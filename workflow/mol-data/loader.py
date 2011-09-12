@@ -164,7 +164,7 @@ class Config(object):
                             "SELECT alias, required, source FROM %d WHERE %s AND alias NOT EQUAL TO ''" % (fusiontable_id, where_clause)
                         )
                     )
-                except IOError as (errno, strerror):
+                except IOError, (errno, strerror):
                     logging.warning("Could not connect to the internet to validate %s: %s", config_section_to_validate, strerror)
                     logging.warning("Continuing without validation.")
                     return 0
@@ -277,7 +277,7 @@ def source2csv(source_dir, options):
             args = shlex.split(command)
             try:
                 subprocess.call(args)
-            except OSError as errmsg:
+            except OSError, errmsg:
                 logging.error("""Error occurred while executing command line '%s': %s
     Please ensure that %s is executable and available on your path.
                 """, command, args[0], errmsg)

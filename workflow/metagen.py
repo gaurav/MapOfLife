@@ -69,7 +69,7 @@ class FusionTableProps(object):
                 )
             )
             # print urlconn.read()
-        except IOError as (errno, strerror):
+        except IOError, (errno, strerror):
             exit("Could not connect to the internet to retrieve configuration: %s" % strerror)
 
         return csv.DictReader(urlconn)
