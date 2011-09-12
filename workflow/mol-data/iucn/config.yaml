@@ -91,7 +91,6 @@ Collections:
       measurementmethod:
       nameaccordingto:  
       occurrencestatus:  PRESENCE  
-      polygonid: 
       polygonname:
       population:      
       seasonality:      SEASONAL
@@ -174,7 +173,6 @@ Collections:
       measurementmethod:
       nameaccordingto:  
       occurrencestatus:  PRESENCE  
-      polygonid:      
       polygonname:      
       population:      
       seasonality:      SEASONAL

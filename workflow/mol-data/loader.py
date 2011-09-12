@@ -289,11 +289,21 @@ def source2csv(source_dir, options):
             dr = csv.DictReader(open(csvfile, 'r'), skipinitialspace=True)
 
             # Lowercase all field names.
-            dr.fieldnames = map(lambda fn: fn.lower(), dr.fieldnames)
+            fieldnames_set = 0
            
             layer_polygons = []
             
             for dbf in dr: # For each row in the DBF CSV file (1 row per polygon)
+                if fieldnames_set == 0:
+                    # TODO Comment
+                    fieldnames_set = 1
+                    dr.fieldnames = map(lambda fn: fn.lower(), dr.fieldnames)
+                    
+                    # Now, we need to rename *this* dbf object so all its keys are in lowercase; later dbfs will be handled by the new dr.fieldnames.
+                    new_dbf = dict()
+                    for key in dbf.keys():
+                        new_dbf[key.lower()] = dbf[key]
+                    dbf = new_dbf
     
                 polygon = {}
     
