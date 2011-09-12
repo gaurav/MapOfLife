@@ -202,10 +202,91 @@ app.handleOnClick = function(evt) {
     var location = $('#location').val();
     if (location == '') {
         location = $('#location').attr('placeholder');
-    }    
+    } 
+    console.log('Searching for ' + location);
+    app.pointsName = location;
+    $.post(
+        '/frontend/points/search', 
+        {name: location, source: 'gbif'},
+        function (data) {
+            console.log(data);
+            var names = data;
+            var name = null;
+            var html = '';
+            var widget = null;
+            app.namesDiv = $('<div id="names"></div>');
+            app.loadingImg.show();
+            for (x in names) {
+                name = names[x];
+                widget = app.getNameWidget(name);
+                app.namesDiv.append(widget);
+            }
+            app.namesDiv.append(app.loadingImg[0]);
+            app.map.controls[google.maps.ControlPosition.TOP_RIGHT].clear();
+            app.map.controls[google.maps.ControlPosition.TOP_RIGHT].push(app.namesDiv[0]);
+            $('#loadgif').hide();
+        }
+    );
     // Adds a history token and eventually georeferences:
     //app.go(location);
-    app.sendMessage('/backend/points/search', 'class=' + location);
+    //app.sendMessage('/backend/points/search', 'class=' + location);
+    
+};
+
+
+
+app.getNameWidget = function(name) {
+    var widget = $('<div></div>'),
+        id = null,
+        status = null,
+        job = null,
+        count = null;
+    widget.attr('id', name);
+    widget.append($('<a href="#">'+name+'</a>'));
+    widget.click(
+        function(event) {
+            console.log(name + ' clicked');
+            //app.loadingImg.show();
+            $('#loadgif').show();
+            $('#loadcount').text('Loading...');
+            $.post(
+                '/frontend/points/harvest',
+                {name: name, source: 'gbif'},
+                function (data) {
+                    console.log(data);
+                    id = setInterval(
+                        function() {
+                            // TODO: Error handling 
+                            $.post(
+                                '/frontend/points/harvest',
+                                {name: name, source: 'gbif'},
+                                function (data) { 
+                                    job = JSON.parse(data);
+                                    status = job['status'];
+                                    count = job['msg'] ? job['msg'] : '0';
+                                    console.log('UPDATE: ' + data);
+                                    $('#loadcount').text('Loaded ' + count);
+                                    if (status && (status === 'done' || status === 'error')) {
+                                        clearInterval(id);
+                                        app.setImageMapType(name);
+                                        //app.loadingImg.hide();
+                                        $('#loadgif').hide();
+                                        $('#loadcount').text('Loaded ' + count + ' ' + name + ' points');
+                                        // add div with count harvested?
+                                    }
+                                },
+                                'json'
+                            );
+                        }
+                        , 2000);
+                },
+                'json'
+            );
+
+
+        }
+    );   
+    return widget;
 };
  
 /**
@@ -319,6 +400,36 @@ app._getNormalizedCoord = function(coord, zoom) {
     };
 };
     
+app.setImageMapType = function(name) {
+    app.map.overlayMapTypes.clear();    
+    app.map.overlayMapTypes.push(new google.maps.ImageMapType(
+        {
+            getTileUrl: function(coord, zoom) {
+                var normalizedCoord = app._getNormalizedCoord(coord, zoom),
+                    bound = Math.pow(2, zoom),
+                    tileParams = '',
+                    backendTileApi = 'http://points.mol-lab.appspot.com/frontend/points/tile',
+                    //backendTileApi = 'http://localhost:8080/frontend/points/tile',
+                    tileurl = null;                                
+            
+                if (!normalizedCoord) {
+                    return null;
+                }              
+                tileParams = tileParams + 'x=' + normalizedCoord.x;
+                tileParams = tileParams + '&y=' + normalizedCoord.y;
+                tileParams = tileParams + '&z=' + zoom;      
+                tileParams = tileParams + '&name=' + name;
+                tileParams = tileParams + '&source=gbif';
+                tileurl = backendTileApi + "?" + tileParams;
+                //console.log(tileurl);
+                return tileurl;
+            },
+            tileSize: new google.maps.Size(256, 256),
+            isPng: true,
+            opacity: 1.0,
+            name: 'points'
+        }));
+};
 
 /**
  * Immediate function setup.
@@ -331,7 +442,7 @@ app.init = function () {
         q = window.location.search.substring(1);
 
     // Open Channel API to App Engine
-    app.openChannel();
+    // app.openChannel();
 
     // Parses URL parameters:
     while ((e = r.exec(q))) {
@@ -339,40 +450,15 @@ app.init = function () {
     }
     
     var queryPlaceholder = "aves",
-    latlng = new google.maps.LatLng(37.8, -121);
+    latlng = new google.maps.LatLng(20.8, -100);
     app.mapOptions = {
         mapTypeId: google.maps.MapTypeId.TERRAIN,
         center: latlng
     };
     app.geocoder = new google.maps.Geocoder();
     app.map = new google.maps.Map(document.getElementById("map_canvas"), app.mapOptions);
-    app.map.setZoom(3);
-    app._mapType = new google.maps.ImageMapType(
-        {
-            getTileUrl: function(coord, zoom) {
-                var normalizedCoord = app._getNormalizedCoord(coord, zoom),
-                    bound = Math.pow(2, zoom),
-                    tileParams = '',
-                    backendTileApi = 'http://points.mol-lab.appspot.com/backend/points/tile', //'http://localhost:8080/backend/points/tile',
-                    tileurl = null;                                
-            
-                if (!normalizedCoord) {
-                    return null;
-                }              
-                tileParams = tileParams + 'x=' + normalizedCoord.x;
-                tileParams = tileParams + '&y=' + normalizedCoord.y;
-                tileParams = tileParams + '&z=' + zoom;      
-                tileurl = backendTileApi + "?" + tileParams;
-                console.log(tileurl);
-                return tileurl;
-            },
-            tileSize: new google.maps.Size(256, 256),
-            isPng: true,
-            opacity: 1.0,
-            name: 'points'
-        });
-
-    app.map.overlayMapTypes.push(app._mapType);    
+    app.map.setZoom(2);
+    app.loadingImg = $('<div id="loader"><img id="loadgif" src="/js/loading.gif"/><span id="loadcount"></span></div>');  
     app.geocoderMarkers = [];
     $('#button').click(app.handleOnClick);
     $('#clearMapButton').click(app.handleClearMap);
