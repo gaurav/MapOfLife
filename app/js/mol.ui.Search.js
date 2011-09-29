@@ -361,6 +361,8 @@ MOL.modules.Search = function(mol) {
 
                 widget = display.getSearchBox();
                 
+                // Activate the "Go" button if the user
+                // presses 'Enter'.
                 widget.keyup(
                     function(event) {
                       if (event.keyCode === 13) {
