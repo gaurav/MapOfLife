@@ -101,12 +101,15 @@ MOL.modules.ajax = function(mol) {
              * @param callback the mol.ajax. ActionCallback
              */
             execute: function(action, callback ) {
+                console.log("Starting ajax call (" + {action: action.toJson()}+ ") ... " + (new Date()).getTime())
+
                 var params = {action: action.toJson()},
                     xhr = $.post('/webapp', params, 'json'),
                     self = this;
 
                 xhr.success(
                     function(response) {
+                        console.log("Ajax call (" + params + ") success!" + (new Date()).getTime())
                         callback.onSuccess(response);
                         self.fireEvents(action);
                     }
@@ -114,6 +117,7 @@ MOL.modules.ajax = function(mol) {
 
                 xhr.error(
                     function(error) {
+                        console.log("Ajax call (" + params + ") failed: " + error + "!" + (new Date()).getTime())
                         callback.onFailure(error);
                     }
                 );

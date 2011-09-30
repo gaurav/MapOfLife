@@ -71,6 +71,8 @@ MOL.modules.Map = function(mol) {
             },
 
             show: function() {
+                console.log("Starting map render: " + new Date().getTime());
+
                 var points = this._points,
                     point = null,
                     Marker = google.maps.Marker,
@@ -96,6 +98,8 @@ MOL.modules.Map = function(mol) {
                         self._onMap = true;
                     }
                 }
+
+                console.log("Starting map render: " + new Date().getTime());
             },
 
             hide: function() {
