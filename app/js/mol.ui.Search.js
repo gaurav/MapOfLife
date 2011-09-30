@@ -528,10 +528,12 @@ MOL.modules.Search = function(mol) {
                     fw.getAuthor().text(res.name2);
                     fw.getInfoLink().attr("attr","/static/dead_link.html");
                     sourceImg.attr("src","/static/maps/search/" + res.source.toLowerCase() + ".png");
+                    sourceImg.attr("title", res.source);
                     sourceImg.click(function() {
                         mol.log.todo('Send source info to LeftBottom Modal');
                     });
                     typeImg.attr("src","/static/maps/search/" + res.type.toLowerCase() + ".png");
+                    typeImg.attr("title", res.type);
                     typeImg.click(function(){
                         mol.log.todo('Send type info to LeftBottom Modal');
                     });
