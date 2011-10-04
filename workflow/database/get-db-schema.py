@@ -48,7 +48,7 @@ class TableSchema(object):
             urlconn = urllib.urlopen(
                 ft_partial_url + 
                 urllib.quote_plus(
-                    "SELECT alias, required, indexed, source FROM %d WHERE alias NOT EQUAL TO ''" 
+                    "SELECT alias, required, indexed, source FROM %d WHERE alias NOT EQUAL TO '' AND source NOT EQUAL TO 'MOL-calculated'" 
                         % (fusiontable_id)
                 )
             )
