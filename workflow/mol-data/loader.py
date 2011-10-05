@@ -22,11 +22,13 @@ import copy
 import csv
 import glob
 import logging
-from unicodewriter import UnicodeDictWriter
+from unicodewriter import UnicodeDictWriter, UnicodeDictReader
 from optparse import OptionParser
 import os
+import psycopg2
 import simplejson
 import shlex
+import StringIO
 import subprocess
 import sys
 import time
@@ -61,10 +63,15 @@ class Config(object):
             return row
             
         def get_columns(self):
+            cols = self.get_metadata_columns()
+            cols.extend(['layer_source', 'layer_collection', 'layer_filename', 'layer_polygons'])
+            return cols
+
+        def get_metadata_columns(self):
+            """Returns columns storing metadata (which is all of them except the generated ones)."""
             cols = []
             cols.extend(self.collection['fields']['required'].keys())
             cols.extend(self.collection['fields']['optional'].keys())
-            cols.extend(['layer_source', 'layer_collection', 'layer_filename', 'layer_polygons'])
             return cols
 
         def get_mapping(self, required=True):
@@ -389,6 +396,56 @@ def source2csv(source_dir, options):
             os.chdir('../../')
             filename = os.path.abspath('%s/%s/collection.csv.txt' % (source_dir, coll_dir))
 
+            # Before we upload to Google App Engine, we should
+            # upload to PostgreSQL.
+
+            file = open(filename, 'r')
+            metadata = UnicodeDictReader(file)
+            stringio = StringIO.StringIO()
+            tmpcsv = UnicodeDictWriter(stringio, collection.get_metadata_columns())
+            for row in metadata:
+                for key,val in row.iteritems():
+                    row[key] = val.replace("\n", "\\n")
+                tmpcsv.writerow(row)
+            file.close()
+
+            # Move the StringIO back to the start of the file
+            # so we can read the CSV from that.
+            stringio.seek(0)
+
+            # Time to connect to the database! Read the database
+            # settings from db.json.
+            db_settings = open("db.json", "r")
+            settings = simplejson.load(db_settings)
+            db_settings.close()
+
+            if 'psycopg2_connect' in settings.keys():
+                conn = psycopg2.connect(settings['psycopg2_connect'])
+            else:
+                conn = psycopg2.connect(
+                    "host=" + settings['host'] +
+                    " port=" + settings['port'] + 
+                    " dbname=" + settings['dbname'] + 
+                    " user=" + settings['user'] + 
+                    " password=" + settings['password']
+                )
+
+            # print "Columns: " + collection.get_metadata_columns().__repr__()
+            # print "Data: " + stringio.getvalue()
+
+            cur = conn.cursor()
+            # cur.copy_from(stringio, 'mol_metadata', sep=',', null='', columns=collection.get_metadata_columns())
+            cur.copy_expert("COPY mol_metadata (" + ', '.join(collection.get_metadata_columns()) + ") FROM STDIN WITH NULL AS '' CSV", stringio)
+
+            stringio.close()
+
+            conn.commit()
+            cur.close()
+            conn.close()
+
+            print "Metadata added to the database."
+
+            # Upload to Google App Engine!
             if options.config_file is None:
                 logging.error("No bulkloader configuration file specified: please specify one with the --config_file option.")
                 exit(2) # Since apparently '2' signals that something is wrong in the command line arguments.
