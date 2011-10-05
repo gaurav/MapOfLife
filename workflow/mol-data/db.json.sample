@@ -1,0 +1,11 @@
+{
+    "_comment": "You can either use 'psycopg2_connect' (without the underscore!) or specify *all* of 'host', 'post', 'dbname', 'user', 'password'.",
+
+    "_psycopg2_connect": "host=localhost port=5432 dbname=MapOfLife user=mol_service password=your_password_here",
+
+    "host": "localhost",
+    "port": "5432",
+    "dbname": "MapOfLife",
+    "user": "mol_service",
+    "password": "your_password_here"
+}

@@ -415,6 +415,9 @@ def source2csv(source_dir, options):
 
             # Time to connect to the database! Read the database
             # settings from db.json.
+            if not os.path.exists("db.json"):
+                logging.error("'db.json' not found in the current directory. Please create a 'db.json' by adapting 'db.json.sample' for your use.")
+                sys.exit(1)
             db_settings = open("db.json", "r")
             settings = simplejson.load(db_settings)
             db_settings.close()
