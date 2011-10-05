@@ -394,18 +394,31 @@ def source2csv(source_dir, options):
         # os.chdir(current_dir)
         if not options.dry_run:
             os.chdir('../../')
-            filename = os.path.abspath('%s/%s/collection.csv.txt' % (source_dir, coll_dir))
+            filename = os.path.abspath('%s/%s/collection.csv.txt' 
+                % (source_dir, coll_dir))
 
-            # Before we upload to Google App Engine, we should
-            # upload to PostgreSQL.
+            # Before we upload our metadata to Google App Engine, we should
+            # upload our metadata to PostgreSQL.
 
+            # First, we load up the metadata and gently massage it 
+            # into a format the PostgreSQL COPY FROM can understand. 
+            # We store it in an in-memory "StringIO" file.
             file = open(filename, 'r')
             metadata = UnicodeDictReader(file)
             stringio = StringIO.StringIO()
-            tmpcsv = UnicodeDictWriter(stringio, collection.get_metadata_columns())
+
+            tmpcsv = UnicodeDictWriter(
+                stringio, 
+                collection.get_metadata_columns()
+            )
             for row in metadata:
                 for key,val in row.iteritems():
+                    # PostgreSQL has problems reading newlines in CSV files.
+                    # So we re-encode them as literal '\\' '\n'. Since we are
+                    # not actually going to display this data, that's probably
+                    # fine for now.
                     row[key] = val.replace("\n", "\\n")
+
                 tmpcsv.writerow(row)
             file.close()
 
@@ -416,8 +429,11 @@ def source2csv(source_dir, options):
             # Time to connect to the database! Read the database
             # settings from db.json.
             if not os.path.exists("db.json"):
-                logging.error("'db.json' not found in the current directory. Please create a 'db.json' by adapting 'db.json.sample' for your use.")
-                sys.exit(1)
+                logging.error(
+                    """'db.json' not found in the current directory. Please 
+create a 'db.json' by modifying 'db.json.sample' for your use.""")
+                exit(1)
+
             db_settings = open("db.json", "r")
             settings = simplejson.load(db_settings)
             db_settings.close()
@@ -425,28 +441,25 @@ def source2csv(source_dir, options):
             if 'psycopg2_connect' in settings.keys():
                 conn = psycopg2.connect(settings['psycopg2_connect'])
             else:
-                conn = psycopg2.connect(
-                    "host=" + settings['host'] +
-                    " port=" + settings['port'] + 
-                    " dbname=" + settings['dbname'] + 
-                    " user=" + settings['user'] + 
-                    " password=" + settings['password']
-                )
+                # That '**' will convert settings from a dictionary
+                # into Python keyword arguments. Just like magic!
+                conn = psycopg2.connect(**settings)
 
             # print "Columns: " + collection.get_metadata_columns().__repr__()
             # print "Data: " + stringio.getvalue()
 
             cur = conn.cursor()
-            # cur.copy_from(stringio, 'mol_metadata', sep=',', null='', columns=collection.get_metadata_columns())
-            cur.copy_expert("COPY mol_metadata (" + ', '.join(collection.get_metadata_columns()) + ") FROM STDIN WITH NULL AS '' CSV", stringio)
+            cur.copy_expert(
+                "COPY mol_metadata (" + 
+                    ', '.join(collection.get_metadata_columns()) + 
+                ") FROM STDIN WITH NULL AS '' CSV", stringio)
 
             stringio.close()
-
             conn.commit()
             cur.close()
             conn.close()
 
-            print "Metadata added to the database."
+            logging.info("Metadata added to the database.")
 
             # Upload to Google App Engine!
             if options.config_file is None:
