@@ -399,6 +399,9 @@ def source2csv(source_dir, options):
 
             # Before we upload our metadata to Google App Engine, we should
             # upload our metadata to PostgreSQL.
+      
+            # TODO: We probably want to let people turn this off,
+            # maybe if the 'db.json' file is missing.
 
             # First, we load up the metadata and gently massage it 
             # into a format the PostgreSQL COPY FROM can understand. 
