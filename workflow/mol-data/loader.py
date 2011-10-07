@@ -48,9 +48,15 @@ class Config(object):
         return x
     
     class Collection(object):
-        def __init__(self, filename, collection):
+        def __init__(self, filename, collection, provider):
             self.filename = filename
             self.collection = collection
+
+            # Set up collection information.
+            fields = self.collection['fields']
+            if 'required' in fields:
+                fields['required']['provider'] = provider
+                fields['required']['collection'] = self.collection['collection']
 
             if not _getoptions().no_validate:
                 self.validate()
@@ -87,7 +93,7 @@ class Config(object):
             #return dict((source, mol) for mol,source in mapping.iteritems())
             
         def getdir(self):
-            return self.collection['directoryname']
+            return self.collection['collection']
 
         def get(self, key, default=None):
             return self.collection.get(key, default)
@@ -240,10 +246,10 @@ class Config(object):
         self.config = Config.lower_keys(yaml.load(open(filename, 'r').read()))
 
     def collection_names(self):
-        return [x.get('directoryname') for x in self.collections()]
+        return [x.get('collection') for x in self.collections()]
 
     def collections(self):
-        return [Config.Collection(self.filename, collection) for collection in self.config['collections']]
+        return [Config.Collection(self.filename, collection, self.config['source']['name']) for collection in self.config['collections']]
 
 def source2csv(source_dir, options):
     ''' Loads the collections in the given source directory. 
@@ -334,7 +340,7 @@ def source2csv(source_dir, options):
                             source_name = source[1:].lower()
 
                             sourceval = dbf.get(source_name)
-                            if not dbf.has_key(source_name):
+                            if not source_name in dbf:
                                 logging.error('Unable to map required DBF field %s to %s. Valid fieldnames include: %s.' % (source_name, mol,  ", ".join(dr.fieldnames)))
                                 sys.exit(1)        
                             row[mol] = sourceval
@@ -360,7 +366,7 @@ def source2csv(source_dir, options):
 
                             # Map a DBF column to a field.
                             sourceval = dbf.get(source_name)
-                            if not dbf.has_key(source_name):
+                            if not source_name in dbf:
                                 logging.error('Unable to map optional DBF field %s to %s. Valid fieldnames include: %s.' % (source_name, mol, ", ".join(dr.fieldnames)))
                                 sys.exit(1) 
                             row[mol] = sourceval
@@ -371,6 +377,9 @@ def source2csv(source_dir, options):
                             row[mol] = source
                             polygon[mol] = source
 
+                # MOL-calculated fields (see issue #120) will eventually be calculated here.
+                # For now, that's just 'provider', 'contributor' and 'filename'.
+                row['filename'] = row['layer_filename']
     
                 # Write coll_row to collection.csv
                 coll_csv.writerow(row)
