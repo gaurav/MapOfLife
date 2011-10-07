@@ -98,8 +98,8 @@ CREATE TABLE mol_metadata (
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON mol_metadata TO mol_service;
 GRANT SELECT, USAGE, UPDATE ON mol_metadata_id_seq TO mol_service;
-  # Replace 'mol_service' with the username MoL will use to access 
-  # this database.
+  % Replace 'mol_service' with the username MoL will use to access 
+  % this database.
 """
 
         columns = []
