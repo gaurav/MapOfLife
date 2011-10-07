@@ -48,7 +48,7 @@ class TableSchema(object):
             urlconn = urllib.urlopen(
                 ft_partial_url + 
                 urllib.quote_plus(
-                    "SELECT alias, required, indexed, source FROM %d WHERE alias NOT EQUAL TO '' AND source NOT EQUAL TO 'MOL-calculated'" 
+                    "SELECT alias, required, indexed, type, source FROM %d WHERE alias NOT EQUAL TO '' AND source NOT EQUAL TO 'MOL-calculated'" 
                         % (fusiontable_id)
                 )
             )
@@ -75,7 +75,7 @@ class TableSchema(object):
             if row['required'] is None or row['required'] != 'y':
                 is_required = 0
 
-            self.schema[row_alias] = {'required': is_required}
+            self.schema[row_alias] = {'required': is_required, 'type': row['type']}
 
             # Check if this field should be indexed.
             if row['indexed'] is not None and row['indexed'] == 'y':
@@ -108,7 +108,7 @@ GRANT SELECT, USAGE, UPDATE ON mol_metadata_id_seq TO mol_service;
 
 	    columns.append("%s %s %s" % (
 		field,
-		'TEXT', # We'll set all fields to TEXT for now.
+                column_schema['type'] if column_schema['type'] else "TEXT",
 		"NOT NULL" if column_schema['required'] else "NULL"
 	    ))
 
