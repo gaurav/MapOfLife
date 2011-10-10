@@ -48,7 +48,7 @@ class TableSchema(object):
             urlconn = urllib.urlopen(
                 ft_partial_url + 
                 urllib.quote_plus(
-                    "SELECT alias, required, indexed, type, source FROM %d WHERE alias NOT EQUAL TO '' AND source NOT EQUAL TO 'MOL-calculated'" 
+                    "SELECT alias, required, indexed, type, source FROM %d WHERE alias NOT EQUAL TO ''" 
                         % (fusiontable_id)
                 )
             )
@@ -91,13 +91,20 @@ class TableSchema(object):
         for PostgreSQL."""
 
         create_template = """
-CREATE TABLE mol_metadata (
+-- DROPs the layers table. WARNING: This will
+-- PERMANENTLY DELETE DATA! Please DO NOT RUN
+-- this script if you want to keep your existing
+-- data!
+DROP TABLE IF EXISTS layers;
+
+-- Creates the layers table.
+CREATE TABLE layers (
     id SERIAL PRIMARY KEY,
     %s
 );
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON mol_metadata TO mol_service;
-GRANT SELECT, USAGE, UPDATE ON mol_metadata_id_seq TO mol_service;
+GRANT SELECT, INSERT, UPDATE, DELETE ON layers TO mol_service;
+GRANT SELECT, USAGE, UPDATE ON layers_id_seq TO mol_service;
   /* Replace 'mol_service' with the username MoL will use to access 
      this database. */
 """

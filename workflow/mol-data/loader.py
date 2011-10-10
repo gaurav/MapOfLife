@@ -135,7 +135,7 @@ class Config(object):
                 names retrieved from the Fusion Table.
 
                 You provide the 'WHERE' clause of the SQL query you need to execute to get the list of 
-                valid fields (probably something like "source='MOLSourceFields' AND required = 'y'").
+                valid fields (probably something like "required = 'y'").
 
                 Arguments:
                     fields: The dictionary whose keys we have to validate.
@@ -162,13 +162,11 @@ class Config(object):
                 expected_fields = set()
                 errors = 0
 
+                sql = "SELECT alias, required, source FROM %d WHERE %s AND alias NOT EQUAL TO ''" % (fusiontable_id, where_clause)
+
                 try:
                     urlconn = urllib.urlopen(
-                        ft_partial_url + 
-                        urllib.quote_plus(
-                            "SELECT alias, required, source FROM %d WHERE %s AND alias NOT EQUAL TO ''" 
-                                % (fusiontable_id, where_clause)
-                        )
+                        ft_partial_url + urllib.quote_plus(sql)
                     )
                 except IOError as (errno, strerror):
                     logging.warning("Could not connect to the internet to validate %s: %s", config_section_to_validate, strerror)
@@ -177,7 +175,14 @@ class Config(object):
 
                 # Read the field names into a dictionary.
                 rows = csv.DictReader(urlconn)
+
                 for row in rows:
+                    if not row.has_key('alias'):
+                        logging.error(
+                            """The following Google Fusion Table SQL 
+query failed to return any results; this should never happen:\n\t%s""", sql)
+                        exit(1)
+
                     # We don't need to test for row['alias'], because our SQL statement already removes any blank aliases.
                     if (row['alias'].lower()) in expected_fields:
                         logging.error("Field alias '%s' is used twice in the Fusion Table, aborting.", 
@@ -222,13 +227,13 @@ class Config(object):
             errors += validate_fields(
                 self.collection['fields']['required'], 
                 "Collections:Fields:Required", 
-                "source='MOLSourceDBFfields' AND required = 'y'", 
+                "required = 'y'",
                 1)
 
             errors += validate_fields(
                 self.collection['fields']['optional'], 
                 "Collections:Fields:Optional", 
-                "source='MOLSourceDBFfields' AND required = ''", 
+                "required = ''",
                 0)
 
             # In case of any errors, bail out.
@@ -462,11 +467,22 @@ create a 'db.json' by modifying 'db.json.sample' for your use.""")
 
             cur = conn.cursor()
             cur.copy_expert(
-                "COPY mol_metadata (" + 
+                "COPY layers (" + 
                     ', '.join(collection.get_metadata_columns()) + 
                 ") FROM STDIN WITH NULL AS '' CSV", stringio)
-
+           
             stringio.close()
+
+            # Now, we need to create a CSV to bulkload to Google.
+            filename = os.path.abspath('%s/%s/collection.for-google.csv.txt' 
+                % (source_dir, coll_dir))
+
+            file = open(filename, "w")
+            cur.copy_expert("COPY layers (" +
+                ', '.join(collection.get_metadata_columns()) +
+                ") TO STDOUT WITH NULL AS '' CSV", file)
+            file.close()
+
             conn.commit()
             cur.close()
             conn.close()
