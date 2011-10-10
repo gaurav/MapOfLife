@@ -19,7 +19,7 @@ transformers:
   
   property_map:
     - property: __key__
-      import_template: "%(provider)s-%(collection)s-%(filename)s-%(id)d"
+      import_template: "%(provider)s-%(collection)s-%(filename)s"
 
     - property: provider 
       external_name: provider

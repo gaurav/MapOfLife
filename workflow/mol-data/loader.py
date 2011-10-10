@@ -478,7 +478,7 @@ create a 'db.json' by modifying 'db.json.sample' for your use.""")
                 % (source_dir, coll_dir))
 
             file = open(filename, "w")
-            file.write(', '.join(collection.get_metadata_columns()) + "\n")
+            file.write(','.join(collection.get_metadata_columns()) + "\n")
             cur.copy_expert("COPY layers (" +
                 ', '.join(collection.get_metadata_columns()) +
                 ") TO STDOUT WITH NULL AS '' CSV", file)
