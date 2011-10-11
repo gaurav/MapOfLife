@@ -55,8 +55,8 @@ class Config(object):
             # Set up collection information.
             fields = self.collection['fields']
             if 'required' in fields:
-                fields['required']['provider'] = provider
-                fields['required']['collection'] = self.collection['collection']
+                fields['required']['provider'] = provider.lower()
+                fields['required']['collection'] = self.collection['collection'].lower()
 
             if not _getoptions().no_validate:
                 self.validate()
@@ -384,7 +384,7 @@ def source2csv(source_dir, options):
 
                 # MOL-calculated fields (see issue #120) will eventually be calculated here.
                 # For now, that's just 'provider', 'contributor' and 'filename'.
-                row['filename'] = row['layer_filename']
+                row['filename'] = row['layer_filename'].lower()
     
                 # Write coll_row to collection.csv
                 coll_csv.writerow(row)
@@ -465,7 +465,18 @@ create a 'db.json' by modifying 'db.json.sample' for your use.""")
             # print "Columns: " + collection.get_metadata_columns().__repr__()
             # print "Data: " + stringio.getvalue()
 
+            # Before we add the new rows to the database,
+            # we should get rid of all the information
+            # we have on this provider/collection. That
+            # old collections are effectively "wiped" from
+            # the system once we're done with them.
+            #
+            # This makes more sense to me than replacing
+            # individual files, but maybe that's just me.
             cur = conn.cursor()
+            cur.execute("DELETE FROM layers WHERE provider=%s AND collection=%s", [source_dir.lower(), coll_dir.lower()])
+
+            # Add the new rows to the database.
             cur.copy_expert(
                 "COPY layers (" + 
                     ', '.join(collection.get_metadata_columns()) + 
@@ -474,6 +485,12 @@ create a 'db.json' by modifying 'db.json.sample' for your use.""")
             stringio.close()
 
             # Now, we need to create a CSV to bulkload to Google.
+            # TODO: At the moment, we reupload the *entire* database to
+            # Google App Engine. This is going to get unwieldy fast.
+            # Instead, we ought to only bulkupload rows in *this*
+            # provider and collection combination. Unfortunately,
+            # there is no easy way to do this: we have to create
+            # a temporary table in PostgreSQL.
             filename = os.path.abspath('%s/%s/collection.for-google.csv.txt' 
                 % (source_dir, coll_dir))
 
@@ -528,6 +545,8 @@ create a 'db.json' by modifying 'db.json.sample' for your use.""")
                 '--db_filename=progress/bulkloader-progress-%s.sql3' % time.strftime('%Y%m%d.%H%M%S')
             ] 
             subprocess.call(cmd, shell=flag_run_in_shell)
+
+            # Now run all the shapefiles through shp2pgis.py
 
         # Go back to the original directory for the next collection.
         os.chdir(original_dir)
