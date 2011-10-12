@@ -95,6 +95,8 @@ class TableSchema(object):
 -- PERMANENTLY DELETE DATA! Please DO NOT RUN
 -- this script if you want to keep your existing
 -- data!
+SET CLIENT_ENCODING TO UTF8;
+SELECT DropGeometryColumn('','layers','the_geom_webmercator');
 DROP TABLE IF EXISTS layers;
 
 -- Creates the layers table.
@@ -103,6 +105,8 @@ CREATE TABLE layers (
     %s
 );
 
+SELECT AddGeometryColumn('','layers','the_geom_webmercator','3857','MULTIPOLYGON',2);
+CREATE INDEX "layers_the_geom_webmercator_gist" ON "layers" using gist ("the_geom_webmercator" gist_geometry_ops);
 GRANT SELECT, INSERT, UPDATE, DELETE ON layers TO mol_service;
 GRANT SELECT, USAGE, UPDATE ON layers_id_seq TO mol_service;
   /* Replace 'mol_service' with the username MoL will use to access 
