@@ -341,34 +341,37 @@ def source2csv(source_dir, options):
             logging.info('DBF %s' % dbf_filename)
             os.rename(dbf_filename, dbf_filename_temp)
 
-            # Create the .dbf blank (it has no fields)
-            w = shapefile.Writer(shapefile.POLYGONM)
-            w.poly(parts=[[[1,5],[5,5],[5,1],[3,3],[1,1]]])
-            w.save(dbf_filename)
+            try:
+                # Create the .dbf blank (it has no fields)
+                w = shapefile.Writer(shapefile.POLYGONM)
+                w.poly(parts=[[[1,5],[5,5],[5,1],[3,3],[1,1]]])
+                w.save(dbf_filename)
 
-            # Get the projection SRID (default 3857)
-            proj = open('%s.prj' % name, 'r').read()
-            srs = osr.SpatialReference()
-            srs.ImportFromESRI([proj])
-            srs.AutoIdentifyEPSG()
-            srid = srs.GetAuthorityCode(None)
-            if srid == None:
-                srid = 3857
+                # Get the projection SRID (default 3857)
+                proj = open('%s.prj' % name, 'r').read()
+                srs = osr.SpatialReference()
+                srs.ImportFromESRI([proj])
+                srs.AutoIdentifyEPSG()
+                srid = srs.GetAuthorityCode(None)
+                if srid == None:
+                    srid = 3857
 
-            # Create SQL file that contains the_geom
-            sql_file = open('%s.sql' % name, 'wr+')
-            command =  'shp2pgsql -I -D -d -s %s %s polygons > %s.sql' % (srid, name, name)
-            logging.info('Converting shapefile: %s' % command)
-            args = shlex.split(command)
-            subprocess.call(args, stdout=sql_file)
+                # Create SQL file that contains the_geom
+                sql_file = open("%s.sql" % name, "w")
+                command =  'shp2pgsql -I -D -d -s %s %s polygons' % (srid, name)
+                logging.info('Converting shapefile: %s' % command)
+                args = shlex.split(command)
+                subprocess.call(args, stdout=sql_file)
+                sql_file.close()
 
-            # Parse SQL file for a list of the_geom data
-            sql_file.seek(0)
-            the_geom = sql_file.read().split('\n')[8:-4]
-            logging.info('Parsed %s polygons from the_geom' % len(the_geom))
-
-            # Restore .dbf file name
-            os.rename(dbf_filename_temp, dbf_filename)
+                # Parse SQL file for a list of the_geom data
+                sql_file = open("%s.sql" % name, "r")
+                sql_file.seek(0)
+                the_geom = sql_file.read().split('\n')[8:-4]
+                logging.info('Parsed %s polygons from the_geom' % len(the_geom))
+            finally:
+                # Restore .dbf file name
+                os.rename(dbf_filename_temp, dbf_filename)
 
             # ------------------------------------------------------- 
 
@@ -536,19 +539,19 @@ create a 'db.json' by modifying 'db.json.sample' for your use.""")
 
             # Add the new rows to the database.
             sql = "COPY layers (" + \
-                    ', '.join(collection.get_metadata_columns() + ['the_geom_webmercator']) + \
+                    ', '.join(collection.get_metadata_columns() + ['temp_geom']) + \
                 ") FROM STDIN WITH NULL AS '' CSV"
-            logging.info('SQL %s' % sql)
+            # logging.info('SQL %s' % sql)
 
             cur.copy_expert(
                 "COPY layers (" +
-                    ', '.join(collection.get_metadata_columns() + ['the_geom_webmercator']) +
+                    ', '.join(collection.get_metadata_columns() + ['temp_geom']) +
                 ") FROM STDIN WITH NULL AS '' CSV", stringio)
 
             stringio.close()
 
             
-
+            cur.execute("UPDATE layers SET the_geom_webmercator=temp_geom")
             
 
             # Now, we need to create a CSV to bulkload to Google.
