@@ -96,8 +96,8 @@ class TableSchema(object):
 -- this script if you want to keep your existing
 -- data!
 SET CLIENT_ENCODING TO UTF8;
-SELECT DropGeometryColumn('','layers','the_geom_webmercator');
 DROP TABLE IF EXISTS layers;
+-- SELECT DropGeometryColumn('','layers','the_geom_webmercator');
 
 -- Creates the layers table.
 CREATE TABLE layers (
