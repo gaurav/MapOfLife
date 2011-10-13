@@ -367,8 +367,9 @@ def source2csv(source_dir, options):
                 # Parse SQL file for a list of the_geom data
                 sql_file = open("%s.sql" % name, "r")
                 sql_file.seek(0)
-                the_geom = sql_file.read().split('\n')[8:-4]
-                logging.info('Parsed %s polygons from the_geom' % len(the_geom))
+                content = sql_file.read()
+                the_geom = content.split('\n')[8:-4]
+                logging.info('Parsed %s polygons from the_geom' % (len(the_geom)))
             finally:
                 # Restore .dbf file name
                 os.rename(dbf_filename_temp, dbf_filename)
