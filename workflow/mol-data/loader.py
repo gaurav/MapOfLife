@@ -276,7 +276,6 @@ def source2csv(source_dir, options):
         # Create collection.csv writer
         coll_file = open('collection.csv.txt', 'w')
         coll_cols = collection.get_columns()
-        coll_cols.append('the_geom_webmercator')
         coll_cols.sort()
         coll_csv = UnicodeDictWriter(coll_file, coll_cols)
         # coll_csv = csv.DictWriter(coll_file, coll_cols)
@@ -314,17 +313,23 @@ def source2csv(source_dir, options):
             command = ogr2ogr_path + ' -f CSV "%s" "%s"' % (csvfile, sf)
             args = shlex.split(command)
             try:
-                subprocess.call(args)
+                subprocess.check_call(args)
             except OSError as errmsg:
                 logging.error("""Error occurred while executing command line '%s': %s
     Please ensure that %s is executable and available on your path.
                 """, command, args[0], errmsg)
                 raise # Re-raise the OSError exception.
 
+            if not os.path.exists(csvfile):
+                logging.error("""ogr2ogr did not produce a CSV output file.
+This is probably because of an error in shapefile '%s'.""", sf)
+                exit(1)
+
             # Copy and update coll_row with DBF fields
             row = copy.copy(coll_row)
             row['layer_filename'] = os.path.splitext(sf)[0]
-            dr = csv.DictReader(open(csvfile, 'r'), skipinitialspace=True)
+            csv_file = open(csvfile, 'r')
+            dr = csv.DictReader(csv_file, skipinitialspace=True)
 
             # Lowercase all field names.
             dr.fieldnames = map(lambda fn: fn.lower(), dr.fieldnames)
@@ -334,45 +339,57 @@ def source2csv(source_dir, options):
             
             # ------------------------------------------------------- 
 
-            # Rename .dbf file temporarily
-            name = os.path.splitext(sf)[0]
-            dbf_filename = '%s.dbf' % name
-            dbf_filename_temp = '%s~' % dbf_filename
-            logging.info('DBF %s' % dbf_filename)
-            os.rename(dbf_filename, dbf_filename_temp)
+            name = sf[0:sf.index('.shp')]
 
-            try:
-                # Create the .dbf blank (it has no fields)
-                w = shapefile.Writer(shapefile.POLYGONM)
-                w.poly(parts=[[[1,5],[5,5],[5,1],[3,3],[1,1]]])
-                w.save(dbf_filename)
+            # Get the projection SRID (default 3857)
+            proj_file = open('%s.prj' % name, 'r')
+            proj = proj_file.read()
+            proj_file.close()
 
-                # Get the projection SRID (default 3857)
-                proj = open('%s.prj' % name, 'r').read()
-                srs = osr.SpatialReference()
-                srs.ImportFromESRI([proj])
-                srs.AutoIdentifyEPSG()
-                srid = srs.GetAuthorityCode(None)
-                if srid == None:
-                    srid = 3857
+            srs = osr.SpatialReference()
+            srs.ImportFromESRI([proj])
+            srs.AutoIdentifyEPSG()
+            srid = srs.GetAuthorityCode(None)
+            if srid == None:
+                srid = '3857'
 
-                # Create SQL file that contains the_geom
-                sql_file = open("%s.sql" % name, "w")
-                command =  'shp2pgsql -I -D -d -s %s %s polygons' % (srid, name)
-                logging.info('Converting shapefile: %s' % command)
-                args = shlex.split(command)
-                subprocess.call(args, stdout=sql_file)
-                sql_file.close()
+            command = [ogr2ogr_path, 
+                '-f', 'PGdump', 
+                '-lco', 'SRID=%s' % srid,
+                '-lco', 'DIM=3',
+                '%s.sql' % name,
+                '%s.shp' % name
+            ]
+            logging.info('Converting shapefile: %s' % " ".join(command))
+            subprocess.call(command)
 
-                # Parse SQL file for a list of the_geom data
-                sql_file = open("%s.sql" % name, "r")
-                sql_file.seek(0)
-                content = sql_file.read()
-                the_geom = content.split('\n')[8:-4]
-                logging.info('Parsed %s polygons from the_geom' % (len(the_geom)))
-            finally:
-                # Restore .dbf file name
-                os.rename(dbf_filename_temp, dbf_filename)
+            # Parse SQL file for a list of the_geom data
+            # TODO: The following code assumes that ogr2ogr gives 
+            # the same order of output for PGdump and CSV outputs. 
+            # It will definitely be easier going forward to pull
+            # all the data out at one time, perhaps by parsing
+            # the ogr2ogr output, and importing it in that way.
+            # Alternatively, we could write out a completely mapped
+            # DBF file, then import it directly into the database.
+            # Remains to be seen how we proceed.
+            the_geom = []
+            sql_file = open("%s.sql" % name, "r")
+            for line in sql_file:
+                expected_INSERT = 'INSERT INTO "public"."%s" ("wkb_geometry" ,' % name
+
+                if line[0:len(expected_INSERT)] == expected_INSERT:
+                    start_at = line.index("\") VALUES ('") + 12
+                    end_at = line.index("', ", start_at)
+                    the_geom.append(line[start_at:end_at])
+                elif line[0:6] == 'INSERT':
+                    logging.error("Unable to interpret INSERT line in %s.sql: %s", name, line)
+                    exit(1)
+                else:
+                    # Ignore line and continue
+                    continue
+            sql_file.close()
+
+            logging.info('Parsed %s polygons from the_geom' % (len(the_geom)))
 
             # ------------------------------------------------------- 
 
@@ -452,6 +469,8 @@ def source2csv(source_dir, options):
                 coll_csv.writerow(row)
                 layer_polygons.append(polygon)
 
+            csv_file.close()
+
             # Create JSON representation of dbfjson
             polygons_json = simplejson.dumps(layer_polygons) # TODO: Showing up as string instead of JSON in API
             d=dict(shapefilename=row['layer_filename'], json=polygons_json)
@@ -469,9 +488,8 @@ def source2csv(source_dir, options):
 
         # os.chdir(current_dir)
         if not options.dry_run:
-            os.chdir('../../')
-            filename = os.path.abspath('%s/%s/collection.csv.txt'
-                % (source_dir, coll_dir))
+            os.chdir(original_dir)
+            filename = '%s/%s/collection.csv.txt' % (source_dir, coll_dir)
 
             # Before we upload our metadata to Google App Engine, we should
             # upload our metadata to PostgreSQL.
