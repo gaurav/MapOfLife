@@ -72,7 +72,7 @@ class Config(object):
 
         def get_columns(self):
             cols = self.get_metadata_columns()
-            cols.extend(['layer_source', 'layer_collection', 'layer_filename', 'layer_polygons'])
+            cols.extend(['layer_source', 'layer_collection', 'layer_filename', 'layer_polygons', 'the_geom_webmercator'])
             return cols
 
         def get_metadata_columns(self):
@@ -465,7 +465,7 @@ This is probably because of an error in shapefile '%s'.""", sf)
                 # 3) Run: shp2pgsql -I -d -s 3857 x test > x.sql
                 # 4) Get list of the_geom 
                 # 5) For each the_geom: row['the_geom_webmercator'
-                
+
                 coll_csv.writerow(row)
                 layer_polygons.append(polygon)
 
@@ -508,6 +508,10 @@ This is probably because of an error in shapefile '%s'.""", sf)
                 stringio,
                 collection.get_metadata_columns() + ['the_geom_webmercator']
             )
+
+            # Up the field size so we can store 10 MB layer maps into the CSV file.
+            csv.field_size_limit(10*1024*1024)
+
             for row in metadata:
                 for key,val in row.iteritems():
                     # PostgreSQL has problems reading newlines in CSV files.
@@ -562,16 +566,10 @@ create a 'db.json' by modifying 'db.json.sample' for your use.""")
                 ") FROM STDIN WITH NULL AS '' CSV"
             # logging.info('SQL %s' % sql)
 
-            cur.copy_expert(
-                "COPY layers (" +
-                    ', '.join(collection.get_metadata_columns() + ['temp_geom']) +
-                ") FROM STDIN WITH NULL AS '' CSV", stringio)
-
+            cur.copy_expert(sql, stringio)
             stringio.close()
-
             
             cur.execute("UPDATE layers SET the_geom_webmercator=temp_geom")
-            
 
             # Now, we need to create a CSV to bulkload to Google.
             # TODO: At the moment, we reupload the *entire* database to
