@@ -569,7 +569,14 @@ create a 'db.json' by modifying 'db.json.sample' for your use.""")
             cur.copy_expert(sql, stringio)
             stringio.close()
             
-            cur.execute("UPDATE layers SET the_geom_webmercator=temp_geom")
+            # TODO: Update the following statement so that:
+            #   1. We only copy the geom over where ST_IsValid(temp_geom)
+            #   2. We count how many invalid geometries we have, then
+            #      report this to the user. Maybe quit entirely? Hmm.
+            #   3. Reset the temp_geom to NULL, so we know which rows
+            #      have been set correctly.
+            cur.execute("UPDATE layers SET the_geom_webmercator=ST_Transform(temp_geom, 4326) WHERE ST_IsValid(temp_geom) AND GeometryType(temp_geom)='MULTIPOLYGON'")
+            cur.execute("UPDATE layers SET the_geom_webmercator=ST_Multi(ST_Transform(temp_geom, 4326)) WHERE ST_IsValid(temp_geom) AND GeometryType(temp_geom)='POLYGON'")
 
             # Now, we need to create a CSV to bulkload to Google.
             # TODO: At the moment, we reupload the *entire* database to

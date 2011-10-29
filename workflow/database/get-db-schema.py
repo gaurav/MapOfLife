@@ -106,12 +106,15 @@ CREATE TABLE layers (
     %s
 );
 
-SELECT AddGeometryColumn('','layers','the_geom_webmercator','3857','POLYGON',3);
+SELECT AddGeometryColumn('','layers','the_geom_webmercator','4326','MULTIPOLYGON',3);
 CREATE INDEX "layers_the_geom_webmercator_gist" ON "layers" using gist ("the_geom_webmercator" gist_geometry_ops);
+  
+/* Replace 'mol_service' with the username MoL will use to access 
+   this database. */
 GRANT SELECT, INSERT, UPDATE, DELETE ON layers TO mol_service;
 GRANT SELECT, USAGE, UPDATE ON layers_id_seq TO mol_service;
-  /* Replace 'mol_service' with the username MoL will use to access 
-     this database. */
+
+-- TODO: GRANT permissions to spatial_ref_sys as well.
 """
 
         columns = []
