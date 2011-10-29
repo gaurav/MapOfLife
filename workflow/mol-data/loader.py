@@ -695,7 +695,10 @@ def main():
 
         logging.info('Processing source directories: %s' % source_dirs)
         for sd in source_dirs: # For each source dir (e.g., jetz, iucn)
-            source2csv(sd, options)
+            if not os.path.exists(sd + "/config.yaml"):
+                logging.info('Directory "%s": No config.yaml found, ignoring directory.' % sd)
+            else:
+                source2csv(sd, options)
 
     logging.info('Loading finished!')
 
