@@ -585,21 +585,24 @@ create a 'db.json' by modifying 'db.json.sample' for your use.""")
             # provider and collection combination. Unfortunately,
             # there is no easy way to do this: we have to create
             # a temporary table in PostgreSQL.
-            filename = os.path.abspath('%s/%s/collection.for-google.csv.txt'
-                % (source_dir, coll_dir))
 
-            file = open(filename, "w")
-            file.write(','.join(collection.get_metadata_columns()) + "\n")
-            cur.copy_expert("COPY layers (" +
-                ', '.join(collection.get_metadata_columns()) +
-                ") TO STDOUT WITH NULL AS '' CSV", file)
-            file.close()
+            # filename = os.path.abspath('%s/%s/collection.for-google.csv.txt'
+            #     % (source_dir, coll_dir))
+            
+            filename = os.path.abspath('%s/%s/collection.csv.txt' % (source_dir, coll_dir))
 
-            conn.commit()
-            cur.close()
-            conn.close()
+            # file = open(filename, "w")
+            # file.write(','.join(collection.get_metadata_columns()) + "\n")
+            # cur.copy_expert("COPY layers (" +
+            #     ', '.join(collection.get_metadata_columns()) +
+            #     ") TO STDOUT WITH NULL AS '' CSV", file)
+            # file.close()
 
-            logging.info("Metadata added to the database.")
+            # conn.commit()
+            # cur.close()
+            # conn.close()
+
+            # logging.info("Metadata added to the database.")
 
             # Upload to Google App Engine!
             if options.config_file is None:
@@ -638,7 +641,7 @@ create a 'db.json' by modifying 'db.json.sample' for your use.""")
                 '--log_file=logs/bulkloader-log-%s' % time.strftime('%Y%m%d.%H%M%S'),
                 '--db_filename=progress/bulkloader-progress-%s.sql3' % time.strftime('%Y%m%d.%H%M%S')
             ]
-            subprocess.call(cmd, shell=flag_run_in_shell)
+            #subprocess.call(cmd, shell=flag_run_in_shell)
 
             # Now run all the shapefiles through shp2pgis.py
 
