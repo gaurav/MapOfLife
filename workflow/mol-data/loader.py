@@ -558,7 +558,7 @@ create a 'db.json' by modifying 'db.json.sample' for your use.""")
             # This makes more sense to me than replacing
             # individual files, but maybe that's just me.
             cur = conn.cursor()
-            #cur.execute("DELETE FROM layers WHERE provider=%s AND collection=%s", [source_dir.lower(), coll_dir.lower()])
+            cur.execute("DELETE FROM layers WHERE provider=%s AND collection=%s", [source_dir.lower(), coll_dir.lower()])
 
             # Add the new rows to the database.
             sql = "COPY layers (" + \
