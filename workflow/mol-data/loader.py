@@ -375,7 +375,7 @@ This is probably because of an error in shapefile '%s'.""", sf)
             the_geom = []
             sql_file = open("%s.sql" % name, "r")
             for line in sql_file:
-                expected_INSERT = 'INSERT INTO "public"."%s" ("wkb_geometry" ,' % name
+                expected_INSERT = 'INSERT INTO "public"."%s" ("wkb_geometry" ,' % name.lower()
 
                 if line[0:len(expected_INSERT)] == expected_INSERT:
                     start_at = line.index("\") VALUES ('") + 12
