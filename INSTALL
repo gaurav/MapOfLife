@@ -7,3 +7,5 @@ You need the following Python modules to run some of the components of Map of Li
     above; in that case, you will need to add:
         /Library/Frameworks/GDAL.framework/Versions/Current/Programs
     to your path manually.
+ - PsycoPg2 (http://initd.org/psycopg/), to communicate with PostgreSQL
+ - pyshp (http://code.google.com/p/pyshp/), to read and write shapefiles
