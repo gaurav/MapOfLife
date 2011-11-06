@@ -248,15 +248,16 @@ query failed to return any results; this should never happen:\n\t%s""", sql)
             # No errors? Return successfully!
             return
 
-    def __init__(self, filename):
+    def __init__(self, filename, provider):
         self.filename = filename
+        self.provider = provider
         self.config = Config.lower_keys(yaml.load(open(filename, 'r').read()))
 
     def collection_names(self):
         return [x.get('collection') for x in self.collections()]
 
     def collections(self):
-        return [Config.Collection(self.filename, collection, self.config['source']['name']) for collection in self.config['collections']]
+        return [Config.Collection(self.filename, collection, self.provider) for collection in self.config['collections']]
 
 def source2csv(source_dir, options):
     ''' Loads the collections in the given source directory.
@@ -264,7 +265,7 @@ def source2csv(source_dir, options):
         Arguments:
             source_dir - the relative path to the directory in which the config.yaml file is located.
     '''
-    config = Config(os.path.join(source_dir, 'config.yaml'))
+    config = Config(os.path.join(source_dir, 'config.yaml'), source_dir)
     logging.info('Collections in %s: %s' % (source_dir, config.collection_names()))
 
     for collection in config.collections(): # For each collection dir in the source dir
@@ -591,18 +592,18 @@ create a 'db.json' by modifying 'db.json.sample' for your use.""")
             
             filename = os.path.abspath('%s/%s/collection.csv.txt' % (source_dir, coll_dir))
 
-            # file = open(filename, "w")
-            # file.write(','.join(collection.get_metadata_columns()) + "\n")
-            # cur.copy_expert("COPY layers (" +
-            #     ', '.join(collection.get_metadata_columns()) +
-            #     ") TO STDOUT WITH NULL AS '' CSV", file)
-            # file.close()
+            file = open(filename, "w")
+            file.write(','.join(collection.get_metadata_columns()) + "\n")
+            cur.copy_expert("COPY layers (" +
+                ', '.join(collection.get_metadata_columns()) +
+                ") TO STDOUT WITH NULL AS '' CSV", file)
+            file.close()
 
-            # conn.commit()
-            # cur.close()
-            # conn.close()
+            conn.commit()
+            cur.close()
+            conn.close()
 
-            # logging.info("Metadata added to the database.")
+            logging.info("Metadata added to the database.")
 
             # Upload to Google App Engine!
             if options.config_file is None:
