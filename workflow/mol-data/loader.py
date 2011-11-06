@@ -547,7 +547,7 @@ create a 'db.json' by modifying 'db.json.sample' for your use.""")
                 # into Python keyword arguments. Just like magic!
                 conn = psycopg2.connect(**settings)
 
-            # print "Columns: " + collection.get_metadata_columns().__repr__()
+            # print "Columns: " + ', '.join(collection.get_metadata_columns() + ['temp_geom'])
             # print "Data: " + stringio.getvalue()
 
             # Before we add the new rows to the database,
@@ -565,7 +565,9 @@ create a 'db.json' by modifying 'db.json.sample' for your use.""")
             sql = "COPY layers (" + \
                     ', '.join(collection.get_metadata_columns() + ['temp_geom']) + \
                 ") FROM STDIN WITH NULL AS '' CSV"
-            # logging.info('SQL %s' % sql)
+            logging.info('SQL %s' % sql)
+
+            conn.commit()
 
             cur.copy_expert(sql, stringio)
             stringio.close()
@@ -587,10 +589,10 @@ create a 'db.json' by modifying 'db.json.sample' for your use.""")
             # there is no easy way to do this: we have to create
             # a temporary table in PostgreSQL.
 
-            # filename = os.path.abspath('%s/%s/collection.for-google.csv.txt'
-            #     % (source_dir, coll_dir))
+            filename = os.path.abspath('%s/%s/collection.for-google.csv.txt'
+                % (source_dir, coll_dir))
             
-            filename = os.path.abspath('%s/%s/collection.csv.txt' % (source_dir, coll_dir))
+            # filename = os.path.abspath('%s/%s/collection.csv.txt' % (source_dir, coll_dir))
 
             file = open(filename, "w")
             file.write(','.join(collection.get_metadata_columns()) + "\n")
