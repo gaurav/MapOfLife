@@ -565,7 +565,7 @@ create a 'db.json' by modifying 'db.json.sample' for your use.""")
             sql = "COPY layers (" + \
                     ', '.join(collection.get_metadata_columns() + ['temp_geom']) + \
                 ") FROM STDIN WITH NULL AS '' CSV"
-            logging.info('SQL %s' % sql)
+            # logging.info('SQL %s' % sql)
 
             conn.commit()
 
@@ -586,6 +586,9 @@ create a 'db.json' by modifying 'db.json.sample' for your use.""")
             cur.execute("UPDATE layers SET the_geom_webmercator=ST_Transform(temp_geom, 4326) WHERE ST_IsValid(temp_geom) AND GeometryType(temp_geom)='MULTIPOLYGON'")
             cur.execute("UPDATE layers SET the_geom_webmercator=ST_Multi(ST_Transform(temp_geom, 4326)) WHERE ST_IsValid(temp_geom) AND GeometryType(temp_geom)='POLYGON'")
 
+            # Fix any invalid polygons.
+            cur.execute("UPDATE layers SET the_geom_webmercator=ST_Multi(ST_Buffer(ST_GeomFromEWKT(temp_geom), 0.0)) WHERE NOT ST_IsValid(temp_geom) AND ST_IsValid(ST_Multi(ST_Buffer(ST_GeomFromEWKT(temp_geom), 0.0)));")
+
             # Now, we need to create a CSV to bulkload to Google.
             # TODO: At the moment, we reupload the *entire* database to
             # Google App Engine. This is going to get unwieldy fast.
@@ -596,7 +599,7 @@ create a 'db.json' by modifying 'db.json.sample' for your use.""")
 
             filename = os.path.abspath('%s/%s/collection.for-google.csv.txt'
                 % (source_dir, coll_dir))
-            
+ 
             # filename = os.path.abspath('%s/%s/collection.csv.txt' % (source_dir, coll_dir))
 
             file = open(filename, "w")
@@ -640,6 +643,7 @@ create a 'db.json' by modifying 'db.json.sample' for your use.""")
             subprocess.call(cmd, shell=flag_run_in_shell)
 
             # Bulkload LayerIndex entities to App Engine for entire collection
+            # TODO: Wait, why is the filename the same as above?
             cmd = [
                 'appcfg.py', 'upload_data',
                 '--config_file=%s' % config_file,
@@ -649,7 +653,7 @@ create a 'db.json' by modifying 'db.json.sample' for your use.""")
                 '--log_file=logs/bulkloader-log-%s' % time.strftime('%Y%m%d.%H%M%S'),
                 '--db_filename=progress/bulkloader-progress-%s.sql3' % time.strftime('%Y%m%d.%H%M%S')
             ]
-            #subprocess.call(cmd, shell=flag_run_in_shell)
+            subprocess.call(cmd, shell=flag_run_in_shell)
 
             # Now run all the shapefiles through shp2pgis.py
 
