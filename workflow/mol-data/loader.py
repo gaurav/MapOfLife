@@ -570,6 +570,11 @@ create a 'db.json' by modifying 'db.json.sample' for your use.""")
             conn.commit()
 
             cur.copy_expert(sql, stringio)
+
+            # To debug what's going into PostgreSQL, this is the right way to look at it. 
+            #sql = open("%s/%s/debug.csv" % (source_dir, coll_dir), "w")
+            #sql.write(stringio.getvalue())
+            #sql.close()
             stringio.close()
             
             # TODO: Update the following statement so that:
