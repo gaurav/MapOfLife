@@ -587,7 +587,7 @@ create a 'db.json' by modifying 'db.json.sample' for your use.""")
             cur.execute("UPDATE layers SET the_geom_webmercator=ST_Multi(ST_Transform(temp_geom, 4326)) WHERE ST_IsValid(temp_geom) AND GeometryType(temp_geom)='POLYGON'")
 
             # Fix any invalid polygons.
-            cur.execute("UPDATE layers SET the_geom_webmercator=ST_Multi(ST_Buffer(ST_GeomFromEWKT(temp_geom), 0.0)) WHERE NOT ST_IsValid(temp_geom) AND ST_IsValid(ST_Multi(ST_Buffer(ST_GeomFromEWKT(temp_geom), 0.0)));")
+            cur.execute("UPDATE layers SET the_geom_webmercator=ST_Multi(ST_Transform(ST_Buffer(ST_GeomFromEWKT(temp_geom), 0.0), 4326)) WHERE NOT ST_IsValid(temp_geom) AND ST_IsValid(ST_Multi(ST_Buffer(ST_GeomFromEWKT(temp_geom), 0.0)));")
 
             # Now, we need to create a CSV to bulkload to Google.
             # TODO: At the moment, we reupload the *entire* database to
