@@ -269,6 +269,12 @@ def source2csv(source_dir, options):
     logging.info('Collections in %s: %s' % (source_dir, config.collection_names()))
 
     for collection in config.collections(): # For each collection dir in the source dir
+
+        coll_geojson = {
+            "type": "FeatureCollection",
+            "features": []
+            }
+
         coll_dir = collection.getdir()
 
         original_dir = os.getcwd() # We'll need this to restore us to this dir at the end of processing this collection.
@@ -336,69 +342,25 @@ This is probably because of an error in shapefile '%s'.""", sf)
             dr.fieldnames = map(lambda fn: fn.lower(), dr.fieldnames)
 
             layer_polygons = []
-            
-            
-            # ------------------------------------------------------- 
 
             name = sf[0:sf.index('.shp')]
 
-            # Get the projection SRID (default 3857)
-            proj_file = open('%s.prj' % name, 'r')
-            proj = proj_file.read()
-            proj_file.close()
-
-            srs = osr.SpatialReference()
-            srs.ImportFromESRI([proj])
-            srs.AutoIdentifyEPSG()
-            srid = srs.GetAuthorityCode(None)
-            if srid == None:
-                srid = '3857'
-
+            # Converts the shapefile to a GeoJSON doc reprojected to 4326 (CartoDB).
             command = [ogr2ogr_path, 
-                '-f', 'PGdump', 
-                '-lco', 'SRID=%s' % srid,
-                '-lco', 'DIM=3',
-                '%s.sql' % name,
+                '-f', 'GeoJSON', 
+                '-t_srs', 'EPSG:4326',
+                '%s.json' % name,
                 '%s.shp' % name
             ]
-            logging.info('Converting shapefile: %s' % " ".join(command))
+            logging.info('Converting shapefile to GeoJSON: %s.shp' % name)
             subprocess.call(command)
 
-            # Parse SQL file for a list of the_geom data
-            # TODO: The following code assumes that ogr2ogr gives 
-            # the same order of output for PGdump and CSV outputs. 
-            # It will definitely be easier going forward to pull
-            # all the data out at one time, perhaps by parsing
-            # the ogr2ogr output, and importing it in that way.
-            # Alternatively, we could write out a completely mapped
-            # DBF file, then import it directly into the database.
-            # Remains to be seen how we proceed.
-            the_geom = []
-            sql_file = open("%s.sql" % name, "r")
-            for line in sql_file:
-                expected_INSERT = 'INSERT INTO "public"."%s" ("wkb_geometry" ,' % name.lower()
-
-                if line[0:len(expected_INSERT)] == expected_INSERT:
-                    start_at = line.index("\") VALUES ('") + 12
-                    end_at = line.index("', ", start_at)
-                    the_geom.append(line[start_at:end_at])
-                elif line[0:6] == 'INSERT':
-                    logging.error("Unable to interpret INSERT line in %s.sql: %s", name, line)
-                    exit(1)
-                else:
-                    # Ignore line and continue
-                    continue
-            sql_file.close()
-
-            logging.info('Parsed %s polygons from the_geom' % (len(the_geom)))
-
-            # ------------------------------------------------------- 
-
+            geojson = simplejson.loads(open('%s.json' % name).read())
             row_count = 0
+
             for dbf in dr: # For each row in the DBF CSV file (1 row per polygon)
 
-                row['the_geom_webmercator'] = the_geom[row_count]
-                row_count += 1
+                #row['the_geom_webmercator'] = simplejson.dumps(features[row_count]['geometry'])                
 
                 polygon = {}
 
@@ -459,16 +421,11 @@ This is probably because of an error in shapefile '%s'.""", sf)
                 # For now, that's just 'provider', 'contributor' and 'filename'.
                 row['filename'] = row['layer_filename'].lower()
 
-                # Write coll_row to collection.csv
+                # Update the collectin GeoJSON
+                geojson['features'][row_count]['properties'] = copy.copy(row)
+                coll_geojson['features'].append(geojson['features'][row_count])
 
-                # 1) Rename x.dbf to x.dbf_
-                # 2) Create blank x.dbf
-                # 3) Run: shp2pgsql -I -d -s 3857 x test > x.sql
-                # 4) Get list of the_geom 
-                # 5) For each the_geom: row['the_geom_webmercator'
-
-                coll_csv.writerow(row)
-                layer_polygons.append(polygon)
+                row_count += 1
 
             csv_file.close()
 
@@ -478,6 +435,8 @@ This is probably because of an error in shapefile '%s'.""", sf)
             poly_dw.writerow(dict(shapefilename=row['layer_filename'], json=polygons_json))
         poly_file.flush()
         poly_file.close()
+        
+        open('all.json', 'w').write(simplejson.dumps(coll_geojson))
 
         # Important: Close the DictWriter file before trying to bulkload it
         logging.info('All collection metadata saved to %s' % coll_file.name)
