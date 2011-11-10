@@ -19,18 +19,18 @@ transformers:
   
   property_map:
     - property: __key__
-      import_template: "%(layer_source)s-%(layer_collection)s-%(layer_filename)s"
+      import_template: "%(provider)s-%(collection)s-%(filename)s"
 
-    - property: source
-      external_name: layer_source
+    - property: provider 
+      external_name: provider
       import_transform: transform.none_if_empty(unicode)
 
     - property: collection
-      external_name: layer_collection
+      external_name: collection
       import_transform: transform.none_if_empty(unicode)
 
     - property: filename
-      external_name: layer_filename
+      external_name: filename
       import_transform: transform.none_if_empty(unicode)
 
     - property: json
@@ -44,12 +44,12 @@ transformers:
 
   property_map:
     - property: __key__
-      import_template: "%(layer_source)s-%(layer_collection)s-%(layer_filename)s"
+      import_template: "%(provider)s-%(collection)s-%(filename)s"
       import_transform: bulkload_helper.create_layer_index_key()
     
 # TODO: Full text for LayerIndex?
 #    - property: corpus
-#      external_name: layer_source
+#      external_name: source
 #      import_transform: bulkload_helper.get_corpus_list()
 
     # Required source fields
@@ -102,8 +102,8 @@ transformers:
       external_name: scientificname
       import_transform: transform.none_if_empty(unicode)
 
-    - property: source
-      external_name: source
+    - property: provider 
+      external_name: provider
       import_transform: transform.none_if_empty(unicode)
 
     - property: verbatimsrs

@@ -62,9 +62,9 @@ def create_layer_json():
         path, filename = os.path.split(bulkload_state.filename)
         jsonfilename = os.path.join(path, 'collection.polygons.csv.txt')
         dr = csv.DictReader(open(jsonfilename, 'r'))
-        layer_filename = bulkload_state.current_dictionary['layer_filename']
+        filename = bulkload_state.current_dictionary['filename']
         for row in dr:
-            if row['shapefilename'] == layer_filename:                
+            if row['shapefilename'] == filename:                
                 d = copy.deepcopy(bulkload_state.current_dictionary)
                 d = dict((k,v) for k,v in d.iteritems() if v and v != 'null')
                 d.pop('__record_number__') # We don't want this in the JSON!

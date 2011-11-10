@@ -1,0 +1,23 @@
+You can either use 'psycopg2_connect' (without the underscore!) or specify 
+*all* of 'host', 'post', 'database', 'user', 'password'. We actually pass *all*
+the keywords set here straight to psycopg2, so you can use *any* of those
+keywords you like (including 'sslmode', for instance). Similarly, leaving out
+any of these keywords will use Psycopg2's default.
+
+The list of valid keywords is available at:
+    http://initd.org/psycopg/docs/module.html#psycopg2.connect
+
+So your db.json will either look like:
+
+{
+    "psycopg2_connect": "host=localhost port=5432 dbname=MapOfLife user=mol_service password=your_password_here",
+}
+
+or:
+{
+    "host": "localhost",
+    "port": "5432",
+    "database": "MapOfLife",
+    "user": "mol_service",
+    "password": "your_password_here"
+}
