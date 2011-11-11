@@ -105,13 +105,16 @@ def convertToJSON(dir):
                 geojson = simplejson.loads(open(json_filename).read())
 
                 # Step 2.3. For every feature:
+                row_count = 0
                 for feature in geojson['features']:
+                    row_count = row_count + 1
+
                     properties = feature['properties']
-                    new_properties = {}
+                    new_properties = collection.default_fields()
 
                     # Map the properties over.
                     for key in properties.keys():
-                        (new_key, new_value) = collection.map_field(key, properties[key])
+                        (new_key, new_value) = collection.map_field(row_count, key, properties[key])
                         if new_value is not None:
                             new_properties[new_key] = new_value
                
@@ -183,106 +186,11 @@ def main():
 if __name__ == '__main__':
     main()
 
-def source2csv(source_dir, options):
-    ''' Loads the collections in the given source directory.
 
-        Arguments:
-            source_dir - the relative path to the directory in which the config.yaml file is located.
-    '''
-    config = Config(os.path.join(source_dir, 'config.yaml'), source_dir)
-    logging.info('Collections in %s: %s' % (source_dir, config.collection_names()))
-
-    for collection in config.collections(): # For each collection dir in the source dir
-
-        coll_geojson = {
-            "type": "FeatureCollection",
-            "features": []
-            }
-
-        coll_dir = collection.getdir()
-
-        original_dir = os.getcwd() # We'll need this to restore us to this dir at the end of processing this collection.
-        os.chdir(os.path.join(source_dir, coll_dir))
-
-        # Create collection.csv writer
-        coll_file = open('collection.csv.txt', 'w')
-        coll_cols = collection.get_columns()
-        coll_cols.sort()
-        coll_csv = UnicodeDictWriter(coll_file, coll_cols)
-        # coll_csv = csv.DictWriter(coll_file, coll_cols)
-        coll_csv.writer.writerow(coll_csv.fieldnames)
-        coll_row = collection.get_row()
-        coll_row['layer_source'] = source_dir
-        coll_row['layer_collection'] = coll_dir
-
-        # Create polygons.csv writer
-        poly_file = open('collection.polygons.csv.txt', 'w')
-        poly_dw = UnicodeDictWriter(poly_file, ['shapefilename', 'json'])
-        # poly_dw = csv.DictWriter(poly_file, ['shapefilename', 'json'])
-        poly_dw.writer.writerow(poly_dw.fieldnames)
-
-        glob.glob('*.shp')
-        # Convert DBF to CSV and add to collection.csv
-        shpfiles = glob.glob('*.shp')
-        logging.info('Processing %d layers in the %s/%s' % (len(shpfiles), source_dir, coll_dir))
-        for sf in shpfiles:
-            logging.info('Extracting DBF fields from %s' % sf)
-            csvfile = '%s.csv' % sf
-            if os.path.exists(csvfile): # ogr2ogr barfs if there are *any* csv files in the dir
-                os.remove(csvfile)
-
-            # TODO: optional command line option for ogr2ogr command
-
-            command = ogr2ogr_path + ' -f CSV "%s" "%s"' % (csvfile, sf)
-            logging.error("Here we go: " + command);
-            args = shlex.split(command)
-            try:
-                # subprocess.check_call(args)
-                1
-            except OSError as errmsg:
-                logging.error("""Error occurred while executing command line '%s': %s
-    Please ensure that %s is executable and available on your path.
-                """, command, args[0], errmsg)
-                raise # Re-raise the OSError exception.
-
-            # if not os.path.exists(csvfile):
-            if False:
-                logging.error("""ogr2ogr did not produce a CSV output file.
-This is probably because of an error in shapefile '%s'.""", sf)
-                exit(1)
-
-            # Copy and update coll_row with DBF fields
-            row = copy.copy(coll_row)
-            row['layer_filename'] = os.path.splitext(sf)[0]
-            csv_file = open(csvfile, 'r')
-            dr = csv.DictReader(csv_file, skipinitialspace=True)
-
-            # Lowercase all field names.
-            dr.fieldnames = map(lambda fn: fn.lower(), dr.fieldnames)
-
-            layer_polygons = []
-
-            name = sf[0:sf.index('.shp')]
-
-            # Converts the shapefile to a GeoJSON doc reprojected to 4326 (CartoDB).
-            command = [ogr2ogr_path, 
-                '-f', 'GeoJSON', 
-                '-t_srs', 'EPSG:4326',
-                '%s.json' % name,
-                '%s.shp' % name
-            ]
-            logging.info('Converting shapefile to GeoJSON: %s.shp' % name)
-            subprocess.call(command)
-
-            geojson = simplejson.loads(open('%s.json' % name).read())
-            row_count = 0
-
-            for dbf in dr: # For each row in the DBF CSV file (1 row per polygon)
-
-                #row['the_geom_webmercator'] = simplejson.dumps(features[row_count]['geometry'])                
-
-                polygon = {}
-
+def x():
+    if 1:
+        if 2:
+            if 3:
                 for source, mols in collection.get_mapping().iteritems(): # Required DBF fields
 
                     # Source may be blank for required fields, which is wrong.

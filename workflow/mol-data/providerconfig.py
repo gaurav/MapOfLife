@@ -94,15 +94,54 @@ class ProviderConfig(object):
                 mapping = self.collection['fields']['required']
             else:
                 mapping = self.collection['fields']['optional']
-            dd = defaultdict(list)
+            dd = dict()
             for mol, source in mapping.iteritems():
-                dd[source].append(mol)
+                if source is not None and source != '' and unicode(source)[0] == '=':
+                    dd[unicode(source).lower()] = mol
+                    # TODO: Restore multiple mappings, as below:
+                    # dd[unicode(source).lower()].append(mol)
             return dd
 
             #return dict((source, mol) for mol,source in mapping.iteritems())
 
-        def map_field(self, name, specified_value):
-            return (name, "A place")
+        def default_fields(self):
+            """ Returns a dict of every field which already has a value set in config.yaml """
+
+            dict = {}
+
+            for (name, value) in self.collection['fields']['required'].iteritems():
+                if value is not None and value != '' and unicode(value)[0] != '=':
+                    dict[name] = value
+            
+            for (name, value) in self.collection['fields']['optional'].iteritems():
+                if value is not None and value != '' and unicode(value)[0] != '=':
+                    dict[name] = value
+
+            return dict
+
+        def map_field(self, row_no, name, specified_value):
+            # Is this a mapped field?
+            mapping = self.get_mapping()
+
+            name_lc = unicode(name).lower()
+
+            if ('=' + name_lc) in mapping:
+                field_to_map_to = mapping['=' + name_lc] 
+
+                # Quick check for 'blank' mappings.
+                # TODO: Reactivate this at some point.
+                # if self.is_required(field_to_map_to) and (specified_value is None or specified_value == ''):
+                #    logging.error("Required field '%s' is mapped from DBF column '%s', but row %d is missing a value in this dataset." % (field_to_map_to, name_lc, row_no))
+                #    exit()
+                
+                # Otherwise, go right ahead and map it!
+                return (field_to_map_to, specified_value)
+
+            # No mapping? Okay then.
+            return (None, None)
+            
+        def is_required(self, fieldname):
+            return fieldname in self.collection['fields']['required'].keys()
 
         def getdir(self):
             return self.collection['collection']
