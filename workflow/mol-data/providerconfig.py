@@ -141,7 +141,14 @@ class ProviderConfig(object):
             return (None, None)
             
         def is_required(self, fieldname):
-            return fieldname in self.collection['fields']['required'].keys()
+            """ Returns true if a particular field is required, false if optional. """
+            if fieldname in self.collection['fields']['required'].keys():
+                return True
+            elif fieldname in self.collection['fields']['optional'].keys():
+                return False
+            else:
+                logging.error("is_required('%s') called on a fieldname not in the spec" % fieldname)
+                exit(1)
 
         def getdir(self):
             return self.collection['collection']
@@ -312,6 +319,53 @@ query failed to return any results; this should never happen:\n\t%s""", sql)
     def validate(self):
         for collection in self.collections():
             collection.validate()
+
+    # A private class variable so we don't have to keep going
+    # back to the Fusion Table.
+    __dbfname_lookup = None
+
+    @staticmethod
+    def fieldname_to_dbfname(fieldname):
+        """ Given a fieldname, it looks up the corresponding dbfname """
+        
+        if ProviderConfig.__dbfname_lookup is None:
+            ProviderConfig.__dbfname_lookup = \
+                ProviderConfig.get_fieldname_to_dbfname_dict()
+
+        # print "val: " + ProviderConfig.__dbfname_lookup.__repr__();
+
+        return ProviderConfig.__dbfname_lookup[fieldname]
+
+    @staticmethod
+    def get_fieldname_to_dbfname_dict():
+        """ Returns the map of fieldnames to dbfnames. """
+
+        # Check the fusiontable for the conversion. 
+        fusiontable_id = 1999452
+        ft_partial_url = "http://www.google.com/fusiontables/api/query?sql="
+
+        sql = "SELECT FieldName, dbfname FROM %d WHERE FieldName NOT EQUAL TO ''" % fusiontable_id
+
+        try:
+            urlconn = urllib.urlopen(
+                ft_partial_url + urllib.quote_plus(sql)
+            )
+        except IOError as (errno, strerror):
+            logging.error("Could not connect to the internet to determine the dbfname dict: %s" % strerror)
+            exit(1) 
+            
+        # Read the field names into a dictionary.
+        rows = csv.DictReader(urlconn)
+
+        results = dict()
+        for row in rows:
+             results[row['FieldName'].lower()] = row['dbfname'].lower()
+
+        urlconn.close()
+
+        return results
+
+
 
 
 def _getoptions():
