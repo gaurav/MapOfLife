@@ -101,6 +101,9 @@ class ProviderConfig(object):
 
             #return dict((source, mol) for mol,source in mapping.iteritems())
 
+        def map_field(self, name, specified_value):
+            return (name, "A place")
+
         def getdir(self):
             return self.collection['collection']
 
@@ -127,7 +130,7 @@ class ProviderConfig(object):
             ERR_VALIDATION = 3 # Conventionally, 0 = success, 1 = error, 2 = command line incorrect.
             """ Fatal errors because of validation failures will cause an exit(ERR_VALIDATION) """
 
-            config_section_to_validate = "'%s', directory '%s'" % (self.filename, self.getdir())
+            config_section_to_validate = "'%s', collection '%s'" % (self.filename, self.getdir())
 
             # Step 1. Check if both required categories are present.
             if not self.collection.has_key('fields') or not self.collection['fields'].has_key('required'):
@@ -209,14 +212,14 @@ query failed to return any results; this should never happen:\n\t%s""", sql)
                 errors = 0
                 field_aliases = set(fields.keys())
                 if len(field_aliases.difference(expected_fields)) > 0:
-                    logging.error("  Unexpected fields found in section '%s': %s", section, ", ".join(
+                    logging.error("Unexpected fields found in section '%s': %s", section, ", ".join(
                         sorted(field_aliases.difference(expected_fields)))
                     )
                     errors = 1
 
                 if len(expected_fields.difference(field_aliases)) > 0:
                     if required == 1:
-                        logging.error("  Fields missing from section '%s': %s", section, ", ".join(
+                        logging.error("Fields missing from section '%s': %s", section, ", ".join(
                             sorted(expected_fields.difference(field_aliases)))
                         )
                         errors = 1
