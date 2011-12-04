@@ -62,6 +62,8 @@ class ProviderConfig(object):
     class Collection(object):
         """Wraps a single collection defined in a 'config.yaml' file."""
 
+        constrained_fields = set()
+
         def __init__(self, filename, collection, provider):
             """Creates a collection, given the name of the collection and the data provider."""
 
@@ -117,11 +119,11 @@ class ProviderConfig(object):
 
             for (name, value) in self.collection['fields']['required'].iteritems():
                 if value is not None and value != '' and unicode(value)[0] != '=':
-                    dict[name] = unicode(value)
+                    dict[name] = constrain_if_necessary(name, unicode(value))
             
             for (name, value) in self.collection['fields']['optional'].iteritems():
                 if value is not None and value != '' and unicode(value)[0] != '=':
-                    dict[name] = unicode(value)
+                    dict[name] = constrain_if_necessary(name, unicode(value))
 
             return dict
 
@@ -141,10 +143,25 @@ class ProviderConfig(object):
                 #    exit()
                 
                 # Otherwise, go right ahead and map it!
-                return (field_to_map_to, specified_value)
+                return (field_to_map_to, constrain_if_necessary(field_to_map_to, specified_value))
 
             # No mapping? Okay then.
             return (None, None)
+
+        def constrain_if_necessary(self, fieldname, value):
+            """Checks if fieldname needs to be constrained (if it is in 
+            self.constrained_fields) and, if so, ensures that this value
+            is in fact constrained.
+            
+            Returns: the value.
+            """
+
+            if fieldname in self.constrained_fields:
+                possible_values = get_possible_values(fieldname)
+                if value.lower() in possible_values:
+                    return 
+                else:
+                    throw ### TODO EXCEPTION HERE
             
         def is_required(self, fieldname):
             """ Returns true if a particular field is required, false if optional. """
@@ -226,7 +243,7 @@ class ProviderConfig(object):
                 expected_fields = set()
                 errors = 0
 
-                sql = "SELECT alias, required, source FROM %d WHERE %s AND alias NOT EQUAL TO ''" % (fusiontable_id, where_clause)
+                sql = "SELECT alias, required, type, source FROM %d WHERE %s AND alias NOT EQUAL TO ''" % (fusiontable_id, where_clause)
 
                 try:
                     urlconn = urllib.urlopen(
@@ -256,6 +273,10 @@ query failed to return any results; this should never happen:\n\t%s""", sql)
 
                     # Add this field name to the list of expected fields.
                     expected_fields.add(row['alias'].lower())
+
+                    # Add this field name to the list of validated fields (if it is indeed validated).
+                    if row['type'].lower() == 'constrainedtext':
+                        self.constrained_fields.add(row['alias'].lower())
 
                 urlconn.close()
 
