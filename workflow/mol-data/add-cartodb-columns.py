@@ -126,7 +126,7 @@ class TableSchema(object):
 		"NOT NULL" if column_schema['required'] else "NULL"
 	    ))
             print "\tField '%s' created." % field
-            print "\tResponse: " + response.__str__()
+            #print "\tResponse: " + response.__str__()
 
 	return
 
