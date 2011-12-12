@@ -119,13 +119,14 @@ class TableSchema(object):
         for field in self.schema.keys():
             column_schema = self.schema[field]
 
-	    cdb.sql("ALTER TABLE %s ADD COLUMN %s %s %s" % (
+	    response = cdb.sql("ALTER TABLE %s ADD COLUMN %s %s %s" % (
                 table_name,
 		field,
                 column_schema['type'] if column_schema['type'] else "TEXT",
 		"NOT NULL" if column_schema['required'] else "NULL"
 	    ))
             print "\tField '%s' created." % field
+            print "\tResponse: " + response.__str__()
 
 	return
 

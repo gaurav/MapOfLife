@@ -101,16 +101,26 @@ MOL.modules.LayerControl = function(mol) {
                   }
                 );                
                 
-                // Clicking the add button fires a LayerControlEvent:
+                // Clicking the search button fires a LayerControlEvent:
+                widget = display.getSearchButton();
+                widget.click(
+                    function(event) {
+                        bus.fireEvent(new LayerControlEvent('search-click'));
+                        display.toggleShareLink("", false);
+                        $(".mol-LayerControl-Search").find("input").focus();
+                    }
+                );
+                
+                //  Clicking the add button fires a LayerControlEvent:
                 widget = display.getAddButton();
                 widget.click(
                     function(event) {
                         bus.fireEvent(new LayerControlEvent('add-click'));
                         display.toggleShareLink("", false);
-                        $(".mol-LayerControl-Search").find("input").focus();
+//                        $(".mol-LayerControl-Search").find("input").focus();
                     }
                 );
-
+                
                 // Zoom button click
                 widget = display.getZoomButton();
                 widget.click(
@@ -207,75 +217,34 @@ MOL.modules.LayerControl = function(mol) {
                             layerButton = layerUi.getType();
                             layerButton.click(
                             	function(event) {
-                            		/** Editing **/
-                            		$("#css").remove();
-                            		var html =  '<div id="css" class="widgetTheme" style="">' +
-                            				'<h1 class="layerNomial">' + layerName + '</h1><br>' +
-                            				'<textarea id="css_text">' +
-                            				layer.getConfig().getStyle().toDisplayString() +
-                            				'</textarea>' +
-											'<div class="style_block">' +
-                            				'<div id="fill" class="color_selector">' +
-											'<div style="background-color: rgb(161, 161, 201); "></div>' +
-											'</div>' +
-											'<input id="fill_alpha" type="range"  min="0" max="100" value="70" style="float:left;" />' +
-											'</div>' +
-											'<div class="style_block">' +
-                            				'<div id="line" class="color_selector">' +
-											'<div style="background-color: rgb(161, 161, 201); "></div>' +
-											'</div>' +
-											'<input id="stroke_alpha" type="range"  min="0" max="100" value="70" style="float:left;" />' +
-											'</div>' +
-                            				'<div class="style_block"><button id="update_css">update css</button></div>' +
-                            				'<button id="close_css"><img src="/static/maps/search/cancel.png"></button>' +
-                            				'</div>';
-                            		$("body").append(html);
-                            		$('#fill.color_selector').ColorPicker({
-                            			color: '#0000ff',
-                            			onShow: function (colpkr) {
-                            				$(colpkr).fadeIn(500);
-                            				return false;
-                            			},
-                            			onHide: function (colpkr) {
-                            				$(colpkr).fadeOut(500);
-                            				return false;
-                            			},
-                            			onChange: function (hsb, hex, rgb) {
-											layer.getConfig().getStyle().setFill(rgb);
-                            				$("#fill.color_selector div").css('backgroundColor', '#' + hex);
-											$("#css_text").val(layer.getConfig().getStyle().toDisplayString());
-                            			}
+                            		var r = display.getNewStyleControl(layer),
+                            		fillPalette = r.getFillPalette(),
+                            		strokePalette = r.getStrokePalette(),
+                            		fillSlider = r.getFillSlider(),
+                            		strokeSlider = r.getStrokeSlider(),
+                            		closeButton = r.getCloseButton(),
+                            		updateButton = r.getUpdateStyleButton();
+                            		
+                            		fillPalette._element.ColorPicker(r._colorPaletteConfig('#fill'));
+                            		strokePalette._element.ColorPicker(r._colorPaletteConfig('#line'));
+                            		strokeSlider._element.change(function() {
+                            			r.getLayer().getConfig().getStyle().setStroke(null, this.value/100);
+                            			r.updateStyleText();
                             		});
-									document.getElementById("fill_alpha").onchange = function() {
-										layer.getConfig().getStyle().setFill(null, this.value/100);
-										$("#css_text").val(layer.getConfig().getStyle().toDisplayString());
-									};
-									$('#line.color_selector').ColorPicker({
-                            			color: '#0000ff',
-                            			onShow: function (colpkr) {
-                            				$(colpkr).fadeIn(500);
-                            				return false;
-                            			},
-                            			onHide: function (colpkr) {
-                            				$(colpkr).fadeOut(500);
-                            				return false;
-                            			},
-                            			onChange: function (hsb, hex, rgb) {
-											layer.getConfig().getStyle().setStroke(rgb);
-                            				$("#line.color_selector div").css('backgroundColor', '#' + hex);
-											$("#css_text").val(layer.getConfig().getStyle().toDisplayString());
-                            			}
+                            		
+                            		fillSlider._element.change(function() {
+                            			r.getLayer().getConfig().getStyle().setFill(null, this.value/100);
+                            			r.updateStyleText();
                             		});
-									document.getElementById("stroke_alpha").onchange = function() {
-										layer.getConfig().getStyle().setStroke(null, this.value/100);
-										$("#css_text").val(layer.getConfig().getStyle().toDisplayString());
-									};
-                            		$("#close_css").click(
+                            		
+                            		
+                            		closeButton.click(
                             			function() {
-                            				$("#css").remove();
+                            				r._reset();
                             			}
                             		);
-                            		$("#update_css").click(
+                            		
+                            		updateButton.click(
                             			function() {
                             				bus.fireEvent(
                             					new LayerEvent(
@@ -317,14 +286,43 @@ MOL.modules.LayerControl = function(mol) {
                             widget = layerUi.getInfoLink();
                             widget.click(
                                 function(event) {
-                                    bus.fireEvent(
-                                        new LayerEvent(
-                                            {
-                                                action: 'view-metadata',
-                                                layer: layer
-                                            }
-                                        )
-                                    );
+                                	var r = display.getNewMetaDataViewer(),
+                                		config = layer.getConfig(),
+                                		title = r.getTitle(),
+                                		closeButton = r.getCloseButton(),
+                                		columns = ['bibliograp', 'collection', 
+                                                   'contact', 'creator',
+                                                   'descriptio', 'layer_coll', 
+                                                   'layer_file', 'layer_sour',
+                                                   'provider', 'publisher', 
+                                                   'rights', 'scientific', 
+                                                   'title', 'type'],
+                                		queryUrl = 'https://' + config.user + '.' + config.host + '/api/v1/sql?q=',
+                                  	    query = "SELECT " + columns.join(',') + 
+                                                " FROM " + config.table +  
+                                                " WHERE scientific = '" + layerName + "'",
+                                	    url = queryUrl + query;
+
+                                	console.log("baseurl: " + url);
+                                	
+                                	title._element.html(layerName);
+                                	closeButton.click(
+                                		function() {
+                                			r._reset();
+                                		}
+                                	);
+                                	
+                                	$.getJSON(
+                                			url, 
+                                            function(data) {
+                                                // for (var key in data.rows) {
+                                					var row = data.rows[0];
+                                					for (var key in row) {
+                                						r.addDescription(key.charAt(0).toUpperCase() + key.slice(1), row[key]);
+                                					}
+                                				// }
+                        		            }
+                                        );
                                 }
                             );
                             break;
@@ -365,22 +363,26 @@ MOL.modules.LayerControl = function(mol) {
                 var x = this._layerName,
                     s = '.layerNomial';
                 return x ? x : (this._layerName = this.findChild(s));
-            },  
+            },
+            
             getSubName: function() {
                 var x = this._layerSubName,
                     s = '.layerAuthor';
                 return x ? x : (this._layerSubName = this.findChild(s));
             }, 
+            
             getToggle: function() {
                 var x = this._layerToggle,
                     s = '.toggle';
                 return x ? x : (this._layerToggle = this.findChild(s));
-            },  
+            },
+            
             getType: function() {
                 var x = this._layerType,
                     s = '.type';
                 return x ? x : (this._layerType = this.findChild(s));
-            },  
+            },
+            
             getInfoLink: function() {
                 var x = this._layerInfoLink,
                     s = '.info';
@@ -391,7 +393,7 @@ MOL.modules.LayerControl = function(mol) {
                 var styleNames = this.getStyleName().split(' ');
                 return _.indexOf(styleNames, 'selected') > -1;
             },
-
+            
             setSelected: function(selected) {
                 if (!selected) {
                     this.removeClass('selected');      
@@ -416,64 +418,177 @@ MOL.modules.LayerControl = function(mol) {
         }
     );
     
+    mol.ui.LayerControl.MetaDataViewer = mol.ui.Display.extend(
+    	{
+    		init: function() {
+    			this._reset();
+    			this._super(this._html());
+    		},
+    		getTitle: function() {
+    			var x = this._title,
+            	s = '#title';
+    			return x ? x : (this._title = this.findChild(s));
+    		},
+    		getDescription: function() {
+    			var x = this._desc,
+            	s = '#description';
+    			return x ? x : (this._desc = this.findChild(s));
+    		},
+    		getCloseButton: function() {
+    			var x = this._closeButton,
+            	s = '#close_meta';
+    			return x ? x : (this._closeButton = this.findChild(s));
+    		},
+    		addDescription: function(key, value) {
+    			this.getDescription()._element.append('<tr><td>'+key+'</td><td>'+value+'</td></tr>');
+    		},
+    		_reset: function() {
+    			$('#meta').remove();
+    		},
+    		_html: function() {
+    			return '<div id="meta" class="metadata widgetTheme">' +
+    				'<h1 id="title"></h1>' + 
+    				'<table id="description" class="widgetTheme"></table>' +
+    				'<button id="close_meta"><img src="/static/maps/search/cancel.png"></button>' +
+    				'</div>';
+    		}
+    	}
+    );
+    
     /**
      *  
      */
     mol.ui.LayerControl.StyleControl = mol.ui.Display.extend(
     	{
     		init: function(layer) {
-                this._layer = layer;
-                this._super();
-                this.setInnerHtml(this._html());
-                this._show = true;
+    			this._layer = layer;
+                this._reset();
+                this._super(this._html());
     		},
+    		
     		getControl: function() {
     			var x = this._styleControl,
                 	s = '#css';
     			return x ? x : (this._styleControl = this.findChild(s));
     		},
-    		getControl: function() {
-    			var x = this._styleControl,
-                	s = '#css';
-    			return x ? x : (this._styleControl = this.findChild(s));
+    		
+    		getStyleText: function() {
+    			var x = this._styleText,
+                	s = '#css_text';
+    			return x ? x : (this._styleText = this.findChild(s));
     		},
+    		
     		getFillPalette: function() {
-    			var x = this._styleControl,
+    			var x = this._fillPalette,
             	s = '#fill.color_selector';
-    			return x ? x : (this._styleControl = this.findChild(s));
+    			return x ? x : (this._fillPalette = this.findChild(s));
     		},
+    		
     		getStrokePalette: function() {
-    			var x = this._styleControl,
+    			var x = this._strokePalette,
             	s = '#line.color_selector';
-    			return x ? x : (this._styleControl = this.findChild(s));
+    			return x ? x : (this._strokePalette = this.findChild(s));
     		},
+    		
     		getFillSlider: function() {
-    			var x = this._styleControl,
+    			var x = this._fillSlider,
             	s = '#fill_alpha';
-    			return x ? x : (this._styleControl = this.findChild(s));
+    			return x ? x : (this._fillSlider = this.findChild(s));
     		},
+    		
     		getStrokeSlider: function() {
-    			var x = this._styleControl,
+    			var x = this._strokeSlider,
             	s = '#stroke_alpha';
-    			return x ? x : (this._styleControl = this.findChild(s));
+    			return x ? x : (this._strokeSlider = this.findChild(s));
     		},
+    		
+    		getCloseButton: function() {
+    			var x = this._closeButton,
+            	s = '#close_css';
+    			return x ? x : (this._closeButton = this.findChild(s));
+    		},
+    		
+    		getUpdateStyleButton: function() {
+    			var x = this._updateButton,
+            	s = '#update_css';
+    			return x ? x : (this._updateButton = this.findChild(s));
+    		},
+    		
+    		_reset: function() {
+    			$('#css').remove();
+    		},
+
+            _colorPaletteConfig: function(s) {
+            	var self = this,
+            		style = self.getLayer().getConfig().getStyle(),
+    				fillStyle = style.getFill(),
+    				strokeStyle = style.getStroke(),
+            		color = null;
+            	
+            	if (s === "#fill") {
+					color = 'rgb('+fillStyle.r+','+fillStyle.g+','+fillStyle.b+')';
+				} else {
+					color = 'rgb('+strokeStyle.r+','+strokeStyle.g+','+strokeStyle.b+')';
+				}
+            	
+            	return {
+        			color: color,
+        			onShow: function (colpkr) {
+        				$(colpkr).fadeIn(500);
+        				return false;
+        			},
+        			onHide: function (colpkr) {
+        				$(colpkr).fadeOut(500);
+        				return false;
+        			},
+        			onChange: function (hsb, hex, rgb) {
+        				if (s === "#fill") {
+        					self.getLayer().getConfig().getStyle().setFill(rgb);
+        				} else {
+        					self.getLayer().getConfig().getStyle().setStroke(rgb);
+        				}
+        				$(s + ".color_selector div").css('backgroundColor', '#' + hex);
+        				self.updateStyleText();
+        			}
+        		};
+            },
+            
+            updateStyleText: function() {
+            	var self = this;
+            	self.getStyleText().val(self.getLayer().getConfig().getStyle().toDisplayString());
+            },
+            
+            _onSliderChange: function() {
+            	var self = this;
+				self.getLayer().getConfig().getStyle().setFill(null, this.value/100);
+				self.updateStyleText();
+            },
+            
+            getLayer: function() {
+            	return this._layer;
+            },
+            
     		_html: function() {
+    			var style = this.getLayer().getConfig().getStyle(),
+    				fillStyle = style.getFill(),
+    				strokeStyle = style.getStroke();
+
     			return '<div id="css" class="widgetTheme" style="">' +
-				'<h1 class="layerNomial">' + layerName + '</h1><br>' +
+				'<h1 class="layerNomial">' + this.getLayer().getName() + '</h1><br>' +
 				'<textarea id="css_text">' +
-				this._layer.getConfig().getStyle().toDisplayString() +
+				style.toDisplayString() +
 				'</textarea>' +
 				'<div class="style_block">' +
 				'<div id="fill" class="color_selector">' +
-				'<div style="background-color: rgb(161, 161, 201); "></div>' +
+				'<div style="background-color: rgb('+fillStyle.r+', '+fillStyle.g+', '+fillStyle.b+'); "></div>' +
 				'</div>' +
-				'<input id="fill_alpha" type="range"  min="0" max="100" value="70" style="float:left;" />' +
+				'<input id="fill_alpha" type="range"  min="0" max="100" value='+Math.round(fillStyle.a*100)+' style="float:left;" />' +
 				'</div>' +
 				'<div class="style_block">' +
 				'<div id="line" class="color_selector">' +
-				'<div style="background-color: rgb(161, 161, 201); "></div>' +
+				'<div style="background-color: rgb('+strokeStyle.r+', '+strokeStyle.g+', '+strokeStyle.b+'); "></div>' +
 				'</div>' +
-				'<input id="stroke_alpha" type="range"  min="0" max="100" value="70" style="float:left;" />' +
+				'<input id="stroke_alpha" type="range"  min="0" max="100" value='+Math.round(strokeStyle.a*100)+' style="float:left;" />' +
 				'</div>' +
 				'<div class="style_block"><button id="update_css">update css</button></div>' +
 				'<button id="close_css"><img src="/static/maps/search/cancel.png"></button>' +
@@ -506,6 +621,11 @@ MOL.modules.LayerControl = function(mol) {
                     s = '.add';
                 return x ? x : (this._addButton = this.findChild(s));
             },  
+            getSearchButton: function() {
+                var x = this._searchButton,
+                    s = '.search';
+                return x ? x : (this._searchButton = this.findChild(s));
+            },  
             getDeleteButton: function() {
                 var x = this._deleteButton,
                     s = '.delete';
@@ -521,13 +641,22 @@ MOL.modules.LayerControl = function(mol) {
                     s = '.zoom';
                 return x ? x : (this._zoomButton = this.findChild(s));
             },           
-            getNewLayer: function(){
+            getNewLayer: function() {
                 var Layer = mol.ui.LayerControl.Layer,
                     r = new Layer();
                 this.findChild('.scrollContainer').append(r);
                 return r;
-            },      
-            
+            },
+            getNewStyleControl: function(layer) {
+                var r = new mol.ui.LayerControl.StyleControl(layer);
+                this.findChild('.scrollContainer').append(r);
+                return r;
+            },
+            getNewMetaDataViewer: function() {
+            	var r = new mol.ui.LayerControl.MetaDataViewer();
+                this.findChild('.scrollContainer').append(r);
+                return r;
+            },
             isLayersVisible: function() {
                 return this._show;
             },
@@ -570,7 +699,7 @@ MOL.modules.LayerControl = function(mol) {
                     x = this.findChild(s);
                     this._toggleLayerImg = x;
                 }
-                if ( ! c ){
+                if (!c) {
                     c = this.findChild(n);
                     this._layerContainer = c;
                 }
@@ -595,6 +724,7 @@ MOL.modules.LayerControl = function(mol) {
                         '    <div class="widgetTheme share button">Share</div>' +
                         '    <div class="widgetTheme zoom button">Zoom</div>' +
                         '    <div class="widgetTheme delete button">Delete</div>' +
+                        '    <div class="widgetTheme search button">Search</div>' +
                         '    <div class="widgetTheme add button">Add</div>' +
                         '</div>' +
                         '<div class="mol-LayerControl-Layers">' +

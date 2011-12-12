@@ -251,7 +251,7 @@ button:hover{
  * search, results
  */
  
-.mol-LayerControl-Search {
+.mol-LayerControl-Search, .mol-LayerControl-Add {
     float: left;
     position: relative;
     height: 28px;
@@ -286,6 +286,7 @@ button:hover{
 .mol-LayerControl-Search .cancel img{
     width: 100%;
 }
+
 .mol-LayerControl-Results{
     float: left;
     width: 100%;
@@ -485,4 +486,54 @@ button:hover{
     margin-right: 4px;
     font-size: 1.1em;
     padding: 3px;
+}
+
+
+/* BEGIN ADD UI
+ * add, results
+ */
+.mol-LayerControl-Add {
+	height: 180px;
+	vertical-align: top;
+    padding: 3px 5px 2px 5px;
+}
+
+.mol-LayerControl-Add .title {
+	padding: 0 0 20px 10px;
+	line-height: 29px;
+}
+
+.mol-LayerControl-Add input {
+	float:right;
+	width:220px;
+	height: 17px;
+	margin-right: 10px;
+}
+
+.mol-LayerControl-Add .key {
+	display:block;
+	clear:both;
+	float:left;
+	font-weight:normal;
+	font-size: 15px;
+	padding: 0 0 11px 10px;
+}
+.mol-LayerControl-Add .cancel{
+    width: 25px;
+    margin-left: 6px;
+    padding-top: 2px;
+    position: absolute;
+    top: 5px;
+    right: 15px;
+}
+.mol-LayerControl-Add .cancel img{
+    width: 100%;
+}
+.mol-LayerControl-Add .execute{
+    float: left;
+    margin-left: 6px;
+    width: 50px;
+    position: absolute;
+    bottom: 10px;
+    right: 15px;
 }

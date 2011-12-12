@@ -42,17 +42,28 @@ For full usage information:
   ./shp2gft.py --help
 """
 
+# Put FT library on path.
+import sys
+sys.path.append('gft/src')
+from authorization.oauth import OAuth
+from sql.sqlbuilder import SQL
+import ftclient
+
+from authorization.oauth import OAuth
+from sql.sqlbuilder import SQL
+import ftclient
+
 import getpass
 import glob
 import logging
+import multiprocessing
 import optparse
 import os
 import shlex
 import shutil
 import subprocess
-import sys
-
-WORKSPACE_DIR_NAME = 'workspace'
+import tempfile
+import yaml
 
 def _get_creds(email=None):
     """Prompts the user and returns a username and password."""
@@ -93,12 +104,12 @@ def _get_options():
         dest='dir',
         help='Directory containing the Shapefiles.')
 
-    # Option specifying the name of the Google Fusion Table.
+    # Option specifying the base table name for the Google Fusion Table.
     parser.add_option(
         '-t', 
         type='string',
         dest='table',
-        help='An existing Google Fusion Table name to append to.')
+        help='Base table name.')
 
     # Option specifying a GMail address.
     parser.add_option(
@@ -107,7 +118,101 @@ def _get_options():
         dest='email',
         help='The GMail address used for authentication.')
 
+    # Option specifying a config file.
+    parser.add_option(
+        '-f', 
+        type='string',
+        dest='config',
+        default='creds.yaml',
+        help='The config YAML file.')
+
+    # Option specifying number of polygons per table.
+    parser.add_option(
+        '-n', 
+        type='int',
+        dest='max_rows',
+        default=90000,
+        help='Maximum polygons per table.')
+
+    # Option specifying number of proccesses.
+    parser.add_option(
+        '-p', 
+        type='int',
+        dest='processes',
+        default=100,
+        help='Number of processes.')
+
+    # Option specifying number of chunks per process.
+    parser.add_option(
+        '-c', 
+        type='int',
+        dest='chunks',
+        default=100,
+        help='Number of chunks per process.')
+
     return parser.parse_args()[0]
+
+def _get_feature_count(pathname):
+    command = 'ogrinfo -al -so %s' % pathname
+    p = subprocess.Popen(
+        shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output, error = p.communicate()
+    count = int(output.split('\n')[5].split('Feature Count:')[1].strip())
+    return count
+
+def _create_fusion_table(name, oauth_client):
+    """Creates a new FT by name."""
+    table = {
+        name: {
+            'SpecID':'NUMBER', 
+            'Latin':'STRING', 
+            'OccCode':'NUMBER',
+            'Date':'STRING',
+            'EditsInfo':'STRING',
+            'Citation':'STRING',
+            'Notes':'STRING',
+            'Origin':'NUMBER',
+            'geometry': 'LOCATION'
+            }
+        }
+    tableid = int(oauth_client.query(SQL().createTable(table)).split("\n")[1])
+    logging.info('Created new Fusion Table: http://www.google.com/fusiontables/DataSource?dsrcid=%s' % tableid)
+
+def upload(name, table, sfd):
+    """Uploads a shapefile to Google Fusion Tables.
+
+    Args:
+        name - The shapefile name.
+        table - The table name.
+        sfd - The directory of shapefiles.
+    """
+    os.chdir(sfd)
+
+    workspace = tempfile.mkdtemp()
+
+    # Copy and rename the shapefile into the workspace.
+    for x in glob.glob('%s.*' % name):
+        dst = os.path.join(workspace, table)
+        shutil.copy(x, x.replace(name, dst))
+
+    # Upload shapefile to the Google Fusion table.
+    os.chdir(workspace)
+    command = 'ogr2ogr -append -f GFT "GFT:" %s.shp' % table
+    p = subprocess.Popen(
+        shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    error, output = p.communicate()
+    
+    if error:
+        logging.info("ERROR: %s" % error)
+
+    logging.info('Appended %s polygons to the %s Fusion Table' \
+                     % (name, table))
+
+    shutil.rmtree(workspace)
+
+def _upload(args):
+    """Helper function that unpacks args for upload()."""
+    upload(*args)
 
 def main():
     """Bulkloads shapefiles to an existing Google Fusion Table.
@@ -122,7 +227,22 @@ def main():
     """
     logging.basicConfig(level=logging.DEBUG)
     options = _get_options()
-    
+
+    # Get Fusion Tables client.
+    if not os.path.exists(options.config):
+        logging.error("Could not find '%s'. Please create a client application at https://code.google.com/apis/console/, then enter your client id and secret into cred.yaml", options.config)
+        exit()
+
+    config = yaml.load(open(options.config, 'r'))        
+    consumer_key = config['client_id']
+    consumer_secret = config['client_secret'] 
+    url, token, secret = OAuth().generateAuthorizationURL(consumer_key, consumer_secret, consumer_key)
+    print "Visit this URL in a browser: %s" % url
+    raw_input("Hit enter after authorization")
+    token, secret = OAuth().authorize(consumer_key, consumer_secret, token, secret)
+    oauth_client = ftclient.OAuthFTClient(consumer_key, consumer_secret, token, secret)
+    #oauth_client = ftclient.OAuthFTClient(consumer_key, consumer_secret)   
+
     # Get authentication token.
     auth_token = os.getenv('GFT_AUTH')
     if not auth_token:
@@ -134,36 +254,32 @@ def main():
     sfd = os.path.abspath(options.dir)
     os.chdir(sfd)
 
-    # Create workspace directory.
-    if not os.path.exists(WORKSPACE_DIR_NAME):
-        os.mkdir(WORKSPACE_DIR_NAME)
-        
+    # Setup the multiprocessing pool.
+    pool = multiprocessing.Pool(processes=options.processes)
+    table_count = 0
+    feature_count = 0
+    tasks = []
+
+    # Upload shapefiles to FT.
     for f in glob.glob('*.shp'):
-        # Shapefile name without the .shp extension.
-        name = os.path.splitext(f)[0]
-        
-        # Copy and rename the shapefile into the workspace.
-        for x in glob.glob('%s.*' % name):
-            dst = os.path.join(WORKSPACE_DIR_NAME, options.table)
-            shutil.copy(x, x.replace(name, dst))
-
-        # Upload shapefile to the Google Fusion table.
-        os.chdir(WORKSPACE_DIR_NAME)
-        command = 'ogr2ogr -append -f GFT "GFT:" %s.shp' % options.table
-        subprocess.call(shlex.split(command))
-        
-        logging.info('Appended %s polygons to the %s Fusion Table' \
-                         % (name, options.table))
-        
-        # Cleanup the workspace by deleting all files in it.
-        for item in os.listdir(os.curdir):
-            os.remove(item)
-
-        # Change back into the Shapefiles directory.
-        os.chdir(sfd)
-    
-    # Remove workspace directory.
-    shutil.rmtree(WORKSPACE_DIR_NAME)
+        table_name = '%s-%s' % (options.table, table_count)
+        count = _get_feature_count(os.path.join(sfd, f))
+        if (count + feature_count) >= options.max_rows:
+            logging.info('Preparing %s tasks with %s rows' % (len(tasks), feature_count))
+            _create_fusion_table(table_name, oauth_client)
+            result = pool.map_async(_upload, tasks, chunksize=options.chunks)
+            result.wait()
+            feature_count = 0
+            table_count += 1
+            tasks = []
+        feature_count += count
+        tasks.append((os.path.splitext(f)[0], table_name, sfd))
+            
+    # Upload unfinished tasks.
+    if len(tasks) > 0:
+        logging.info('Preparing %s tasks' % len(tasks))
+        result = pool.map_async(_upload, tasks, chunksize=10)
+        result.wait()
 
 if __name__ == '__main__':
     main()

@@ -76,6 +76,12 @@ MOL.modules.model = function(mol) {
 		setStroke: function(rgb, alpha) {
 			this.updateProperty('line-color', rgb, alpha);
 		},
+		getFill: function() {
+			return this.properties['polygon-fill'];
+		},
+		getStroke: function() {
+			return this.properties['line-color'];
+		},
 		updateProperty: function(tag, rgb, alpha) {
 			this.properties[tag].update(rgb, alpha);
 		},

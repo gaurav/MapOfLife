@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<link rel="stylesheet" href="../../../css/carto_tiles/cartodb.css">
 <link href="../../../js/colorpicker/css/colorpicker.css" rel='stylesheet' type='text/css'>
 <link href="http://fonts.googleapis.com/css?family=Josefin+Sans"
 	rel='stylesheet' type='text/css'>
@@ -15,8 +16,10 @@
 <script src="../../../js/lib/backbone-min.js"></script>
 <script src="../../../js/lib/class.js"></script>
 
-<script src="../../../js/carto/gmaps_mercator.js"></script>
-<script src="../../../js/carto/cartodb_vector.js"></script>
+<!-- <script src="../../../js/carto/gmaps_mercator.js"></script>
+<script src="../../../js/carto/cartodb_vector.js"></script> -->
+<script src="../../../js/carto_tiles/cartodb-gmapsv3.js"></script>
+<script src="../../../js/carto_tiles/wax.g.js"></script>
 <script src="../../../js/colorpicker/js/colorpicker.js"></script>
 
 
@@ -38,6 +41,7 @@
 <script src="../../../js/mol.ui.LayerList.js"></script>
 <script src="../../../js/mol.ui.Map.js"></script>
 <script src="../../../js/mol.ui.Search.js"></script>
+<script src="../../../js/mol.ui.Add.js"></script>
 <script src="../../../js/mol.ui.Metadata.js"></script>
 
 {% endif %}
@@ -87,7 +91,7 @@ textarea {
 	font-size: 16px;
 }
 
-#close_css {
+#close_css, #close_meta {
 	position: absolute;
 	top: 8px;
 	right: 17px;
@@ -117,6 +121,23 @@ textarea {
 
 .colorpicker {
 	z-index: 2;
+}
+
+.metadata {
+	z-index: 3;
+	width: 400px;
+	height: 500px;
+	padding: 0 20px;
+	border-radius: 5px;
+	position: absolute;
+	top: 0px;
+	right: 365px;
+}
+
+.metadata table {
+    font-size: 14px;
+	background: none;
+	-webkit-box-shadow: none;
 }
 
 

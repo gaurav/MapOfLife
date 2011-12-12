@@ -131,7 +131,7 @@ MOL.modules.Map = function(mol) {
                 return bounds;
             },
 
-            isVisible: function() {                
+            isVisible: function() {
                 return this._onMap;
             },
 
@@ -420,6 +420,7 @@ MOL.modules.Map = function(mol) {
 
             refresh: function() {              
                 var self = this,
+                	map = this._map,
                     layerId = this.getLayer().getId(),
                     layerSource = this.getLayer().getSource(),
                     layerType = this.getLayer().getType(),
@@ -427,33 +428,24 @@ MOL.modules.Map = function(mol) {
                     config = this.getLayer().getConfig(),
                     color = this.getColor();
 
-                this._mapType = new google.maps.ImageMapType(
-                    {
-                        getTileUrl: function(coord, zoom) {
-                            var normalizedCoord = self._getNormalizedCoord(coord, zoom),
-                                bound = Math.pow(2, zoom),
-                                tileParams = '',                                
-                                backendTileApi = 'https://' + config.user + '.' + config.host + '/tiles/' + config.table + '/',
-                                geom_column = "the_geom",
-                		        the_geom = null,
-                		        style = null,
-                                tileurl = null;                                
+                if (google.maps.CartoDBLayer) {
 
-                            if (!normalizedCoord) {
-                                return null;
-                            }
-                            style = "#" + config.table + config.getStyle().toString().replace(/[\n|\t|\s]/gi, '');
-                            style = encodeURIComponent(style);
-                            
-                            tileParams += "sql=select " + "*" + " from " + config.table + " where scientific = '" + layerName + "'";
-                            tileParams += "&style="+style;
-                            tileurl = backendTileApi + zoom + '/' + normalizedCoord.x + '/' + normalizedCoord.y + '.png?' + tileParams;
-                            return tileurl;
-                        },
-                        tileSize: new google.maps.Size(256, 256),
-                        isPng: true,
-                        name: layerId
-                    });
+                    // TODO: Is this needed?
+                	window.map = map;
+
+                	new google.maps.CartoDBLayer({
+                		map_canvas : 'map',
+        				map : map,
+        				user_name : config.user,
+        				table_name : config.table,
+        				query : "select * from " + config.table + " where scientific = '" + layerName + "'",
+        				map_style : true,
+        				infowindow : true,
+        				layerId: layerId,
+        				columns: ['scientific', 'bibliograp', 'collection', 'contact', 'creator','descriptio'],
+        				auto_bound: false
+        			});
+        		}
             },
 
             _getNormalizedCoord: function(coord, zoom) {
