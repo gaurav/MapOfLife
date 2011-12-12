@@ -159,6 +159,11 @@ class ProviderConfig(object):
             """Checks if fieldname needs to be constrained (if it is in 
             self.constrained_fields) and, if so, ensures that this value
             is in fact constrained.
+
+            Rather sneakily, this method will also download the constrained
+            fields list from the server the first time it is executed. This
+            configuration information are stored as an instance variable, 
+            so other instances of ProviderConfig will redownload this list.
             
             Returns: the value (lowercased if the field was constrained, 
                 unchanged if it wasn't).
@@ -203,8 +208,9 @@ query failed to return any results; this should never happen:\n\t%s""", sql)
                     self.constrained_fields[field_name].add(value)
 
                 urlconn.close()
-
-                print "Loaded constraints: " + self.constrained_fields.__str__()
+    
+                # print "Loaded constraints: " + self.constrained_fields.__str__()
+                logging.info("Constrained field information downloaded from Google Fusion Table.")
 
             if fieldname in self.constrained_fields:
                 possible_values = self.constrained_fields[fieldname.lower()]
