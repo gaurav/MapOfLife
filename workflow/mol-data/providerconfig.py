@@ -7,7 +7,7 @@
 # You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
-#
+
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,6 +47,13 @@ import time
 import urllib
 import yaml
 
+class ProviderConfigException(Exception):
+    def __init__(self, errmsg):
+        self.errmsg = errmsg
+
+    def __str__(self):
+        return self.errmsg
+
 class ProviderConfig(object):
     """Wraps the YAML object for a MoL config.yaml object."""
 
@@ -62,7 +69,7 @@ class ProviderConfig(object):
     class Collection(object):
         """Wraps a single collection defined in a 'config.yaml' file."""
 
-        constrained_fields = set()
+        constrained_fields = None
 
         def __init__(self, filename, collection, provider):
             """Creates a collection, given the name of the collection and the data provider."""
@@ -119,11 +126,11 @@ class ProviderConfig(object):
 
             for (name, value) in self.collection['fields']['required'].iteritems():
                 if value is not None and value != '' and unicode(value)[0] != '=':
-                    dict[name] = constrain_if_necessary(name, unicode(value))
+                    dict[name] = self.constrain_if_necessary(name, unicode(value))
             
             for (name, value) in self.collection['fields']['optional'].iteritems():
                 if value is not None and value != '' and unicode(value)[0] != '=':
-                    dict[name] = constrain_if_necessary(name, unicode(value))
+                    dict[name] = self.constrain_if_necessary(name, unicode(value))
 
             return dict
 
@@ -143,7 +150,7 @@ class ProviderConfig(object):
                 #    exit()
                 
                 # Otherwise, go right ahead and map it!
-                return (field_to_map_to, constrain_if_necessary(field_to_map_to, specified_value))
+                return (field_to_map_to, self.constrain_if_necessary(field_to_map_to, specified_value))
 
             # No mapping? Okay then.
             return (None, None)
@@ -153,15 +160,64 @@ class ProviderConfig(object):
             self.constrained_fields) and, if so, ensures that this value
             is in fact constrained.
             
-            Returns: the value.
+            Returns: the value (lowercased if the field was constrained, 
+                unchanged if it wasn't).
             """
 
+            if self.constrained_fields is None:
+                # Load up all the constrained fields and all possible values.
+                # We'll store the values as:
+                #   self.constrained_fields[fieldname] = set(value1, value2, ...)
+                fusiontable_id = 2335560
+                ft_partial_url = "http://www.google.com/fusiontables/api/query?sql="
+
+                sql = "SELECT field, value FROM %d WHERE field NOT EQUAL TO ''" % (fusiontable_id)
+                url = ft_partial_url + urllib.quote_plus(sql)
+
+                try:
+                    urlconn = urllib.urlopen(url)
+                except IOError as (errno, strerror):
+                    logging.error("Could not connect to the internet to download controlled vocabularies (URL: %s): %s", url, strerror)
+                    exit(1)
+
+                # Read the field names into a dictionary.
+                self.constrained_fields = dict()
+                rows = csv.DictReader(urlconn)
+
+                for row in rows:
+                    if not row.has_key('field'):
+                        print "Values I have: " + row.__str__()
+                        logging.error(
+                            """The following Google Fusion Table SQL
+query failed to return any results; this should never happen:\n\t%s""", sql)
+                        exit(1)
+
+                    # We don't need to test for row['alias'], because our SQL statement already removes any blank aliases.
+                    field_name = row['field'].lower()
+                    value = row['value'].lower()
+
+                    # Add this field name to the list of expected fields.
+                    if field_name not in self.constrained_fields:
+                        self.constrained_fields[field_name] = set()
+
+                    self.constrained_fields[field_name].add(value)
+
+                urlconn.close()
+
+                print "Loaded constraints: " + self.constrained_fields.__str__()
+
             if fieldname in self.constrained_fields:
-                possible_values = get_possible_values(fieldname)
-                if value.lower() in possible_values:
-                    return 
-                else:
-                    throw ### TODO EXCEPTION HERE
+                possible_values = self.constrained_fields[fieldname.lower()]
+                if value.lower() not in possible_values:
+                    raise ProviderConfigException("Field %s is a constrained field, and value '%s' is not an acceptable value (acceptable values: %s)" % (
+                            fieldname,
+                            value.lower(),
+                            ", ".join(possible_values)
+                        )
+                    )
+                return value.lower()
+            else:
+                return value
             
         def is_required(self, fieldname):
             """ Returns true if a particular field is required, false if optional. """
@@ -273,10 +329,6 @@ query failed to return any results; this should never happen:\n\t%s""", sql)
 
                     # Add this field name to the list of expected fields.
                     expected_fields.add(row['alias'].lower())
-
-                    # Add this field name to the list of validated fields (if it is indeed validated).
-                    if row['type'].lower() == 'constrainedtext':
-                        self.constrained_fields.add(row['alias'].lower())
 
                 urlconn.close()
 
