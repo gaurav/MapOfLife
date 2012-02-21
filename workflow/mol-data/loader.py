@@ -31,6 +31,7 @@ import pprint
 import random
 import shapely.geometry
 import simplejson
+import sqlite3
 import subprocess
 import sys
 import time
@@ -117,7 +118,28 @@ def uploadToCartoDB(provider_dir):
         config = ProviderConfig("config.yaml", os.path.basename(provider_dir))
         config.validate()
 
-        # Step 2. For each collection, and then each shapefile in that collection:
+        # Step 2. Load (or create) a SQLite database to store the upload index.
+        sqlite = sqlite3.connect("status.sqlite3")
+
+        upload_index = sqlite.cursor()
+        upload_index.execute("""
+            CREATE TABLE IF NOT EXISTS uploads (
+                source TEXT,            -- or "provider"
+                collection TEXT,        -- the collection being uploaded.
+                filename TEXT,          -- the filename in the collection
+                                        -- (= collection for CSV/TXTs)
+                cartodb_tablename TEXT, -- The tablename on CartoDB
+                row INTEGER,            -- The row number in the file.
+                rows_so_far INTEGER,    -- A running total of the rows
+                                        -- uploaded for this file so far.
+                                        -- Should be equal to row, but
+                                        -- won't be if an upload failed.
+                uploaded BOOLEAN        -- Has this record been uploaded?
+            );
+        """)
+        sqlite.commit()
+
+        # Step 3. For each collection, and then each shapefile in that collection:
         for collection in config.collections():
             features = getCollectionIterator(_getoptions().table_name, collection)
 
@@ -125,21 +147,9 @@ def uploadToCartoDB(provider_dir):
             if _getoptions().reset_collection:
                 deletePreviousEntries(_getoptions().table_name, collection.get_provider(), collection.get_collection())
 
-            # Check feature hashes, so we don't reupload existing entries.
-            logging.info("Downloading feature hashes for table '%s', provider '%s', collection '%s' to prevent duplicate uploads.",
-                _getoptions().table_name, 
-                collection.get_provider(), 
-                collection.get_name()
-            )
-            uploaded_feature_hashes = getUploadedFeatureHashes(
-                _getoptions().table_name, 
-                collection.get_provider(), 
-                collection.get_name()
-            )
-            logging.info("%d feature hashes downloaded.", len(uploaded_feature_hashes))
-            
             # We currently combine three SQL statements into a single statement for transmission to CartoDB.
-            sql_statements = set()
+            sql_statements = []
+            sqlite_rows_added = []
 
             row_count = 0
             for feature in features:
@@ -147,6 +157,9 @@ def uploadToCartoDB(provider_dir):
 
                 properties = feature['properties']
                 new_properties = collection.default_fields()
+
+                # Check if this feature has already been processed.
+                upload_index.execute("SELECT 1 FROM uploads WHERE source=? AND collection=? AND filename=? AND cartodb_tablename=?", 
 
                 # Map the properties over.
                 for key in properties.keys():
@@ -159,24 +172,15 @@ def uploadToCartoDB(provider_dir):
                 feature['properties'] = new_properties
 
                 feature_hash = generate_feature_hash(feature) 
-                if feature_hash in uploaded_feature_hashes:
-                    if not _getoptions().replace:
-                        logging.info("\tFeature #%d has already been uploaded (hash matches)" % row_count)
-                        continue
-                    else:
-                        tag = random.randint(100000, 99999999).__str__()
-                        sql_statements.add("DELETE FROM %s WHERE provider=%s AND collection=%s AND featurehash=%s" %
-                            (_getoptions().table_name, 
-                            '$tag_' + tag + '$' + collection.get_provider() + '$tag_' + tag + '$',
-                            '$tag_' + tag + '$' + collection.get_name() + '$tag_' + tag + '$',
-                            '$tag_' + tag + '$' + feature_hash + '$tag_' + tag + '$'
-                            )
-                        )
                 feature['properties']['FeatureHash'] = feature_hash
 
                 # Prepare SQL for upload to CartoDB.
                 logging.info("\tPreparing SQL for feature #%d" % row_count);
                 sql_statements.add(encodeGeoJSONEntryAsSQL(feature, _getoptions().table_name))
+                
+                # Store this record in the database.
+                upload_index.
+                row = upload_index.fetchone()
 
                 if(len(sql_statements) >= sql_statements_to_send_at_once):
                     logging.info("\tBatch-transmitting %d SQL statements to CartoDB." % len(sql_statements))
@@ -196,6 +200,9 @@ def uploadToCartoDB(provider_dir):
             os.chdir(provider_dir)
 
         logging.info("Processing of directory '%s' completed." % provider_dir)
+        
+        # Close the SQL upload index.
+        upload_index.close()
 
     finally:
         os.chdir(original_dir)
