@@ -33,7 +33,7 @@ Collections:
         - "CollectionCode"
       contact: "Tim Robertson <timrobertson100@gmail.com>"
       creator: "Global Biodiversity Information Facility"
-      type: "pointoccurrence"
+      type: "points"
       dateSubmitted: "2012-01-28"
       rights: "Unknown"
       scientificName: 

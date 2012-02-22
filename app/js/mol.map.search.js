@@ -44,13 +44,26 @@ mol.modules.map.search = function(mol) {
              * Populate autocomplete results list
              */
             populateAutocomplete : function(action, response) {
-                $(this.display.searchBox).autocomplete({
-                        RegEx : '\\b<term>[^\\b]*', //<term> gets replaced by the search term.
-                        minLength : 3,
-                        delay : 0,
-                        source : scientificnames
+                $(this.display.searchBox).autocomplete(
+                    {
+                        RegEx: '\\b<term>[^\\b]*', //<term> gets replaced by the search term.
+                        minLength: 3,
+                        delay: 0,
+                        source: function(request, response) {
+                            // TODO: Refactor this using our proxy:
+                            $.getJSON(
+                                'api/autocomplete',
+                                {
+                                    key: request.term
+                                },
+                                function(names) {
+                                    response(names);
+                                }
+                            );
+                        }
                  });
             },
+            
             addEventHandlers: function() {
                 var self = this;
 

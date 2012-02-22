@@ -220,6 +220,7 @@ def upload(name, table, sfd):
     # Move the successfully uploaded files elsewhere.
     global SUBDIR_COMPLETED
 
+    os.chdir(sfd)
     if not os.path.isdir(SUBDIR_COMPLETED):
         os.mkdir(SUBDIR_COMPLETED)
 

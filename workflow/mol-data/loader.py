@@ -151,9 +151,14 @@ def uploadToCartoDB(provider_dir):
             sql_statements = []
             sqlite_rows_added = []
 
+            rows_to_skip = _getoptions().rows_to_skip
             row_count = 0
             for feature in features:
                 row_count += 1
+
+                if(rows_to_skip > 0 and row_count <= rows_to_skip):
+                    logging.info("\tSkipping row %d (--skip-rows %d in operation)", row_count, rows_to_skip)
+                    continue
 
                 properties = feature['properties']
                 new_properties = collection.default_fields()
@@ -578,6 +583,14 @@ def parse_cmdline():
                       action="store_true",
                       dest="mark_time",
                       help="Turns on millisecond timing in the output, so that the time between messages can be tracked."
+    )
+    parser.add_option('--skip-rows',
+                      type="int",
+                      action="store",
+                      dest="rows_to_skip",
+                      metavar="N",
+                      default="0",
+                      help="How many rows should we skip before starting the upload? TURNS OFF DUPLICATION CHECKING."
     )
 
     return parser.parse_args()[0]

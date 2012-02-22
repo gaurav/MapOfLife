@@ -29,6 +29,9 @@ handlers:
 - url: /cache/.*
   script: cache_handler.py
 
+- url: /api/autocomplete
+  script: autocomplete_handler.py
+
 - url: /backend/build_search_cache(/.*)?
   script: search_cache_backend.py
 
