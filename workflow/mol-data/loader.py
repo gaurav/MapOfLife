@@ -268,41 +268,6 @@ def getCollectionIterator(table_name, collection):
         (name.lower().rfind('.txt', len(name) - 4, len(name)) != -1)):
         return getFeaturesFromLatLongCsvFile(collection, name)
 
-def getUploadedFeatureHashes(table_name, provider, collection):
-    global cartodb
-    global cartodb_settings
-
-    if cartodb is None:
-        cartodb = CartoDB(
-            cartodb_settings['CONSUMER_KEY'],
-            cartodb_settings['CONSUMER_SECRET'],
-            cartodb_settings['user'],
-            cartodb_settings['password'],
-            cartodb_settings['user'],
-            host=cartodb_settings['domain'],
-            protocol=cartodb_settings['protocol'],
-            access_token_url=cartodb_settings['access_token_url']
-        )
-
-    # This seems like a tempting place to cache results, but actually
-    # isn't, since this function should only run once for any collection.
-
-    # print "Executing SQL: «%s»" % sql
-    quoted_provider = "$a_complicated_tag_here$%s$a_complicated_tag_here$" % provider
-    quoted_collection = "$another_complicated_tag_here$%s$another_complicated_tag_here$" % collection
-
-    results = cartodb.sql(
-        "SELECT FeatureHash FROM %s WHERE provider=%s AND collection=%s" % 
-            (table_name, quoted_provider, quoted_collection)
-    )
-    rows = results['rows']
-
-    # TODO: We should probably check for hash-collision here, just in case.
-
-    hashes = dict((row['featurehash'], 1) for row in rows)
-    # print "Hashes: " + ", ".join(hashes.keys())
-    return hashes
-
 def getFeaturesFromShapefileDir(collection, name):
     os.chdir(name)
 
