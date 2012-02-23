@@ -134,6 +134,7 @@ def uploadToCartoDB(provider_dir):
                                         -- uploaded for this file so far.
                                         -- Should be equal to row, but
                                         -- won't be if an upload failed.
+                rows_in_upload INTEGER, -- Rows in upload.
                 uploaded BOOLEAN        -- Has this record been uploaded?
             );
         """)
@@ -145,8 +146,9 @@ def uploadToCartoDB(provider_dir):
 
             # Delete previous entries from this provider/collection combination.
             if _getoptions().reset_collection:
+                logging.info("Deleting previous entries.")
                 deletePreviousEntries(_getoptions().table_name, collection.get_provider(), collection.get_collection())
-
+                
             # We currently combine three SQL statements into a single statement for transmission to CartoDB.
             sql_statements = []
             sqlite_rows_added = []
@@ -156,15 +158,34 @@ def uploadToCartoDB(provider_dir):
             for feature in features:
                 row_count += 1
 
+                properties = feature['properties']
+                new_properties = collection.default_fields()
+
+                if row_count == 1 and _getoptions().reset_collection:
+                    logging.info("\tDeleting entries from the upload cache.")
+                    upload_index.execute("DELETE FROM uploads WHERE source=? AND collection=? AND filename=? AND cartodb_tablename=?", 
+                        (properties['provider'], 
+                        properties['collection'], 
+                        properties['filename'], 
+                        _getoptions().table_name)
+                    )
+                    sqlite.commit()
+
                 if(rows_to_skip > 0 and row_count <= rows_to_skip):
                     logging.info("\tSkipping row %d (--skip-rows %d in operation)", row_count, rows_to_skip)
                     continue
 
-                properties = feature['properties']
-                new_properties = collection.default_fields()
-
                 # Check if this feature has already been processed.
-                upload_index.execute("SELECT 1 FROM uploads WHERE source=? AND collection=? AND filename=? AND cartodb_tablename=?", 
+                upload_index.execute("SELECT 1 FROM uploads WHERE source=? AND collection=? AND filename=? AND cartodb_tablename=? AND row=? AND uploaded=1", 
+                    (properties['provider'], 
+                    properties['collection'], 
+                    properties['filename'], 
+                    _getoptions().table_name,
+                    properties['row'])
+                )
+                if upload_index.fetchone() is not None:
+                    logging.info("\tSkipping feature #%d: the upload index shows that it has already been uploaded.", row_count)
+                    continue
 
                 # Map the properties over.
                 for key in properties.keys():
@@ -181,22 +202,42 @@ def uploadToCartoDB(provider_dir):
 
                 # Prepare SQL for upload to CartoDB.
                 logging.info("\tPreparing SQL for feature #%d" % row_count);
-                sql_statements.add(encodeGeoJSONEntryAsSQL(feature, _getoptions().table_name))
+                sql_statements.append(encodeGeoJSONEntryAsSQL(feature, _getoptions().table_name))
                 
-                # Store this record in the database.
-                upload_index.
-                row = upload_index.fetchone()
+                properties = feature['properties']
+                upload_index.execute("INSERT INTO uploads (source, collection, filename, cartodb_tablename, row, rows_so_far, rows_in_upload, uploaded) VALUES (?, ?, ?, ?, ?, ?, ?, ?);",
+                    (properties['provider'],
+                    properties['collection'],
+                    properties['filename'],
+                    _getoptions().table_name,
+                    properties['row'],
+                    0, # We are not tracking rows_so_far right now.
+                    row_count,
+                    0 # This has not yet been uploaded, so FALSE.
+                    )
+                )
+                rowid = upload_index.lastrowid
+                sqlite_rows_added.append(rowid)
+                sqlite.commit()
 
                 if(len(sql_statements) >= sql_statements_to_send_at_once):
                     logging.info("\tBatch-transmitting %d SQL statements to CartoDB." % len(sql_statements))
                     sendSQLStatementToCartoDB("; ".join(sql_statements))
-                    sql_statements.clear()
+                    for r in sqlite_rows_added:
+                        upload_index.execute("UPDATE uploads SET uploaded = 1 WHERE rowid=?;", [r])
+                    sqlite.commit()
+                    del sqlite_rows_added[:]
+                    del sql_statements[:]
 
             # Anything still left in sql_statements? Process and upload them now.
             if(len(sql_statements) > 0):
                 logging.info("\tBatch-transmitting %d SQL statements to CartoDB." % len(sql_statements))
                 sendSQLStatementToCartoDB("; ".join(sql_statements))
-                sql_statements.clear()
+                for r in sqlite_rows_added:
+                    upload_index.execute("UPDATE uploads SET uploaded = 1 WHERE rowid=?;", [r])
+                sqlite.commit()
+                del sqlite_rows_added[:]
+                del sql_statements[:]
             
             logging.info("Uploaded %d features from collection '%s' (provider '%s').", row_count, collection.get_name(), collection.get_provider());
 
