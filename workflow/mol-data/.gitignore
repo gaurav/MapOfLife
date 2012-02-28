@@ -4,3 +4,4 @@
 jetz2
 datasets/
 logs/
+*.sqlite3
