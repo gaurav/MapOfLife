@@ -114,6 +114,9 @@ class ProviderConfig(object):
                 logging.error("File %s does not have a valid type: '%s' type specified, but valid types are: %s", filename, properties['type'], ", ".join(valid_types))
                 sys.exit(1)
 
+            # seasonality must be integral.
+            properties['seasonality'] = int(properties['seasonality'])
+
         def default_fields(self):
             """ Returns a dict of every field which already has a value set in config.yaml.
             """
