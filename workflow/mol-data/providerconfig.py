@@ -33,6 +33,7 @@ import copy
 import csv
 import glob
 import logging
+import math
 from unicodewriter import UnicodeDictWriter, UnicodeDictReader
 from optparse import OptionParser
 import os
@@ -115,7 +116,7 @@ class ProviderConfig(object):
                 sys.exit(1)
 
             # seasonality must be integral.
-            properties['seasonality'] = int(properties['seasonality'])
+            properties['seasonality'] = int(float(properties['seasonality']))
 
         def default_fields(self):
             """ Returns a dict of every field which already has a value set in config.yaml.
