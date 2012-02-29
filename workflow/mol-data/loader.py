@@ -232,10 +232,11 @@ def uploadToCartoDB(provider_dir):
             # Anything still left in sql_statements? Process and upload them now.
             if(len(sql_statements) > 0):
                 logging.info("\tBatch-transmitting %d SQL statements to CartoDB." % len(sql_statements))
-                sendSQLStatementToCartoDB("; ".join(sql_statements))
-                for r in sqlite_rows_added:
-                    upload_index.execute("UPDATE uploads SET uploaded = 1 WHERE rowid=?;", [r])
-                sqlite.commit()
+                success = sendSQLStatementToCartoDB("; ".join(sql_statements))
+                if success:
+                    for r in sqlite_rows_added:
+                        upload_index.execute("UPDATE uploads SET uploaded = 1 WHERE rowid=?;", [r])
+                    sqlite.commit()
                 del sqlite_rows_added[:]
                 del sql_statements[:]
             
@@ -499,6 +500,8 @@ def sendSQLStatementToCartoDB(sql):
     """ A helper method for sending an SQL statement (or multiple SQL statements in a 
     single string) to CartoDB. Note that cartodb is only initialized once; it is stored
     as a global, and reused on subsequent calls.
+
+    Returns: True if the data was transmitted successfully, or False if it wasn't.
     """
 
     global cartodb
@@ -535,12 +538,14 @@ def sendSQLStatementToCartoDB(sql):
 
         if result is None:
             logging.error("\t  ERROR! Unable to execute SQL statement <<%s>>; continuing.")
-            return
+            return False
 
         logging.info("\t  Result: %s" % result)
     else:
         logging.info("\t  SQL statement to execute: %s" % sql)
         logging.info("\t  Result: none (dummy run in progress)")
+
+    return True
 
 cmdline_options = None
 def _getoptions():
