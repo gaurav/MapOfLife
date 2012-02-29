@@ -49,6 +49,7 @@
     <script src="../../../js/mol.map.menu.js"></script>
     <script src="../../../js/mol.map.loading.js"></script>
     <script src="../../../js/mol.map.dashboard.js"></script>
+    <script src="../../../js/mol.map.query.js"></script>
     {% endif %}
 
     <meta charset="utf-8" />
@@ -79,9 +80,11 @@
 	         ne = new env.map.menu.MenuEngine(proxy, bus)
 	         ne.start()
 	         le = new env.map.loading.LoadingEngine(proxy, bus)
-            le.start()
-            de = new env.map.dashboard.DashboardEngine(proxy, bus);
-            de.start()
+             le.start()
+             de = new env.map.dashboard.DashboardEngine(proxy, bus);
+             de.start()
+             qe = new env.map.query.QueryEngine(proxy, bus, me.display.map);
+             qe.start()
           });
           {% else %}
           env = mol(function(env) {
@@ -100,9 +103,11 @@
 	         ne = new env.map.menu.MenuEngine(proxy, bus)
 	         ne.start()
 	         le = new env.map.loading.LoadingEngine(proxy, bus)
-            le.start()
-            de = new env.map.dashboard.DashboardEngine(proxy, bus);
-            de.start()
+             le.start()
+             de = new env.map.dashboard.DashboardEngine(proxy, bus);
+             de.start()
+             qe = new env.map.query.QueryEngine(proxy, bus);
+             qe.start()
           });
           {% endif %}
       });

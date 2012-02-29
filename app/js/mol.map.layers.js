@@ -40,6 +40,20 @@ mol.modules.map.layers = function(mol) {
                         self.addLayers(event.layers);
                     }
                 );
+                this.bus.addHandler(
+                    'layer-display-toggle',
+                    function(event) {
+                        var params = null,
+                        e = null;
+
+                        if (event.visible === undefined) {
+                            self.display.toggle();
+                            params = {visible: self.display.is(':visible')};
+                        } else {
+                            self.display.toggle(event.visible);
+                        }
+                    }
+                );
             },
 
             /**
@@ -67,7 +81,7 @@ mol.modules.map.layers = function(mol) {
                     function(layer) {
                         var l = this.display.addLayer(layer);
                         self = this;
-                        
+
                         if (layer.type === 'points') {
                             l.opacity.hide();
                         } else {
@@ -79,12 +93,12 @@ mol.modules.map.layers = function(mol) {
                                             opacity: parseFloat(l.opacity.val())
                                         },
                                         e = new mol.bus.Event('layer-opacity', params);
-                                    
+
                                     self.bus.fireEvent(e);
                                 }
                             );
                         }
-                        
+
                         // Close handler for x button fires a 'remove-layers' event.
                         l.close.click(
                             function(event) {
@@ -92,13 +106,13 @@ mol.modules.map.layers = function(mol) {
                                         layers: [layer]
                                     },
                                     e = new mol.bus.Event('remove-layers', params);
-                                
+
                                 self.bus.fireEvent(e);
                                 l.remove();
                             }
                         );
-                        
-                        // Click handler for zoom button fires 'layer-zoom-extent' 
+
+                        // Click handler for zoom button fires 'layer-zoom-extent'
                         // and 'show-loading-indicator' events.
                         l.zoom.click(
                             function(event) {
@@ -231,7 +245,7 @@ mol.modules.map.layers = function(mol) {
             addLayer: function(layer) {
                 var ld = new mol.map.layers.LayerDisplay(layer);
                 ld.typePng[0].src = 'static/maps/search/'+layer.type.replace(/ /g,"_")+'.png';
-                ld.typePng[0].title = 'Layer Type: '+layer.type;                
+                ld.typePng[0].title = 'Layer Type: '+layer.type;
                 this.list.append(ld);
 				    this.layers.push(layer);
                 return ld;

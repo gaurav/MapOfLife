@@ -2,7 +2,7 @@ mol.modules.map = function(mol) {
 
     mol.map = {};
 
-    mol.map.submodules = ['search', 'results', 'layers', 'tiles', 'menu', 'loading', 'dashboard'];
+    mol.map.submodules = ['search', 'results', 'layers', 'tiles', 'menu', 'loading', 'dashboard', 'query'];
 
     mol.map.MapEngine = mol.mvp.Engine.extend(
         {
@@ -117,7 +117,19 @@ mol.modules.map = function(mol) {
                         );
                     }
                 );
-
+                this.bus.addHandler(
+                    'register-list-click',
+                    function(event) {
+                            google.maps.event.addListener(
+                            self.display.map,
+                            "click",
+                            function(event) {
+                                var params = { gmaps_event : event, map : self.display.map}
+                                self.bus.fireEvent(new mol.bus.Event('species-list-query-click',params));
+                            }.bind(self)
+                        );
+                    }
+                );
                 /*
                  *  Turn on the loading indicator display when zooming
                  */
@@ -179,7 +191,36 @@ mol.modules.map = function(mol) {
                         );
                     }
                 );
+                /**
+                 * Handles the layer-toggle event. The event.layer is a layer
+                 * object {name, type} and event.showing is true if the layer
+                 * is showing, false otherwise.
+                 */
+                this.bus.addHandler(
+                    'toggle-overlays',
+                    function(event) {
+                        var toggle = event.toggle,
+                        overlayMapTypes = self.display.map.overlayMapTypes;
+                        if(toggle == false) {
+                            self.layerList = [];
+                            overlayMapTypes.forEach(
+                                function(layer, index) {
+                                    self.layerList.push(layer);
+                                    overlayMapTypes.removeAt(index);
+                                }
+                            )
+                            overlayMapTypes.clear();
+                        } else {
+                            _.each(
+                                self.layerList,
+                                function(layer){
+                                    self.display.map.overlayMapTypes.push(layer);
+                                }
+                            )
+                        }
 
+                    }
+                );
                 this.bus.addHandler(
                     'add-map-control',
 

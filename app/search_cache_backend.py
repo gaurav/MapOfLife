@@ -12,7 +12,7 @@ import urllib
 import webapp2
 
 from google.appengine.api import urlfetch
-from google.appengine.ext import ndb 
+from google.appengine.ext import ndb
 from google.appengine.ext.ndb import model
 from google.appengine.ext.webapp.util import run_wsgi_app
 
@@ -30,13 +30,13 @@ def check_entities(flush=False):
     global ac_entities
     if len(entities) >= 5000 or flush:
         ndb.put_multi(entities)
-        entities = [] 
+        entities = []
     if len(ac_entities) >= 5000 or flush:
         ndb.put_multi(ac_entities)
-        ac_entities = [] 
-    
+        ac_entities = []
+
 def handle_result(rpc, name, url, payload):
-    """Builds up a list of CacheEntry entities and batch puts them."""   
+    """Builds up a list of CacheEntry entities and batch puts them."""
     key = 'name-%s' % name
     try:
         result = rpc.get_result()
@@ -63,9 +63,9 @@ def create_callback(rpc, name, url, payload):
 
 def name_keys(name):
     """Generates name keys that are at least 3 characters long.
-    
+
     Example usage:
-        > name_keys('concolor') 
+        > name_keys('concolor')
         > ['con', 'conc', 'conco', 'concol', 'concolo', 'concolor']
     """
     yield name.strip()
@@ -111,7 +111,7 @@ def add_autocomplete_results(name):
     for term in name_keys(name):
         key = 'ac-%s' % term
         names_list = cache.get(key, loads=True) # names is a list of names
-        
+
         # Note: Each 'x' here is of the form name:kind which is why we split on ':'
         rows = [cache.get('name-%s' % x.split(':')[0], loads=True)['rows'] for x in names_list]
 
@@ -137,10 +137,10 @@ class SearchCacheBuilder(webapp2.RequestHandler):
 
     def post(self):
         url = 'https://mol.cartodb.com/api/v2/sql'
-        sql_points = "SET STATEMENT_TIMEOUT TO 0; select distinct(scientificname) from points limit 500" #where scientificname='Dacelo novaeguineae'"
-        # limit 20' 
-        sql_polygons = "SET STATEMENT_TIMEOUT TO 0; select distinct(scientificname) from polygons limit 500" #where scientificname='Dacelo novaeguineae'"
-        # limit 20' 
+        sql_points = "SET STATEMENT_TIMEOUT TO 0; select distinct(scientificname) from points limit 10" #where scientificname='Dacelo novaeguineae'"
+        # limit 20'
+        sql_polygons = "SET STATEMENT_TIMEOUT TO 0; select distinct(scientificname) from polygons limit 10" #where scientificname='Dacelo novaeguineae'"
+        # limit 20'
 
         # Get points names:
         request = '%s?%s' % (url, urllib.urlencode(dict(q=sql_points)))
@@ -160,7 +160,7 @@ class SearchCacheBuilder(webapp2.RequestHandler):
         unique_names = list(set([x['scientificname'] for x in rows]))
 
 
-        sql = "SET STATEMENT_TIMEOUT TO 0; SELECT p.provider as source, p.scientificname as name, p.type as type FROM polygons as p WHERE p.scientificname = '%s' UNION SELECT t.provider as source, t.scientificname as name, t.type as type FROM points as t WHERE t.scientificname = '%s'"          
+        sql = "SET STATEMENT_TIMEOUT TO 0; SELECT p.provider as source, p.scientificname as name, p.type as type FROM polygons as p WHERE p.scientificname = '%s' UNION SELECT t.provider as source, t.scientificname as name, t.type as type FROM points as t WHERE t.scientificname = '%s'"
 
         # Cache search results.
         rpcs = []
@@ -171,18 +171,18 @@ class SearchCacheBuilder(webapp2.RequestHandler):
                 rpc = urlfetch.create_rpc(deadline=60)
                 rpc.callback = create_callback(rpc, name, url, payload)
                 urlfetch.make_fetch_call(rpc, url, payload=payload, method='POST')
-                rpcs.append(rpc)            
+                rpcs.append(rpc)
             for rpc in rpcs:
                 rpc.wait()
-            
+
         check_entities(flush=True)
 
         # Build autocomplete cache:
-        for name in unique_names:            
+        for name in unique_names:
             add_autocomplete_cache(name, 'scientific')
             if names_map.has_key(name):
                 for common in names_map[name]:
-                    add_autocomplete_cache(common, 'english')            
+                    add_autocomplete_cache(common, 'english')
         check_entities(flush=True)
 
         # Build autocomplete search results cache:
@@ -190,9 +190,9 @@ class SearchCacheBuilder(webapp2.RequestHandler):
             add_autocomplete_results(name)
             if names_map.has_key(name):
                 for common in names_map[name]:
-                    add_autocomplete_results(common)            
+                    add_autocomplete_results(common)
         check_entities(flush=True)
-            
+
     def names_generator(self, unique_names):
         """Generates lists of at most 10 names."""
         names = []
@@ -202,8 +202,8 @@ class SearchCacheBuilder(webapp2.RequestHandler):
                 yield names
                 names = []
         if len(names) > 0:
-            yield names            
-    
+            yield names
+
 application = webapp2.WSGIApplication(
     [('/backend/build_search_cache', SearchCacheBuilder),]
     , debug=True)
