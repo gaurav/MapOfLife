@@ -222,10 +222,11 @@ def uploadToCartoDB(provider_dir):
 
                 if(len(sql_statements) >= sql_statements_to_send_at_once):
                     logging.info("\tBatch-transmitting %d SQL statements to CartoDB." % len(sql_statements))
-                    sendSQLStatementToCartoDB("; ".join(sql_statements))
-                    for r in sqlite_rows_added:
-                        upload_index.execute("UPDATE uploads SET uploaded = 1 WHERE rowid=?;", [r])
-                    sqlite.commit()
+                    success = sendSQLStatementToCartoDB("; ".join(sql_statements))
+                    if success:
+                        for r in sqlite_rows_added:
+                            upload_index.execute("UPDATE uploads SET uploaded = 1 WHERE rowid=?;", [r])
+                        sqlite.commit()
                     del sqlite_rows_added[:]
                     del sql_statements[:]
 
@@ -541,11 +542,12 @@ def sendSQLStatementToCartoDB(sql):
             return False
 
         logging.info("\t  Result: %s" % result)
+        return True
+
     else:
         logging.info("\t  SQL statement to execute: %s" % sql)
         logging.info("\t  Result: none (dummy run in progress)")
-
-    return True
+        return False
 
 cmdline_options = None
 def _getoptions():
