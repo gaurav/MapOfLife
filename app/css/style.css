@@ -224,6 +224,13 @@ div#content .person.top{
     font-size: 1.3em;
     min-height: 200px;
 }
+
+div#content .person.container {
+    width: 120%;
+    font-size: 1.3em;
+    min-height: 200px;
+}
+
 div#content .person img{
     padding: 1%;
     float: left;
@@ -405,4 +412,26 @@ div#footer #footer_links a { font-size: 1.1em; color: #aaa; padding-right: 8px; 
 div#footer #footer_imgs { float: right; width: 200px; margin-right: 50px; height: auto; color: #fff; }
 div#footer #footer_imgs img{ float: right; height: 32px; padding-right: 10px; opacity: 0.7;}
  
-
+/*
+ * This code for a submenu is from tech.css, and was initially
+ * just for tech.html.
+ */
+div#submenu {
+    position: relative;
+    float: left;
+    width: 100%;
+    margin-top: 70px;
+    margin-bottom: 10px;
+    padding: 10px;
+    padding-left: 15%;
+    font-size: 1.4em;
+    background-color: #6AD2DF; color: #111; 
+}
+div#submenu .link{
+    float: left;
+    margin-left: 45px;
+}
+div#submenu .link a{
+    color: #ddd;
+    color: #111;
+}
