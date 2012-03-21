@@ -35,7 +35,7 @@ div#header #subtitle{
 }
 div#header #menu{ 
     float: right;
-    width: 250px;
+    width: 300px;
     margin-right: 10px;
 }
 div#header #menu .item a{ 

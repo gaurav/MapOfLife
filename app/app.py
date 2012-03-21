@@ -59,6 +59,10 @@ class PeoplePage(BaseHandler):
     def get(self):
         self.push_html('people.html')
 
+class PartnersPage(BaseHandler):
+    def get(self):
+        self.push_html('partners.html')
+
 class TechPage(BaseHandler):
     def get(self):
         self.push_html('tech.html')
@@ -470,6 +474,7 @@ application = webapp.WSGIApplication(
           ('/demo', DemoPage),
           ('/blog', BlogPage),
           ('/people', PeoplePage),
+          ('/partners', PartnersPage),
           ('/search', SearchHandler),
           ('/layerwidget', LayerWidget),
           ('/map/.*', RangeMapHandler),
