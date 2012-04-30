@@ -10,10 +10,16 @@ body { height: 200%; margin: 0px; padding: 0px; overflow: hidden;
     color: white;
     background: rgba(29, 43, 82, 0.955);
     font: normal normal 700 12px/normal Arial;
-    text-align: center;
+    text-align: right;
     width: 100%;
-    padding: 0.4em 0em;	
+    padding: 0.4em 0em;
 }
+
+.top_bar .MapOfLife {
+    float: left;
+    padding-left: 0.4em;
+}
+
 .top_bar a {    
     color: white;
     font-weight: normal;
