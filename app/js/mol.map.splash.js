@@ -77,7 +77,8 @@ mol.modules.map.splash = function(mol) {
                         // '<a class="addthis_button_preferred_3"></a> ' +
                         // '<a class="addthis_button_preferred_4"></a> ' +
                         // '<a class="addthis_button_compact"></a>' + 
-                        '<a class="addthis_counter addthis_bubble_style"></a>  </div>  <script type="text/javascript">' + 
+                        // '<a class="addthis_counter addthis_bubble_style"></a>' +
+                        '</div>  <script type="text/javascript">' + 
                         'var addthis_config = {"data_track_addressbar":true};' + 
                         'var addthis_share = {"url": "http://www.mappinglife.org/"};' +
                         '</script>  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid=ra-4fad74ac7e04ff72"></script>  <!-- AddThis Button END -->'
@@ -85,7 +86,7 @@ mol.modules.map.splash = function(mol) {
 
                 var html = '' +
         '<div>' +
-	// '<div class="message"></div>' +
+	'<div class="message"></div>' +
         sharing_buttons + 
         '<iframe class="mol-splash iframe_content ui-dialog-content" style="height:400px; width: 98%; margin-left: -18px; margin-right: auto; display: block;" src="/static/splash/index.html"></iframe>' +
 	'<div id="footer_imgs" style="text-align: center">' +
