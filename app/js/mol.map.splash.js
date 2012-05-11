@@ -66,9 +66,27 @@ mol.modules.map.splash = function(mol) {
     mol.map.splash.splashDisplay = mol.mvp.View.extend(
         {
             init: function() {
+                var sharing_buttons = '' +
+                    '<!-- AddThis Button BEGIN --> <div class="addthis_toolbox addthis_default_style addthis_counter_style ">' +
+                        '<a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>' + 
+                        '<a class="addthis_button_tweet"></a>' +
+                        '<a class="addthis_button_google_plusone" g:plusone:size="medium"></a>' +
+                        '<a class="addthis_counter addthis_pill_style"></a>' +
+                        //'<a class="addthis_button_preferred_1"></a> ' +
+                        //'<a class="addthis_button_preferred_2"></a> ' +
+                        // '<a class="addthis_button_preferred_3"></a> ' +
+                        // '<a class="addthis_button_preferred_4"></a> ' +
+                        // '<a class="addthis_button_compact"></a>' + 
+                        '<a class="addthis_counter addthis_bubble_style"></a>  </div>  <script type="text/javascript">' + 
+                        'var addthis_config = {"data_track_addressbar":true};' + 
+                        'var addthis_share = {"url": "http://www.mappinglife.org/"};' +
+                        '</script>  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid=ra-4fad74ac7e04ff72"></script>  <!-- AddThis Button END -->'
+                    ;
+
                 var html = '' +
         '<div>' +
-	'<div class="message"></div>' +
+	// '<div class="message"></div>' +
+        sharing_buttons + 
         '<iframe class="mol-splash iframe_content ui-dialog-content" style="height:400px; width: 98%; margin-left: -18px; margin-right: auto; display: block;" src="/static/splash/index.html"></iframe>' +
 	'<div id="footer_imgs" style="text-align: center">' +
         '<div>Sponsors, partners and supporters</div>' +
