@@ -107,7 +107,8 @@ mol.modules.map.help = function(mol) {
         {
             init: function() {
                 var html = '' +
-                    '<iframe id="feedback_dialog" src="https://docs.google.com/spreadsheet/embeddedform?formkey=dC10Y2ZWNkJXbU5RQWpWbXpJTzhGWEE6MQ" width="760" height="625" frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>';
+                    // '<iframe id="feedback_dialog" src="https://docs.google.com/spreadsheet/embeddedform?formkey=dC10Y2ZWNkJXbU5RQWpWbXpJTzhGWEE6MQ" width="760" height="625" frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>';
+                    '<iframe id="feedback_dialog" class="mol-feedback iframe_content" src="/static/feedback/index.html"></iframe>';
 
                 this._super(html);
 
