@@ -4501,10 +4501,20 @@ mol.modules.map.splash = function(mol) {
     mol.map.splash.splashDisplay = mol.mvp.View.extend(
         {
             init: function() {
+                var sharing_buttons = "" +
+                    '<div align="right" style="margin-right: 2%">' +
+                        "<span class='st_fblike_hcount' st_url='http://www.mappinglife.org' displayText='Facebook Like'></span>" +
+                        "<span class='st_twitter_hcount' st_url='http://www.mappinglife.org' displayText='Tweet'></span>" +
+                        "<span class='st_plusone_hcount' st_url='http://www.mappinglife.org' displayText='Google +1'></span>" +
+                        "<span class='st_email_hcount' st_url='http://www.mappinglife.org' displayText='Email'></span>" +
+                        "<span class='st_sharethis_hcount' st_url='http://www.mappinglife.org' displayText='ShareThis'></span>" +
+                    '</div>';
+
                 var html = '' +
         '<div>' +
 	'<div class="message"></div>' +
-        '<iframe class="mol-splash iframe_content ui-dialog-content" style="height:400px; width: 98%; margin-left: -18px; margin-right: auto; display: block;" src="/static/splash/index.html"></iframe>' +
+        sharing_buttons + 
+        '<iframe class="mol-splash iframe_content ui-dialog-content" style="height:370px; width: 98%; margin-left: -18px; margin-right: auto; display: block;" src="/static/splash/index.html"></iframe>' +
 	'<div id="footer_imgs" style="text-align: center">' +
         '<div>Sponsors, partners and supporters</div>' +
         '<a target="_blank" href="http://www.yale.edu/jetz/"><button><img width="72px" height="36px" title="Jetz Lab, Yale University" src="/static/home/yale.png"></button></a>' +
