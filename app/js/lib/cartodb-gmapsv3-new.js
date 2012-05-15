@@ -436,6 +436,7 @@ var CartoDB = CartoDB || {};
             "scientificname AS  \"Species name\", " +
             "CollectionID AS \"Collection\", " +
             "CONCAT('<a target=\"_gbif\" onclick=\"window.open(this.href)\" href=\"http://data.gbif.org/occurrences/',identifier,'\">',identifier, '</a>') as \"Source ID\", " +
+            "identifier AS \"oid\", " +
             "SurveyStartDate as \"Observed on\" " +
             "FROM {0} WHERE cartodb_id={1}".format("gbif_import", feature);
     } else {
@@ -462,14 +463,40 @@ var CartoDB = CartoDB || {};
       infowindow_sql = encodeURIComponent(this.params_.feature.replace('{{feature}}',feature));
     }
 
+    if(this.params_.table_name != 'gbif_import') {
+        $.post(
+            'cache/get',
+            {sql: infowindow_sql, key: 'polygons-'+feature},
+            function(result) {
+                positionateInfowindow(result.rows[0],latlng);
+            }
+        );
+    } else {
+         $.post(
+            'cache/get',
+            {sql: infowindow_sql, key: 'polygons-'+feature},
+            function(result) {
+                getGBIFOccurence(result.rows[0].oid, result, latlng);
+            }
+        );
+    }
 
-    $.post(
-      'cache/get',
-      {sql: infowindow_sql, key: 'polygons-'+feature},
-      function(result) {
-        positionateInfowindow(result.rows[0],latlng);
-      }
-    );
+    function getGBIFOccurence(oid, cdb_result, latlng) {
+        $.post (
+            'gbif/occurrence',
+            {oid : oid},
+            function(response) {
+                var variables = [];
+                _.each(
+                    data.rows,
+                    function(row) {
+                        variables.push(row);
+                    }
+                )
+                positionateWindow(variables, latlng);
+            }
+        )
+    }
 
     function positionateInfowindow(variables,center) {
       if (that.div_) {

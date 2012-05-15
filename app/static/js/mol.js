@@ -343,7 +343,7 @@ mol.modules.services.cartodb = function(mol) {
                     xhr = $.post(this.cache, data);
                 } else {
                     data = {q:sql}
-                    xhr = $.post(this.url.format(this.user,this.host), data);
+                    xhr = $.post(this.url.format(this.user,this.host), data );
                 }
 
 
@@ -2757,36 +2757,37 @@ mol.modules.map.search = function(mol) {
                         self.bus.fireEvent(e);
                     }
                 );
+                
                 this.bus.addHandler(
                     'close-autocomplete',
                     function(event) {
                         $(self.display.searchBox).autocomplete("close");
                     }
                 );
+                
                 this.bus.addHandler(
                     'search',
                     function(event) {
                         if (event.term != undefined) {
-                            if(!self.display.is(':visible')) {
+                            if (!self.display.is(':visible')) {
                                 self.bus.fireEvent(new mol.bus.Event('search-display-toggle',{visible : true}));
                             }
 
                             self.search(event.term);
 
-                            if(self.display.searchBox.val()=='') {
-                                self.display.searchBox.val(event.term)
+                            if (self.display.searchBox.val()=='') {
+                                self.display.searchBox.val(event.term);
                             }
-
                         }
                    }
-               );
+                );
+                
                 /**
                  * Clicking the go button executes a search.
                  */
                 this.display.goButton.click(
                     function(event) {
-
-						self.search(self.names.join(","));
+						      self.search(self.names.join(","));
                     }
                 );
 
@@ -2811,24 +2812,24 @@ mol.modules.map.search = function(mol) {
                  */
                 this.display.searchBox.keyup(
                     function(event) {
-                      if (event.keyCode === 13) {
-                        $(this).autocomplete("close");
-                         self.bus.fireEvent(new mol.bus.Event('hide-loading-indicator', {source : "autocomplete"}));
-                        //user hit return before autocomplete got a result.
-                        if (self.searching[$(this).val()] == undefined || self.searching[$(this).val()]) {
-                             $(self.display.searchBox).one(
-                                "autocompleteopen",
-                                function(event, ui) {
-                                    self.searching[$(this).val()] = false;
-                                    self.bus.fireEvent(new mol.bus.Event('hide-loading-indicator', {source : "autocomplete"}));
-                                    term = self.names.join(",");
-                                    $(self.display.searchBox).autocomplete("close");
-                                    self.search(term);
+                        if (event.keyCode === 13) {
+                            $(this).autocomplete("close");
+                            self.bus.fireEvent(new mol.bus.Event('hide-loading-indicator', {source : "autocomplete"}));
+                            //user hit return before autocomplete got a result.
+                            if (self.searching[$(this).val()] == undefined || self.searching[$(this).val()]) {
+                                $(self.display.searchBox).one(
+                                    "autocompleteopen",
+                                    function(event, ui) {
+                                        var term = self.names.join(",");
+                                        self.searching[$(this).val()] = false;
+                                        self.bus.fireEvent(new mol.bus.Event('hide-loading-indicator', {source : "autocomplete"}));
+                                        $(self.display.searchBox).autocomplete("close");
+                                        self.search(term);
                                 }
                              );
-                            $(this).autocomplete("search",$(this).val())
+                            $(this).autocomplete("search",$(this).val());
                         } else if (self.names.length>0 && !self.searching[$(this).val()]) {
-                                term = self.names.join(",");
+                                var term = self.names.join(",");
                                 $(self.display.searchBox).autocomplete("close");
                                 self.search(term);
                             }
@@ -2860,13 +2861,25 @@ mol.modules.map.search = function(mol) {
              * @param term the search term (scientific name)
              */
             search: function(term) {
-                        var self = this;
-                        self.bus.fireEvent(new mol.bus.Event('show-loading-indicator', {source : "search".format(term)}));
-                        self.bus.fireEvent(new mol.bus.Event('results-display-toggle',{visible : false}));
-                        $(self.display.searchBox).autocomplete('disable');
-                        $(self.display.searchBox).autocomplete('enable');
-                        $.post(
-                            'cartodb/results',
+                var self = this;
+                    self.bus.fireEvent(new mol.bus.Event('show-loading-indicator', {source : "search".format(term)}));
+                    self.bus.fireEvent(new mol.bus.Event('results-display-toggle',{visible : false}));
+                    $(self.display.searchBox).autocomplete('disable');
+                    $(self.display.searchBox).autocomplete('enable');
+                
+                // Update count for term.
+                $.post(
+                    'cartodb/results/count',
+                    {
+                        name: self.display.searchBox.val()
+                    },
+                    function (response) {
+                        // NO-OP
+                    }
+                );
+                
+                $.post(
+                    'cartodb/results',
                                 {
                                     names:term
                                 },
@@ -3396,7 +3409,7 @@ mol.modules.map.dashboard = function(mol) {
                     '      <th><b>Birds</b></th>' +
                     '      <th><b>Mammals</b></th>' +
                     '      <th><b>Reptiles</b></th>' +
-                    '      <th><b>Fish</b></th>' +
+                    '      <th><b>Freshwater fishes</b></th>' +
                     '    </tr>' +
                     '   </thead>' +
                     '   <tbody>' +
@@ -3854,7 +3867,7 @@ mol.modules.map.query = function(mol) {
                         '     </select>' +
                         '     Group <select class="class" value="">' +
                         '       <option selected value=" AND  p.polygonres = 1000 ">Birds</option>' +
-                        '       <option value=" AND p.provider = \'fishes\' ">NA Fishes</option>' +
+                        '       <option value=" AND p.provider = \'fishes\' ">NA Freshwater Fishes</option>' +
                         '       <option value=" AND p.class=\'reptilia\' ">Reptiles</option>' +
                         '       <option value=" AND p.class=\'amphibia\' ">Amphibians</option>' +
                         '       <option value=" AND p.class=\'mammalia\' ">Mammals</option>' +
@@ -3885,7 +3898,8 @@ mol.modules.map.query = function(mol) {
         }
     }
     );
-};mol.modules.map.legend = function(mol) {
+};
+mol.modules.map.legend = function(mol) {
 
     mol.map.legend = {};
 
@@ -4255,7 +4269,7 @@ mol.modules.map.metadata = function(mol) {
             getLayerMetadata: function (layer) {
                   var self = this,
                     sql = this.sql['layer'].format(layer.name, layer.type, layer.source),
-                    params = {sql:sql}, //cache_buster: true, key: 'layermetadata-{0}-{1}-{2}'.format(layer.name, layer.type, layer.source)},
+                    params = {sql:sql, key: 'lm514-{0}-{1}-{2}'.format(layer.name, layer.type, layer.source)},
                     action = new mol.services.Action('cartodb-sql-query', params),
                     success = function(action, response) {
                         var results = {layer:layer, response:response};
@@ -4287,7 +4301,7 @@ mol.modules.map.metadata = function(mol) {
                                  var self = this,
                     type = params.type,
                     sql = this.sql['types'].format(type),
-                    params = {sql:sql}, //key: 'type_metadata-{0}'.format(type)},
+                    params = {sql:sql,key: 'tm514-{0}'.format(type)},
                     action = new mol.services.Action('cartodb-sql-query', params),
                     success = function(action, response) {
                         var results = {type:type, response:response};
@@ -4318,7 +4332,7 @@ mol.modules.map.metadata = function(mol) {
                     provider = params.provider,
                     _class = params._class,
                     sql = this.sql['dashboard'].format(provider, type, _class),
-                    params = {sql:sql}, //cache_buster: 'true', key: 'db-metadata-{0}-{1}-{2}'.format(provider, type, _class)},
+                    params = {sql:sql, key: 'dm514-{0}-{1}-{2}'.format(provider, type, _class)},
                     action = new mol.services.Action('cartodb-sql-query', params),
                     success = function(action, response) {
                         var results = {provider:provider, type:type, _class:_class, response:response};
@@ -4514,7 +4528,7 @@ mol.modules.map.splash = function(mol) {
         '<div>' +
 	'<div class="message"></div>' +
         sharing_buttons + 
-        '<iframe class="mol-splash iframe_content ui-dialog-content" style="height:370px; width: 98%; margin-left: -18px; margin-right: auto; display: block;" src="/static/splash/index.html"></iframe>' +
+	'<iframe class="mol-splash iframe_content ui-dialog-content" style="height:400px; width: 98%; margin-left: -18px; margin-right: auto; display: block;" src="/static/splash/index.html"></iframe>' +
 	'<div id="footer_imgs" style="text-align: center">' +
         '<div>Sponsors, partners and supporters</div>' +
         '<a target="_blank" href="http://www.yale.edu/jetz/"><button><img width="72px" height="36px" title="Jetz Lab, Yale University" src="/static/home/yale.png"></button></a>' +

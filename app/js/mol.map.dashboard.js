@@ -135,7 +135,7 @@ mol.modules.map.dashboard = function(mol) {
                     '      <th><b>Birds</b></th>' +
                     '      <th><b>Mammals</b></th>' +
                     '      <th><b>Reptiles</b></th>' +
-                    '      <th><b>Fish</b></th>' +
+                    '      <th><b>Freshwater fishes</b></th>' +
                     '    </tr>' +
                     '   </thead>' +
                     '   <tbody>' +

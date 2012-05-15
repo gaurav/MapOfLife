@@ -35,6 +35,7 @@ class AutocompleteHandler(webapp2.RequestHandler):
             self.response.out.write('[]')
             return
         names = cache.get(key)
+        self.response.headers["Cache-Control"] = "max-age=2629743" # Cache 1 month
         if not names:
             self.response.out.write('[]')
         else:

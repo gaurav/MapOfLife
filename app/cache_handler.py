@@ -4,6 +4,7 @@ __author__ = 'Aaron Steele'
 
 # MOL imports
 import cache
+import molcounter
 
 # Standard Python imports
 import json
@@ -17,11 +18,10 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 class GetHandler(webapp2.RequestHandler):
     """Request handler for cache requests."""
-
+        
     def post(self):
         """Returns a cached value by key or None if it doesn't exist."""
         key = self.request.get('key', 'empty')
-        logging.info('SEARCH_KEY=%s' % key)
         sql = self.request.get('sql', None)
         cache_buster = self.request.get('cache_buster', None)
         if not cache_buster:
@@ -30,7 +30,8 @@ class GetHandler(webapp2.RequestHandler):
             url = 'http://mol.cartodb.com/api/v2/sql?%s' % urllib.urlencode(dict(q=sql))
             value = urlfetch.fetch(url, deadline=60).content
             if not json.loads(value).has_key('error') and not cache_buster:
-                cache.add(key, value)
+                cache.add(key.lower(), value)
+        self.response.headers["Cache-Control"] = "max-age=2629743" # Cache 1 month
         self.response.headers["Content-Type"] = "application/json"
         self.response.out.write(value)
 

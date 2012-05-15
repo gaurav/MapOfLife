@@ -19,7 +19,7 @@ mol.modules.services.cartodb = function(mol) {
                     xhr = $.post(this.cache, data);
                 } else {
                     data = {q:sql}
-                    xhr = $.post(this.url.format(this.user,this.host), data);
+                    xhr = $.post(this.url.format(this.user,this.host), data );
                 }
 
 
