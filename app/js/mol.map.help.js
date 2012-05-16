@@ -63,7 +63,6 @@ mol.modules.map.help = function(mol) {
                     }
                 );
 
-
             },
 
             initDialog: function() {
@@ -84,7 +83,6 @@ mol.modules.map.help = function(mol) {
                         width: 850
                     }
                 );
-
 
             }
         }
@@ -115,6 +113,7 @@ mol.modules.map.help = function(mol) {
             }
         }
     );
+
 };
 
 
