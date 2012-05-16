@@ -4527,7 +4527,6 @@ mol.modules.map.splash = function(mol) {
                 var html = '' +
         '<div>' +
 	'<div class="message"></div>' +
-        sharing_buttons + 
 	'<iframe class="mol-splash iframe_content ui-dialog-content" style="height:400px; width: 98%; margin-left: -18px; margin-right: auto; display: block;" src="/static/splash/index.html"></iframe>' +
 	'<div id="footer_imgs" style="text-align: center">' +
         '<div>Sponsors, partners and supporters</div>' +
@@ -4627,7 +4626,6 @@ mol.modules.map.help = function(mol) {
                     }
                 );
 
-
             },
 
             initDialog: function() {
@@ -4648,7 +4646,6 @@ mol.modules.map.help = function(mol) {
                         width: 850
                     }
                 );
-
 
             }
         }
@@ -4679,6 +4676,7 @@ mol.modules.map.help = function(mol) {
             }
         }
     );
+
 };
 
 
@@ -4744,6 +4742,18 @@ mol.modules.map.sidebar = function(mol) {
                     }
                 );
 
+                this.display.share.click(
+                    function(Event) {
+                        var addthis_url = 'http://api.addthis.com/oexchange/0.8/offer?' +
+                            'url=' + encodeURI('http://www.mappinglife.org') + 
+                            '&title=' + encodeURI('Map of Life') +
+                            '&description=' + encodeURI("By bringing together all types of information about species distributions, providing model-based integration, and providing a system for users to build upon our knowledge, the Map of Life project hopes to support our community in understanding and saving the world's biodiversity.") +
+                            '&pubid=' + encodeURI('ra-4fb3099b2f56aff1')
+
+                        window.open(addthis_url, 'addthis_share', 'height=300,width=500,toolbar=no,scrollbars=yes');
+                    }
+                );
+
 
             },
 
@@ -4770,6 +4780,7 @@ mol.modules.map.sidebar = function(mol) {
                     '<div class="mol-Sidebar">' +
                     '    <div title="Current known issues." class="widgetTheme status button"><img src="/static/buttons/status_fr.png"></div>' +
                     '    <div title="About the Map of Life Project." class="widgetTheme about button"><img src="/static/buttons/about_fr.png"></div>' +
+                    '    <div title="Share our application" class="widgetTheme share button addthis_toolbox"><img src="/static/buttons/status_fr.png"></div>' +
                     '    <div title="Submit feedback." class="widgetTheme feedback button"><img src="/static/buttons/feedback_fr_2.png"></div>' +
                     '    <div title="Get help." class="widgetTheme help button"><img src="/static/buttons/help_fr.png"></div>' +
                     '</div>';
@@ -4779,13 +4790,11 @@ mol.modules.map.sidebar = function(mol) {
                 this.help = $(this).find('.help');
                 this.feedback = $(this).find('.feedback');
                 this.status = $(this).find('.status');
-
+                this.share = $(this).find('.share');
             }
         }
     );
 };
-
-
 
 mol.modules.map.status = function(mol) {
 
