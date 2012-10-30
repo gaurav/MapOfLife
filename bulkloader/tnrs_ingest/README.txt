@@ -28,6 +28,12 @@ A proposed schema for the names table (names.sql):
     notes               (text) Used to store information about the generation of this record.
                         In particular, if we use biodiversity.rb to parse the names, the original
                         name will be recorded here.
+    family		(text) Family name.
+
+One possible optimizatoin would be to have all fields should be stored lowercase so 
+that case doesn't affect searches. However, at the moment, the code compares names
+against those in the database, which are stored in normal case ("Panthera tigris", etc).
+So maybe later?
 
 2. TNRS/taxonomic checklists will be incorporated into this database using the following algorithm:
 
