@@ -12,6 +12,7 @@ mol.modules.map.query = function(mol) {
                 'http://mol.cartodb.com/' +
                 'api/v2/sql?callback=?&q={0}';
             // TODO: Docs for what this query does.
+            this.listurl = 'list?dsid={0}&lon={1}&lat={2}&radius={3}&taxa={4}';
             this.sql = '' +
                 "SELECT * FROM get_species_list('{0}',{1},{2},{3},'{4}')";
              // TODO: Docs for what this query does.
@@ -87,24 +88,30 @@ mol.modules.map.query = function(mol) {
             var self = this,
                 //hardcode class for now
                 _class = (dataset_id == "ecoregion_species") ? "Reptilia" : "",
-                sql = this.sql.format(
+                list_url = this.listurl.format(
                     dataset_id,
                     Math.round(lng*100)/100,
                     Math.round(lat*100)/100,
                     listradius.radius,
                     _class),
+                /*sql = this.sql.format(
+                    dataset_id,
+                    Math.round(lng*100)/100,
+                    Math.round(lat*100)/100,
+                    listradius.radius,
+                    _class),*/
                 csv_sql = escape(
                     this.csv_sql.format(
                         dataset_id,
                         Math.round(lng*100)/100,
                         Math.round(lat*100)/100,
                         listradius.radius,
-                        _class)),
-                params = {
+                        _class));
+                /*params = {
                     sql:sql,
                     key: '{0}'.format(
                         (lat+'-'+lng+'-'+listradius.radius+dataset_id))
-                };
+                };*/
 
             if (self.queryct > 0) {
                 alert('Please wait for your last species list request to ' +
@@ -112,7 +119,7 @@ mol.modules.map.query = function(mol) {
             } else {
                 self.queryct++;
                 $.getJSON(
-                    self.url.format(sql),
+                    list_url,
                     function(data, textStatus, jqXHR) {
                         var results = {
                             listradius:listradius,
