@@ -15,13 +15,14 @@ import logging
 from google.appengine.api import urlfetch
 from google.appengine.ext.webapp.util import run_wsgi_app
 
-api_key = ''
-cdb_url = 'http://mol.cartodb.com/api/v2/sql?%s'
+api_key = ""
+cdb_url = "http://mol.cartodb.com/api/v2/sql?%s"
 
 class ListHandler(webapp2.RequestHandler):
     def get(self):
         
-        log_sql = "INSERT INTO list_log (dataset_id, lon, lat, radius, taxa) VALUES ('%s',%f,%f,%i,'%s')"
+        log_sql = """INSERT INTO list_log (dataset_id, lon, lat, radius, taxa) 
+           VALUES ('%s',%f,%f,%i,'%s')"""
         list_sql = "SELECT * FROM get_species_list('%s',%f,%f,%i,'%s')"
 
         
@@ -33,12 +34,14 @@ class ListHandler(webapp2.RequestHandler):
         dataset_id = cleanup(self.request.get('dsid'))
         
         # Log the request
-        log_sql = log_sql % (dataset_id, float(lon), float(lat), int(radius), taxa)
+        log_sql = log_sql % (
+            dataset_id, float(lon), float(lat), int(radius), taxa)
         log_url = cdb_url % (urllib.urlencode(dict(q=log_sql, api_key=api_key)))
         urlfetch.make_fetch_call(rpc, log_url)
         
         # Make the list
-        list_sql = list_sql % (dataset_id, float(lon), float(lat), int(radius), taxa) 
+        list_sql = list_sql % (
+            dataset_id, float(lon), float(lat), int(radius), taxa) 
         list_url = cdb_url % (urllib.urlencode(dict(q=list_sql)))
         value = urlfetch.fetch(list_url, deadline=60).content
 
