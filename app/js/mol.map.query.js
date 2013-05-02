@@ -87,7 +87,8 @@ mol.modules.map.query = function(mol) {
         getList: function(lat, lng, listradius, dataset_id, className) {
             var self = this,
                 //hardcode class for now
-                _class = (dataset_id == "ecoregion_species") ? "Reptilia" : "",
+                _class = self.display.dataset_id
+                    .find('option:selected').data('class'),
                 list_url = this.list_url.format(
                     dataset_id,
                     Math.round(lng*100)/100,
