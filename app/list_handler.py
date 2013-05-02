@@ -1,61 +1,72 @@
-"""This module contains a cache handler."""
+"""This module executes and logs species list requests """
 
-__author__ = 'Aaron Steele'
+__author__ = 'Jeremy Malczyk'
 
-# MOL imports
-import cache
-import molcounter
 
 # Standard Python imports
-import json
-import logging
-import urllib
+#import urllib
 import webapp2
+import urllib
+import logging
+
 
 # Google App Engine imports
-from google.appengine.ext.ndb import model
-from google.appengine.api import memcache
+
 from google.appengine.api import urlfetch
-from google.appengine.ext import ndb
 from google.appengine.ext.webapp.util import run_wsgi_app
 
-class CountHandler(webapp2.RequestHandler):
-    """Request handler for cache requests."""
+api_key = ''
+cdb_url = 'http://mol.cartodb.com/api/v2/sql?%s'
 
+class ListHandler(webapp2.RequestHandler):
     def get(self):
-        top = self.request.get_range('count', default=10)
-        all_results = self.request.get('all', 0)
-        value = json.dumps(molcounter.get_top_names(top, all_results))
+        
+        log_sql = "INSERT INTO list_log (dataset_id, lon, lat, radius, taxa) VALUES ('%s',%f,%f,%i,'%s')"
+        list_sql = "SELECT * FROM get_species_list('%s',%f,%f,%i,'%s')"
+
+        
+        rpc = urlfetch.create_rpc()
+        lat = float(self.request.get('lat'))
+        lon = float(self.request.get('lon'))
+        radius = int(self.request.get('radius'))
+        taxa = cleanup(self.request.get('taxa'))
+        dataset_id = cleanup(self.request.get('dsid'))
+        
+        # Log the request
+        log_sql = log_sql % (dataset_id, float(lon), float(lat), int(radius), taxa)
+        log_url = cdb_url % (urllib.urlencode(dict(q=log_sql, api_key=api_key)))
+        urlfetch.make_fetch_call(rpc, log_url)
+        
+        # Make the list
+        list_sql = list_sql % (dataset_id, float(lon), float(lat), int(radius), taxa) 
+        list_url = cdb_url % (urllib.urlencode(dict(q=list_sql)))
+        value = urlfetch.fetch(list_url, deadline=60).content
+
+        #Write the response
         self.response.headers["Content-Type"] = "application/json"
         self.response.out.write(value)
-
-    def post(self):
-        name = self.request.get('name', None)
-        if name:
-            molcounter.increment(name.replace('ac-sql-', ''))
-   
-class ResultsHandler(webapp2.RequestHandler):
-    """Request handler for cache requests."""
-
-    def get(self):
-        self.post()
-
-    def post(self):
-        """Returns a cached value by key or None if it doesn't exist."""
-        names = self.request.get('names').split(',')
-        keys = [model.Key('CacheItem', 'latin-%s' % name.strip().lower()) 
-                for name in names if name]       
-        values = ndb.get_multi(keys)
-        results = dict([(value.key.id().replace('latin-%s', ''), json.loads(value._to_dict()['string'])) 
-                        for value in values if value])
-        self.response.headers["Cache-Control"] = "max-age=2629743" # Cache 1 month
-        self.response.headers["Content-Type"] = "application/json"
-        self.response.out.write(json.dumps(results))
-
+        
+        try:
+            result = rpc.get_result()
+            if result.status_code == 200:
+                text = result.content
+        except urlfetch.DownloadError:
+            logging.error(
+                "Error logging get_species_list('%s',%f,%f,%i,'%s')" % 
+                (dataset_id, lon, lat, radius, taxa)
+            )
+            
+def cleanup (str):
+    return str.lower().replace('drop','').replace('alter','').replace(
+       'insert','').replace('delete','').replace('select','').replace(
+       'update','').replace(' ','').replace('%20','').replace(
+       'create','').replace('\n','').replace('\\','').replace('/','').replace(
+       '.','')
+            
+            
 application = webapp2.WSGIApplication(
-    [('/cartodb/results', ResultsHandler),
-     ('/cartodb/results/count', CountHandler),],
-    debug=True)
+    [('/list', ListHandler)],
+    debug=False)
 
 def main():
     run_wsgi_app(application)
