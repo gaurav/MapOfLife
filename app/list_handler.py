@@ -21,12 +21,13 @@ cdb_url = "http://mol.cartodb.com/api/v2/sql?%s"
 class ListHandler(webapp2.RequestHandler):
     def get(self):
         
-        log_sql = """INSERT INTO list_log (dataset_id, lon, lat, radius, taxa) 
-           VALUES ('%s',%f,%f,%i,'%s')"""
+        log_sql = """INSERT INTO list_log (dataset_id, lon, lat, radius, taxa, ip) 
+           VALUES ('%s',%f,%f,%i,'%s', '%s')"""
         list_sql = "SELECT * FROM get_species_list('%s',%f,%f,%i,'%s')"
 
         
         rpc = urlfetch.create_rpc()
+        ip = self.request.remote_addr
         lat = float(self.request.get('lat'))
         lon = float(self.request.get('lon'))
         radius = int(self.request.get('radius'))
@@ -35,7 +36,7 @@ class ListHandler(webapp2.RequestHandler):
         
         # Log the request
         log_sql = log_sql % (
-            dataset_id, float(lon), float(lat), int(radius), taxa)
+            dataset_id, float(lon), float(lat), int(radius), taxa, ip)
         log_url = cdb_url % (urllib.urlencode(dict(q=log_sql, api_key=api_key)))
         urlfetch.make_fetch_call(rpc, log_url)
         
@@ -55,8 +56,8 @@ class ListHandler(webapp2.RequestHandler):
                 text = result.content
         except urlfetch.DownloadError:
             logging.error(
-                "Error logging get_species_list('%s',%f,%f,%i,'%s')" % 
-                (dataset_id, lon, lat, radius, taxa)
+                "Error logging get_species_list('%s',%f,%f,%i,'%s','%s')" % 
+                (dataset_id, lon, lat, radius, taxa, ip)
             )
             
 def cleanup (str):
