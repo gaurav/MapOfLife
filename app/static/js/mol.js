@@ -4940,7 +4940,7 @@ mol.modules.map.query = function(mol) {
 
                     //list row header
                     tablerows.push(""+
-                        "<tr class='" + tclass + "'>" +
+                        "<tr class='master " + tclass + "'>" +
                         "   <td class='arrowBox'>" +
                         "       <div class='arrow'></div>" +
                         "   </td>" +
@@ -5257,7 +5257,7 @@ mol.modules.map.query = function(mol) {
         createSpeciesListTable: function(lw) {
             var self = this;
 
-            $("table.listtable tr:odd").addClass("master");
+            //$("table.listtable tr:odd").addClass("master");
             $("table.listtable tr:not(.master)").hide();
             $("table.listtable tr:first-child").show();
             $("table.listtable tr.master td.arrowBox").click(
