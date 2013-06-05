@@ -15,7 +15,7 @@ import logging
 from google.appengine.api import urlfetch
 from google.appengine.ext.webapp.util import run_wsgi_app
 
-api_key = ""
+api_key = "c96e812aedbfe14ae425e85a0558f6ad10a97b7a"
 cdb_url = "http://mol.cartodb.com/api/v2/sql?%s"
 
 class ListHandler(webapp2.RequestHandler):
