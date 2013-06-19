@@ -22,13 +22,13 @@ mol.modules.core = function(mol) {
      * Makes a srting safe for use as a DOM id or class name.
      */
     mol.core.encode = function(string) {
-        return (escape(string)).replace(/%/g,'percent').replace(/\./g,'period');
+        return (escape(string)).replace(/%/g,'_percent_').replace(/\./g,'_period_').replace(/\//g, '_slash_');
     };
     /*
      * Decodes string encoded with mol.core.encode. 
      */
     mol.core.decode = function(string) {
-        return (unescape(string.replace(/percent/g,'%').replace(/period/g,'.')));
+        return (unescape(string.replace(/_percent_/g,'%').replace(/_period_/g,'.').replace(/_slash_/g, '/')));
     };
     
 }

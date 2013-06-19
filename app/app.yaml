@@ -54,6 +54,12 @@ handlers:
   
 - url: /list
   script: list_handler.application
+  
+- url: /tile
+  script: demo_handler.application
+  
+- url: /extent
+  script: demo_handler.application
 
 - url: /api/autocomplete
   script: autocomplete_handler.application
