@@ -93,13 +93,13 @@ mol.modules.core = function(mol) {
      * Makes a srting safe for use as a DOM id or class name.
      */
     mol.core.encode = function(string) {
-        return (escape(string)).replace(/%/g,'_percent_').replace(/\./g,'_period_').replace(/\//g, '_slash_');
+        return (escape(string)).replace(/%/g,'percent').replace(/\./g,'period'); //.replace(/\//g, 'slash');
     };
     /*
      * Decodes string encoded with mol.core.encode. 
      */
     mol.core.decode = function(string) {
-        return (unescape(string.replace(/_percent_/g,'%').replace(/_period_/g,'.').replace(/_slash_/g, '/')));
+        return (unescape(string.replace(/percent/g,'%').replace(/period/g,'.')));//.replace(/slash/g, '/')));
     };
     
 }
@@ -3721,7 +3721,7 @@ mol.modules.map.dashboard = function(mol) {
                 var self = this;
 
                 $.getJSON(
-                    mol.services.cartodb.sqlApi.json_url.format(this.dashboard_sql),
+                    'http://mol.cartodb.com/api/v1/sql?q={0}'.format(this.dashboard_sql),
                     function(response) {
                         self.display = new mol.map.dashboard.DashboardDisplay(
                             response.rows, self.summary
