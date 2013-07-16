@@ -100,6 +100,11 @@ button:hover{
     font-size: 10pt;
 }
 
+/*.holder_content { position: relative; float: left; width: 100%; margin-top:-10px; margin-bottom:16px; margin-left:26px;}*/
+.holder_content { position: relative; float: left;}
+.group1 { float: left; width: 400px; position: relative; background: transparent; padding:15px; margin-bottom:10px}
+.group2 { float: left; width: 400px; position: relative; background: transparent; padding:15px; margin-bottom:10px}
+
 .mol-Sidebar  {
         position:absolute;
         left: -3px;
