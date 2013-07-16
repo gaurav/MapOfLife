@@ -795,6 +795,7 @@ white-space: nowrap;
     -moz-user-select: none;
 }
 .mol-LayerControl-Search .searchDisplay{
+    display: none;
     float:left;
     line-height: 25px;
     font-size: 0.8em;

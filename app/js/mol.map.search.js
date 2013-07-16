@@ -390,7 +390,7 @@ mol.modules.map.search = function(mol) {
                             'placeholder="Search by species name">' +
                 '       <button class="execute">Go</button>' +
                 '   </div>'+
-                '   <button class="toggle">◀</button>' +
+                '   <button class="toggle">▶</button>' +
                 '</div>';
 
             this._super(html);
