@@ -139,9 +139,36 @@ mol.modules.map.splash = function(mol) {
         init: function() {
             var html = '' +
             '<div class="mol-Splash">' +
-            '    <div class="message"></div>' +
-            '    <iframe class="mol-splash iframe_content ui-dialog-content" style="height:400px; width: 98%; margin-right: auto; display: block;" src="/static/splash/index.html"></iframe>' +
-            '    <div id="footer_imgs" style="text-align: center">' + '<div>Sponsors, partners and supporters</div>' +
+            //'    <div class="message"></div>' +
+            //'    <iframe class="mol-splash iframe_content ui-dialog-content" style="height:400px; width: 98%; margin-right: auto; display: block;" src="/static/splash/index.html"></iframe>' +
+            //' <div>'
+            '	<section class="group1">' +		
+            '		<fieldset>' +
+			'			<legend>Map a Species</legend>' +
+			'			<div style="top:0"><img src="../static/img/puma-search.jpg"/></div>' +
+			'			<div style="float:left"><img src="../static/img/puma-range200px.jpg"/></div>' +
+			'			<div style="float:left; top:0;">' +
+			'				<span class="mol-Splash-button">See Where Pumas Live</span><br>'	+
+			'				<span class="mol-Splash-button">Map a Random Species</span><br>'	+
+			'				<span class="mol-Splash-button">Let me Search</span>'	+
+			'			</div>' +
+			'		</fieldset>' +
+			'	</section>' +
+			'	<section class="group2">' +		
+            '		<fieldset>' +
+			'			<legend>See a Species List</legend>' +	
+			'			<div style="top:0"><img src="../static/img/species-list-tool.jpg"/></div>' +
+			'			<div style="float:left"><img src="../static/img/species-list200px.jpg"/></div>' +
+			'			<div style="float:left; top:0;">' +
+			'				<span class="mol-Splash-button">What Lives Near Me?</span><br>'	+ //
+			'				<span class="mol-Splash-button">Pick a Random Place</span><br>'	+ //
+			'				<span class="mol-Splash-button">Let me Choose</span>'	+ //
+			'			</div>' +
+			'		</fieldset>' +
+			'	</section>' +
+			//' </div>' +	//end holder
+			//' <div class="mol-Splash-footer">
+            '    <div id="footer_imgs" style="text-align: center;clear: both">' + '<div>Sponsors, partners and supporters</div>' +
             '        <a target="_blank" tabindex="-1" href="http://www.yale.edu/jetz/"><button><img width="72px" height="36px" title="Jetz Lab, Yale University" src="/static/home/yale.png"></button></a>' +
             '        <a target="_blank" tabindex="-1" href="http://sites.google.com/site/robgur/"><button><img width="149px" height="36px" title="Guralnick Lab, University of Colorado Boulder" src="/static/home/cuboulder.png"></button></a>' +
             '        <a target="_blank" tabindex="-1" href="http://www.gbif.org/"><button><img width="33px" height="32px" title="Global Biodiversity Information Facility" src="/static/home/gbif.png"></button></a>' +
@@ -155,6 +182,7 @@ mol.modules.map.splash = function(mol) {
             '        <a target="_blank" tabindex="-1" href="http://www.bik-f.de/"><button><img width="74px" height="32px" title="Biodiversität und Klima Forschungszentrum (BiK-F)" src="http://www.mappinglife.org/static/home/bik_bildzeichen.png"></button></a>' +
             '        <a target="_blank" tabindex="-1" href="http://www.mountainbiodiversity.org/"><button><img width="59px" height="32px" title="Global Mountain Biodiversity Assessment" src="http://www.mappinglife.org/static/home/gmba.png"></button></a>' +
             '    </div>' +
+           	//' </div>' + //end mol-Splash-footer
             '</div>';
             this._super(html);
             this.iframe_content = $(this).find('.iframe_content');

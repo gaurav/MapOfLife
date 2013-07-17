@@ -101,9 +101,35 @@ button:hover{
 }
 
 /*.holder_content { position: relative; float: left; width: 100%; margin-top:-10px; margin-bottom:16px; margin-left:26px;}*/
+
+/* css for splash page content */
 .holder_content { position: relative; float: left;}
-.group1 { float: left; width: 400px; position: relative; background: transparent; padding:15px; margin-bottom:10px}
-.group2 { float: left; width: 400px; position: relative; background: transparent; padding:15px; margin-bottom:10px}
+/*.group1 { float: left; width: 400px; position: relative; background: transparent; padding:15px; margin-bottom:10px}*/
+.group1 {width: 380px; float:left;}
+/*.group2 { float: left; width: 400px; position: relative; background: transparent; padding:15px; margin-bottom:10px}*/
+.group2 {width: 380px; float:right;}
+.mol-Splash-button {
+	width: 120px;
+	height:20px;
+	position:relative;
+	margin-top:12px;
+	padding:9px;
+	background:#E9EAEB;
+	display: inline-block;
+	color:#000000;
+	/*font-weight:bold;*/
+	font-size: 12px;
+	cursor: pointer;
+	text-align: center;
+    font-family:"Trebuchet MS", Arial, Helvetica, sans-serif;
+	/*float:left;*/
+	text-decoration:none;
+	-moz-box-shadow: 2px 2px #D7D7D7;
+	-webkit-box-shadow: 2px 2px #D7D7D7;}
+	
+.mol-Splash-button:hover { text-decoration:underline;}
+.mol-Splash-footer {clear:both;}
+ 
 
 .mol-Sidebar  {
         position:absolute;
