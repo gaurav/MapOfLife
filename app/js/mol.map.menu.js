@@ -29,7 +29,13 @@ mol.modules.map.menu = function(mol) {
         addEventHandlers: function() {
             var self = this;
 
-
+            this.display.start.click(
+                function(Event) {
+                   self.bus.fireEvent(
+                        new mol.bus.Event('toggle-splash')
+                    );
+                }
+            );
             this.display.about.click(
                 function(Event) {
                     window.open('/about/');
@@ -111,6 +117,8 @@ mol.modules.map.menu = function(mol) {
         init: function() {
             var html = '' +
                 '<div class="mol-BottomRightMenu">' +
+                    '<div title="Start over." ' +
+                    ' class="widgetTheme button start">Start Over</div>' +
                     '<div title="Current known issues." ' +
                     ' class="widgetTheme button status">Status</div>' +
                     '<div title="About the Map of Life Project." ' +
@@ -123,6 +131,7 @@ mol.modules.map.menu = function(mol) {
                 '</div>';
 
             this._super(html);
+            this.start = $(this).find('.start');
             this.about = $(this).find('.about');
             this.help = $(this).find('.help');
             this.feedback = $(this).find('.feedback');

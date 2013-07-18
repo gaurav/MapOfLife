@@ -8,11 +8,11 @@ mol.modules.map.query = function(mol) {
             this.proxy = proxy;
             this.bus = bus;
             this.map = map;
-            this.url = '' +
-                'http://mol.cartodb.com/' +
-                'api/v2/sql?callback=?&q={0}';
+            //this.url = '' +
+            //    'http://mol.cartodb.com/' +
+            //    'api/v2/sql?callback=?&q={0}';
             // TODO: Docs for what this query does.
-            this.list_url = 'list?dsid={0}&lon={1}&lat={2}&radius={3}&taxa={4}';
+            this.list_url = 'http://api.map-of-life.appspot.com/list?dsid={0}&lon={1}&lat={2}&radius={3}';
             this.sql = '' +
                 "SELECT * FROM get_species_list('{0}',{1},{2},{3},'{4}')";
              // TODO: Docs for what this query does.
@@ -159,8 +159,7 @@ mol.modules.map.query = function(mol) {
                 function(event) {
                     var params = {};
 
-                    params.visible = self.display.speciesDisplay
-                                        .is(':visible') ? false : true;
+                    params.visible = true;//TODO
 
                     self.bus.fireEvent(
                         new mol.bus.Event('species-list-tool-toggle', params));
@@ -179,11 +178,7 @@ mol.modules.map.query = function(mol) {
                         $(self.display.queryButton).html("OFF");
                     }
 
-                    if(self.enabled == false) {
-                        self.display.speciesDisplay.hide();
-                    } else {
-                        self.display.speciesDisplay.show();
-                    }
+                    
                 }
             );
             this.bus.addHandler(
@@ -248,8 +243,7 @@ mol.modules.map.query = function(mol) {
                             listradius = new google.maps.Circle(
                             {
                                 map: self.map,
-                                radius: parseInt(
-                                    self.display.radiusInput.val())*1000,
+                                radius: 50000,
                                     // 50 km
                                 center: event.gmaps_event.latLng,
                                 strokeWeight: 3,
@@ -349,11 +343,7 @@ mol.modules.map.query = function(mol) {
                         self.enabled = false;
                     }
 
-                    if(self.enabled == false) {
-                        self.display.speciesDisplay.hide();
-                    } else {
-                        self.display.speciesDisplay.show();
-                    }
+                  
 
                     if (self.listradius) {
                         self.listradius.setMap(null);
@@ -396,7 +386,7 @@ mol.modules.map.query = function(mol) {
                 }
             );
 
-            this.display.radiusInput.blur(
+            /*this.display.radiusInput.blur(
                 function(event) {
                     if (this.value > 1000) {
                         this.value = 1000;
@@ -447,7 +437,7 @@ mol.modules.map.query = function(mol) {
                             .addClass('selected');
                     }
                 }
-            );
+            );*/
         },
 
         /*
@@ -1246,60 +1236,19 @@ mol.modules.map.query = function(mol) {
                                  ' list querying.">' +
                              'OFF' +
                     '  </button>' +
-                    '  <div class="speciesDisplay" >' +
-                         'Radius </span>' +
-                    '    <select class="radius">' +
-                    '      <option selected value="50">50 km</option>' +
-                    '      <option value="100">100 km</option>' +
-                    '      <option value="300">300 km</option>' +
-                    '    </select>' +
-                         'Group ' +
-                    '    <select class="dataset_id" value="">' +
-                    '      <option selected data-range="jetz_maps" ' +
-                    '        data-class="Aves" >' +
-                    '        Birds</option>' +
-                    '      <option data-range="na_fish"' +
-                    '        data-class="Fishes" >' +
-                    '        NA Freshwater Fishes</option>' +
-                    '      <option data-range="iucn_reptiles" ' +
-                    '        data-regionalchecklist="ecoregion_species" ' +
-                    '        data-class="Reptilia" >' +
-                    '        NA Reptiles</option>' +
-                    '      <option data-range="iucn_amphibians"' +
-                    '        data-class="Amphibia" >' +
-                    '        Amphibians</option>' +
-                    '      <option data-range="iucn_mammals" ' +
-                    '        data-class="Mammalia" >' +
-                    '        Mammals</option>' +
-                    '    </select>' +
-                    '    <span class="types">' +
-                    '      <button class="range selected" ' +
-                             'value="range">' +
-                    '        <img title="Click to use Expert range maps' +
-                               ' for query."' +
-                    '          src="/static/maps/search/range.png">' +
-                    '      </button>' +
-                    '      <button class="ecoregion" ' +
-                    '        value="regionalchecklist">' +
-                    '        <img title="Click to use Regional' +
-                               ' checklists for query." ' +
-                               'src="/static/maps/search/ecoregion.png">' +
-                    '      </button>' +
-                    '    </span>' +
-                    '  </div>' +
                     '</div>';
 
             this._super(html);
-            this.resultslist=$(this).find('.resultslist');
-            this.radiusInput=$(this).find('.radius');
-            this.dataset_id=$(this).find('.dataset_id');
-            this.types=$(this).find('.types');
+            //this.resultslist=$(this).find('.resultslist');
+            //this.radiusInput=$(this).find('.radius');
+            //this.dataset_id=$(this).find('.dataset_id');
+            //this.types=$(this).find('.types');
             this.queryButton=$(this).find('#speciesListButton');
-            this.speciesDisplay = $(this).find('.speciesDisplay');
-            $(this.speciesDisplay).hide();
+            //this.speciesDisplay = $(this).find('.speciesDisplay');
+            //$(this.speciesDisplay).hide();
 
-            $(this.types).find('.ecoregion').toggle(false);
-            $(this.types).find('.range').toggle(false);
+            //$(this.types).find('.ecoregion').toggle(false);
+            //$(this.types).find('.range').toggle(false);
         }
     });
 
@@ -1313,24 +1262,27 @@ mol.modules.map.query = function(mol) {
     mol.map.query.listDisplay = mol.mvp.View.extend({
         init : function() {
             var html = '' +
-                '<div class="mol-Map-ListDialogContent ui-tabs" id="tabs">' +
-                '   <ul class="ui-tabs-nav">' +
-                '      <li><a href="#listTab">List</a></li>' +
-                '      <li><a href="#imagesTab">Images</a></li>' +
-                '      <li><a href="#iucnTab">IUCN</a></li>' +
-                '      <li><a href="#dlTab">Download</a></li>' +
-                '   </ul>' +
-                '   <div id="listTab" class="ui-tabs-panel">Content.</div>' +
-                '   <div id="imagesTab" class="ui-tabs-panel">' +
-                '       <div>' +
-                '           <span id="imgTotals"></span>' +
-                            'Source: <a href="http://eol.org/" ' +
-                            'target="_blank">Encyclopedia of Life</a> ' +
-                '       </div>' +
-                '       <ul id="gallery" style="overflow: auto;"></ul></div>' +
-                '   <div id="iucnTab" class="ui-tabs-panel">IUCN.</div>' +
-                '   <div id="dlTab" class="ui-tabs-panel">Download.</div>' +
-                '</div>';
+            	'<div class="mol-Map-ListDialogContent">' +
+            		'<div class="summary">'+
+            		'</div>' +
+	                '<div class="results ui-tabs" id="tabs">' +
+	                '   <ul class="ui-tabs-nav">' +
+	                '      <li><a href="#listTab">List</a></li>' +
+	                '      <li><a href="#imagesTab">Images</a></li>' +
+	                '      <li><a href="#iucnTab">IUCN</a></li>' +
+	                '      <li><a href="#dlTab">Download</a></li>' +
+	                '   </ul>' +
+	                '   <div id="listTab" class="ui-tabs-panel">Content.</div>' +
+	                '   <div id="imagesTab" class="ui-tabs-panel">' +
+	                '       <div>' +
+	                '           <span id="imgTotals"></span>' +
+	                            'Source: <a href="http://eol.org/" ' +
+	                            'target="_blank">Encyclopedia of Life</a> ' +
+	                '       </div>' +
+	                '       <ul id="gallery" style="overflow: auto;"></ul></div>' +
+	                '   <div id="iucnTab" class="ui-tabs-panel">IUCN.</div>' +
+	                '   <div id="dlTab" class="ui-tabs-panel">Download.</div>' +
+	                '</div>';
             this._super(html);
         }
     });
