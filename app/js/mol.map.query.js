@@ -177,31 +177,44 @@ mol.modules.map.query = function(mol) {
             );
             
             this.bus.addHandler(
-            	'list-local',
-            	function(event) {
-            		var dsid = (event.group != undefined) ? 
-            				event.group : 'jetz_maps',
-            			group_name = (event.group_name != undefined) ? 
-            				event.group_name : 'Birds';
-            		
-            		navigator.geolocation.getCurrentPosition(
-            			function(loc) {
-            				self.getList(
-            					loc.coords.latitude, 
-            					loc.coords.longitude, 
-            					50000, 
-            					dsid, 
-            					group_name)
-            			},
-            			function(noloc) {
-            				var lat = prompt(
-            					'We could not determine your location.' +
-            					'What is your latitude?'),
-            					lon = prompt('What is your longitide?');
-            				self.getList(lat, lon, 50000, dsid, group_name);
-            			}
-        			);
-            	}
+                'list-local',
+                function(event) {
+                    var dsid = (event.group != undefined) ? 
+                        event.group : 'jetz_maps',
+                        group_name = (event.group_name != undefined) ? 
+                        event.group_name : 'Birds';
+ 
+                    navigator.geolocation.getCurrentPosition(
+                        function(loc) {
+                            self.bus.fireEvent(
+                                new mol.bus.Event(
+                                    'species-list-tool-toggle',
+                                    {visible: true}
+                                )
+                            );
+                            self.bus.fireEvent(
+                                new mol.bus.Event(
+                                    'species-list-query-click',
+                                    {
+                                        gmaps_event: {
+                                            latLng: new google.maps.LatLng(
+                                                loc.coords.latitude,
+                                                loc.coords.longitude
+                                            )
+                                        }
+                                    }
+                                )
+                            );
+                        
+                        },
+                        function(noloc) {
+                            var lat = prompt(
+                                'We could not determine your location.' +
+                                'Please click a location on the map.');
+                            
+                        }
+                    );
+                }
             );
             
             this.bus.addHandler(

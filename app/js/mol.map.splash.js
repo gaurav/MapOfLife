@@ -28,48 +28,12 @@ mol.modules.map.splash = function(mol) {
             }
             return rv;
         },
-        /*
-        *  Method to attach MOL events to links in the iframe.
-        */
-        addIframeHandlers: function() {
-            var self = this;
-
-            $(this.display.iframe_content[0].contentDocument.body).find('.getspecies').click(function(event) {
-                $(self.display).dialog('option', 'modal', 'false');
-                $(self.display.parent()).animate({
-                    left: '{0}px'.format($(window).width() / (7 / 4) - 400)
-                }, 'slow');
-                self.bus.fireEvent(new mol.bus.Event('search', {
-                    term: 'Puma concolor'
-                }));
-                setTimeout(function() {
-                    self.bus.fireEvent(new mol.bus.Event('results-map-selected'))
-                }, 2000);
-            });
-            $(this.display.iframe_content[0].contentDocument.body).find('.listdemo1').click(function(event) {
-                $(self.display).dialog('option', 'modal', 'false');
-                $(self.display.parent()).animate({
-                    left: '{0}px'.format($(window).width() / 3 - 400)
-                }, 'slow');
-                self.bus.fireEvent(new mol.bus.Event('layers-toggle', {
-                    visible: false
-                }));
-                self.bus.fireEvent(new mol.bus.Event('species-list-tool-toggle', 
-                    {visible: true}));
-                self.bus.fireEvent(new mol.bus.Event('species-list-query-click', {
-                    gmaps_event: {
-                        latLng: new google.maps.LatLng(-2.263, 39.045)
-                    },
-                    map: self.map
-                }));
-            });
-        },
         initDialog: function() {
             var self = this;
             this.display.dialog({
                 autoOpen: true,
-                width: 800,
-                height: 580,
+                width: $(window).width() > 800  ? 800 : $(window).width() - 30,
+                height: $(window).width() > 600  ? 600 : $(window).width() - 30,
                 DialogClass: "mol-splash",
                 title: "Welcome to the Map of Life",
                 close: function() {
@@ -77,7 +41,7 @@ mol.modules.map.splash = function(mol) {
                 }
             //modal: true
             });
-            $(this.display).width('98%');
+         
             $(".ui-widget-overlay").live("click", function() {
                 self.display.dialog("close");
             });
@@ -118,6 +82,34 @@ mol.modules.map.splash = function(mol) {
         },
         addEventHandlers: function() {
             var self = this;
+            
+            //Handlers for links in the splash.
+            
+            this.display.liveNear.click(
+                function(event) {
+                    self.bus.fireEvent(new mol.bus.Event('list-local',{}));
+                    self.display.dialog("close");
+                }
+            );
+            
+            this.display.pickRandom.click(
+                function(event) {
+                    //
+                }
+            );
+            
+            this.display.letChoose.click(
+                function(event) {
+                    self.bus.fireEvent(
+                        new mol.bus.Event(
+                            'species-list-tool-toggle',
+                            {visible: true}
+                        )
+                    );    
+                    self.display.dialog("close");
+                }
+            );
+            
             this.bus.addHandler(
             'toggle-splash',
             function(event) {
@@ -127,11 +119,6 @@ mol.modules.map.splash = function(mol) {
                     self.molDown();
                 } else {
                     self.initDialog();
-                }
-                if (!self.IE8) {
-                    $(self.display.iframe_content).load(function(event) {
-                        self.addIframeHandlers();
-                    });
                 }
             });
         }
@@ -144,10 +131,10 @@ mol.modules.map.splash = function(mol) {
             //'    <iframe class="mol-splash iframe_content ui-dialog-content" style="height:400px; width: 98%; margin-right: auto; display: block;" src="/static/splash/index.html"></iframe>' +
             //' <div>'
             '<div style="text-align: left;clear: both; margin:15px; font-weight:normal">' +
-            '	The Map of Life is the best map of life because it has all of life on a map' +
+            '   The Map of Life is the best map of life because it has all of life on a map' +
             '</div>' +
-            '	<section class="group1">' +
-            '		<fieldset>' +
+            '   <section class="group1">' +
+            '       <fieldset>' +
 			'			<legend>Map a Species</legend>' +
 			'			<div style="float:left"><img src="../static/img/puma-range200px.jpg"/></div>' +
 			'			<div style="float:left; top:0;">' +
@@ -169,9 +156,9 @@ mol.modules.map.splash = function(mol) {
 			'			<legend>See a Species List</legend>' +	
 			'			<div style="float:left"><img src="../static/img/species-list200px.jpg"/></div>' +
 			'			<div style="float:left; top:0;">' +
-			'				<span class="mol-Splash-button">What Birds Lives Near Me?</span><br>'	+ //
-			'				<span class="mol-Splash-button">Pick a Random Place</span><br>'	+ //
-			'				<span class="mol-Splash-button">Let me Choose</span>'	+ //
+			'				<span class="mol-Splash-button liveNear">What Birds Lives Near Me?</span><br>'	+ //
+			'				<span class="mol-Splash-button pickRandom">Pick a Random Place</span><br>'	+ //
+			'				<span class="mol-Splash-button letChoose">Let me Choose</span>'	+ //
 			'			</div>' +
 			'		</fieldset>' +
 			'	</section>' +
@@ -200,7 +187,9 @@ mol.modules.map.splash = function(mol) {
            	//' </div>' + //end mol-Splash-footer
             '</div>';
             this._super(html);
-            this.iframe_content = $(this).find('.iframe_content');
+            this.liveNear = $(this).find('.liveNear');
+            this.pickRandom = $(this).find('.pickRandom');
+            this.letChoose = $(this).find('.letChoose');
             this.mesg = $(this).find('.message');
         }
     });
