@@ -8,11 +8,11 @@ mol.modules.map.query = function(mol) {
             this.proxy = proxy;
             this.bus = bus;
             this.map = map;
-            //this.url = '' +
-            //    'http://mol.cartodb.com/' +
-            //    'api/v2/sql?callback=?&q={0}';
+            this.url = '' +
+                'http://mol.cartodb.com/' +
+                'api/v2/sql?callback=?&q={0}';
             // TODO: Docs for what this query does.
-            this.list_url = 'http://api.map-of-life.appspot.com/list?dsid={0}&lon={1}&lat={2}&radius={3}';
+            this.list_url = 'list?dsid={0}&lon={1}&lat={2}&radius={3}&taxa={4}';
             this.sql = '' +
                 "SELECT * FROM get_species_list('{0}',{1},{2},{3},'{4}')";
              // TODO: Docs for what this query does.
@@ -103,10 +103,19 @@ mol.modules.map.query = function(mol) {
                         listradius.radius,
                         _class));
 
+			
             if (self.queryct > 0) {
                 alert('Please wait for your last species list request to ' +
                 'complete before starting another.');
             } else {
+            
+            	self.map.panTo(new google.maps.LatLng(lat, lng))
+            	switch(listradius.radius) {
+            		case 50000: self.map.setZoom(9); break;
+            		case 100000: self.map.setZoom(8); break;
+            		case 300000: self.map.setZoom(7); break;
+            	}
+            	self.map.panBy(400,0);
                 self.queryct++;
                 $.getJSON(
                     list_url,
@@ -159,12 +168,42 @@ mol.modules.map.query = function(mol) {
                 function(event) {
                     var params = {};
 
-                    params.visible = true;//TODO
+                    params.visible = self.display.speciesDisplay
+                                        .is(':visible') ? false : true;
 
                     self.bus.fireEvent(
                         new mol.bus.Event('species-list-tool-toggle', params));
                 }
             );
+            
+            this.bus.addHandler(
+            	'list-local',
+            	function(event) {
+            		var dsid = (event.group != undefined) ? 
+            				event.group : 'jetz_maps',
+            			group_name = (event.group_name != undefined) ? 
+            				event.group_name : 'Birds';
+            		
+            		navigator.geolocation.getCurrentPosition(
+            			function(loc) {
+            				self.getList(
+            					loc.coords.latitude, 
+            					loc.coords.longitude, 
+            					50000, 
+            					dsid, 
+            					group_name)
+            			},
+            			function(noloc) {
+            				var lat = prompt(
+            					'We could not determine your location.' +
+            					'What is your latitude?'),
+            					lon = prompt('What is your longitide?');
+            				self.getList(lat, lon, 50000, dsid, group_name);
+            			}
+        			);
+            	}
+            );
+            
             this.bus.addHandler(
                 'layer-click-action',
                 function(event) {
@@ -178,7 +217,11 @@ mol.modules.map.query = function(mol) {
                         $(self.display.queryButton).html("OFF");
                     }
 
-                    
+                    if(self.enabled == false) {
+                        self.display.speciesDisplay.hide();
+                    } else {
+                        self.display.speciesDisplay.show();
+                    }
                 }
             );
             this.bus.addHandler(
@@ -243,7 +286,8 @@ mol.modules.map.query = function(mol) {
                             listradius = new google.maps.Circle(
                             {
                                 map: self.map,
-                                radius: 50000,
+                                radius: parseInt(
+                                    self.display.radiusInput.val())*1000,
                                     // 50 km
                                 center: event.gmaps_event.latLng,
                                 strokeWeight: 3,
@@ -343,7 +387,11 @@ mol.modules.map.query = function(mol) {
                         self.enabled = false;
                     }
 
-                  
+                    if(self.enabled == false) {
+                        self.display.speciesDisplay.hide();
+                    } else {
+                        self.display.speciesDisplay.show();
+                    }
 
                     if (self.listradius) {
                         self.listradius.setMap(null);
@@ -386,7 +434,7 @@ mol.modules.map.query = function(mol) {
                 }
             );
 
-            /*this.display.radiusInput.blur(
+            this.display.radiusInput.blur(
                 function(event) {
                     if (this.value > 1000) {
                         this.value = 1000;
@@ -437,7 +485,7 @@ mol.modules.map.query = function(mol) {
                             .addClass('selected');
                     }
                 }
-            );*/
+            );
         },
 
         /*
@@ -675,6 +723,7 @@ mol.modules.map.query = function(mol) {
 
             listWindow.dialog({
                 autoOpen: true,
+                position: "center",
                 width: 680,
                 height: 415,
                 dialogClass: 'mol-Map-ListDialog',
@@ -696,6 +745,9 @@ mol.modules.map.query = function(mol) {
                 $("#gallery")
                     .height($(".mol-Map-ListDialog").height()-125);
             });
+            $(".mol-Map-ListDialog").animate({
+                    left: '{0}px'.format($(window).width() / (7 / 4) - 200)
+                }, 'slow');
 
             //tabs() function needs document ready to
             //have been called on the dialog content
@@ -1236,19 +1288,60 @@ mol.modules.map.query = function(mol) {
                                  ' list querying.">' +
                              'OFF' +
                     '  </button>' +
+                    '  <div class="speciesDisplay" >' +
+                         'Radius </span>' +
+                    '    <select class="radius">' +
+                    '      <option selected value="50">50 km</option>' +
+                    '      <option value="100">100 km</option>' +
+                    '      <option value="300">300 km</option>' +
+                    '    </select>' +
+                         'Group ' +
+                    '    <select class="dataset_id" value="">' +
+                    '      <option selected data-range="jetz_maps" ' +
+                    '        data-class="Aves" >' +
+                    '        Birds</option>' +
+                    '      <option data-range="na_fish"' +
+                    '        data-class="Fishes" >' +
+                    '        NA Freshwater Fishes</option>' +
+                    '      <option data-range="iucn_reptiles" ' +
+                    '        data-regionalchecklist="ecoregion_species" ' +
+                    '        data-class="Reptilia" >' +
+                    '        NA Reptiles</option>' +
+                    '      <option data-range="iucn_amphibians"' +
+                    '        data-class="Amphibia" >' +
+                    '        Amphibians</option>' +
+                    '      <option data-range="iucn_mammals" ' +
+                    '        data-class="Mammalia" >' +
+                    '        Mammals</option>' +
+                    '    </select>' +
+                    '    <span class="types">' +
+                    '      <button class="range selected" ' +
+                             'value="range">' +
+                    '        <img title="Click to use Expert range maps' +
+                               ' for query."' +
+                    '          src="/static/maps/search/range.png">' +
+                    '      </button>' +
+                    '      <button class="ecoregion" ' +
+                    '        value="regionalchecklist">' +
+                    '        <img title="Click to use Regional' +
+                               ' checklists for query." ' +
+                               'src="/static/maps/search/ecoregion.png">' +
+                    '      </button>' +
+                    '    </span>' +
+                    '  </div>' +
                     '</div>';
 
             this._super(html);
-            //this.resultslist=$(this).find('.resultslist');
-            //this.radiusInput=$(this).find('.radius');
-            //this.dataset_id=$(this).find('.dataset_id');
-            //this.types=$(this).find('.types');
+            this.resultslist=$(this).find('.resultslist');
+            this.radiusInput=$(this).find('.radius');
+            this.dataset_id=$(this).find('.dataset_id');
+            this.types=$(this).find('.types');
             this.queryButton=$(this).find('#speciesListButton');
-            //this.speciesDisplay = $(this).find('.speciesDisplay');
-            //$(this.speciesDisplay).hide();
+            this.speciesDisplay = $(this).find('.speciesDisplay');
+            $(this.speciesDisplay).hide();
 
-            //$(this.types).find('.ecoregion').toggle(false);
-            //$(this.types).find('.range').toggle(false);
+            $(this.types).find('.ecoregion').toggle(false);
+            $(this.types).find('.range').toggle(false);
         }
     });
 
@@ -1262,27 +1355,24 @@ mol.modules.map.query = function(mol) {
     mol.map.query.listDisplay = mol.mvp.View.extend({
         init : function() {
             var html = '' +
-            	'<div class="mol-Map-ListDialogContent">' +
-            		'<div class="summary">'+
-            		'</div>' +
-	                '<div class="results ui-tabs" id="tabs">' +
-	                '   <ul class="ui-tabs-nav">' +
-	                '      <li><a href="#listTab">List</a></li>' +
-	                '      <li><a href="#imagesTab">Images</a></li>' +
-	                '      <li><a href="#iucnTab">IUCN</a></li>' +
-	                '      <li><a href="#dlTab">Download</a></li>' +
-	                '   </ul>' +
-	                '   <div id="listTab" class="ui-tabs-panel">Content.</div>' +
-	                '   <div id="imagesTab" class="ui-tabs-panel">' +
-	                '       <div>' +
-	                '           <span id="imgTotals"></span>' +
-	                            'Source: <a href="http://eol.org/" ' +
-	                            'target="_blank">Encyclopedia of Life</a> ' +
-	                '       </div>' +
-	                '       <ul id="gallery" style="overflow: auto;"></ul></div>' +
-	                '   <div id="iucnTab" class="ui-tabs-panel">IUCN.</div>' +
-	                '   <div id="dlTab" class="ui-tabs-panel">Download.</div>' +
-	                '</div>';
+                '<div class="mol-Map-ListDialogContent ui-tabs" id="tabs">' +
+                '   <ul class="ui-tabs-nav">' +
+                '      <li><a href="#listTab">List</a></li>' +
+                '      <li><a href="#imagesTab">Images</a></li>' +
+                '      <li><a href="#iucnTab">IUCN</a></li>' +
+                '      <li><a href="#dlTab">Download</a></li>' +
+                '   </ul>' +
+                '   <div id="listTab" class="ui-tabs-panel">Content.</div>' +
+                '   <div id="imagesTab" class="ui-tabs-panel">' +
+                '       <div>' +
+                '           <span id="imgTotals"></span>' +
+                            'Source: <a href="http://eol.org/" ' +
+                            'target="_blank">Encyclopedia of Life</a> ' +
+                '       </div>' +
+                '       <ul id="gallery" style="overflow: auto;"></ul></div>' +
+                '   <div id="iucnTab" class="ui-tabs-panel">IUCN.</div>' +
+                '   <div id="dlTab" class="ui-tabs-panel">Download.</div>' +
+                '</div>';
             this._super(html);
         }
     });
