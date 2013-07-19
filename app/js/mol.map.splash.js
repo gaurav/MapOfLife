@@ -71,6 +71,7 @@ mol.modules.map.splash = function(mol) {
                 width: 800,
                 height: 580,
                 DialogClass: "mol-splash",
+                title: "Welcome to the Map of Life",
                 close: function() {
                     self.bus.fireEvent(new mol.bus.Event('dialog-closed-click'));
                 }
@@ -142,14 +143,23 @@ mol.modules.map.splash = function(mol) {
             //'    <div class="message"></div>' +
             //'    <iframe class="mol-splash iframe_content ui-dialog-content" style="height:400px; width: 98%; margin-right: auto; display: block;" src="/static/splash/index.html"></iframe>' +
             //' <div>'
-            '	<section class="group1">' +		
+            '<div style="text-align: left;clear: both; margin:15px; font-weight:normal">' +
+            '	The Map of Life is the best map of life because it has all of life on a map' +
+            '</div>' +
+            '	<section class="group1">' +
             '		<fieldset>' +
 			'			<legend>Map a Species</legend>' +
-			'			<div style="top:0"><img src="../static/img/puma-search.jpg"/></div>' +
 			'			<div style="float:left"><img src="../static/img/puma-range200px.jpg"/></div>' +
 			'			<div style="float:left; top:0;">' +
 			'				<span class="mol-Splash-button">See Where Pumas Live</span><br>'	+
-			'				<span class="mol-Splash-button">Map a Random Species</span><br>'	+
+			'				<div style="font-weight:normal;">' +
+			'					Map a:<br>'	+
+			'					<img src="../static/img/bird-shadow20x27px.png"/>' +
+			'					<img src="../static/img/bird-shadow20x27px.png"/>' +
+			'					<img src="../static/img/bird-shadow20x27px.png"/>' +
+			'					<img src="../static/img/bird-shadow20x27px.png"/>' +
+			'					<img src="../static/img/bird-shadow20x27px.png"/><br>' +
+			'				</div>' +
 			'				<span class="mol-Splash-button">Let me Search</span>'	+
 			'			</div>' +
 			'		</fieldset>' +
@@ -157,15 +167,20 @@ mol.modules.map.splash = function(mol) {
 			'	<section class="group2">' +		
             '		<fieldset>' +
 			'			<legend>See a Species List</legend>' +	
-			'			<div style="top:0"><img src="../static/img/species-list-tool.jpg"/></div>' +
 			'			<div style="float:left"><img src="../static/img/species-list200px.jpg"/></div>' +
 			'			<div style="float:left; top:0;">' +
-			'				<span class="mol-Splash-button">What Lives Near Me?</span><br>'	+ //
+			'				<span class="mol-Splash-button">What Birds Lives Near Me?</span><br>'	+ //
 			'				<span class="mol-Splash-button">Pick a Random Place</span><br>'	+ //
 			'				<span class="mol-Splash-button">Let me Choose</span>'	+ //
 			'			</div>' +
 			'		</fieldset>' +
 			'	</section>' +
+			'   <div style="text-align: center;clear: both;">' +
+			'		<fieldset>' +
+			'			<span class="mol-Splash-button" style="width:250px">See All Species Currently in Map of Life</span>'	+ //
+			'			<span class="mol-Splash-button" style="width:250px">Learn About the Project</span>'	+ //
+			'		</fieldset>' +
+			'	</div>' +
 			//' </div>' +	//end holder
 			//' <div class="mol-Splash-footer">
             '    <div id="footer_imgs" style="text-align: center;clear: both">' + '<div>Sponsors, partners and supporters</div>' +
