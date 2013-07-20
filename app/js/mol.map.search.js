@@ -17,14 +17,11 @@ mol.modules.map.search = function(mol) {
                     '<span class="eng">{1}</span>' +
                 '</div>';
             this.ac_sql = "" +
-                "SELECT n,v FROM ac_mar_8_2013 WHERE n~*'\\m{0}' OR v~*'\\m{0}'";
+                "SELECT n,v FROM ac WHERE n~*'\\m{0}' OR v~*'\\m{0}'";
             this.search_sql = '' +
                 'SELECT DISTINCT l.scientificname as name,'+
                     't.type as type,'+
-                    "CASE d.style_table WHEN 'points_style' " + 
-                        'THEN t.carto_css_point ' + 
-                        "WHEN 'polygons_style' " + 
-                        'THEN t.carto_css_poly END as css,' +
+                    't.cartocss as css,' +
                     't.sort_order as type_sort_order, ' +
                     't.title as type_title, '+
                     't.opacity as opacity, ' +
@@ -32,7 +29,7 @@ mol.modules.map.search = function(mol) {
                     'CONCAT(p.title,\'\') as source_title,'+
                     's.source_type as source_type, ' +
                     's.title as source_type_title, ' +   
-                    "CASE WHEN d.type = 'taxogeooccchecklist' " +
+                    "CASE WHEN l.feature_count is not null THEN CASE WHEN d.type = 'taxogeooccchecklist' " +
                         'THEN ' +
                             "CONCAT("+
                                 "to_char(l.occ_count,'999,999,999'),"+
@@ -42,7 +39,7 @@ mol.modules.map.search = function(mol) {
 			    ") " +
                         'ELSE ' +
                             "CONCAT(to_char(l.feature_count,'999,999,999'),' features') "+
-                    'END as feature_count, '+
+                    'END ELSE \'\' END as feature_count, '+
                     'CONCAT(n.v,\'\') as names, ' +
                     'CASE WHEN l.extent is null THEN null ELSE ' +
                     'CONCAT(\'{' +
@@ -59,7 +56,7 @@ mol.modules.map.search = function(mol) {
                     'd.dataset_title as dataset_title, ' + 
                     'd.style_table as style_table ' +
                     
-                'FROM layer_metadata_mar_8_2013 l ' +
+                'FROM layer_metadata l ' +
                 'LEFT JOIN data_registry d ON ' +
                     'l.dataset_id = d.dataset_id ' +
                 'LEFT JOIN types t ON ' +
@@ -68,7 +65,7 @@ mol.modules.map.search = function(mol) {
                     'l.provider = p.provider ' +
                 'LEFT JOIN source_types s ON ' +
                     'p.source_type = s.source_type ' +
-                'LEFT JOIN ac_mar_8_2013 n ON ' +
+                'LEFT JOIN ac n ON ' +
                     'l.scientificname = n.n ' +
                 'WHERE ' +
                      "n.n~*'\\m{0}' OR n.v~*'\\m{0}' " +

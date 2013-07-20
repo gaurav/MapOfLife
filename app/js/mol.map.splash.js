@@ -45,7 +45,6 @@ mol.modules.map.splash = function(mol) {
             $(".ui-widget-overlay").live("click", function() {
                 self.display.dialog("close");
             });
-            this.map.setCenter(new google.maps.LatLng(0,-50));
         },
         /*
         *  Display a message for IE8- users.
@@ -94,7 +93,8 @@ mol.modules.map.splash = function(mol) {
             
             this.display.pickRandom.click(
                 function(event) {
-                    //
+                    self.bus.fireEvent(new mol.bus.Event('list-random',{}));
+                    self.display.dialog("close");
                 }
             );
             
@@ -113,6 +113,7 @@ mol.modules.map.splash = function(mol) {
             this.bus.addHandler(
             'toggle-splash',
             function(event) {
+                self.bus.fireEvent(new mol.bus.Event('clear-lists'));
                 if (self.getIEVersion() < 9 && self.getIEVersion() >= 0) {
                     self.badBrowser();
                 } else if (self.MOL_Down) {
@@ -187,6 +188,7 @@ mol.modules.map.splash = function(mol) {
            	//' </div>' + //end mol-Splash-footer
             '</div>';
             this._super(html);
+            this.Puma = $(this).find('.seePuma');
             this.liveNear = $(this).find('.liveNear');
             this.pickRandom = $(this).find('.pickRandom');
             this.letChoose = $(this).find('.letChoose');
