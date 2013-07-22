@@ -72,6 +72,11 @@ button:hover{
     cursor: pointer;
 }
 
+.mol-hint {
+    font-size: 20pt;
+    line-height: normal;
+}
+
 .mol-Map-TopLeftControl {
     pointer-events: none;
 }

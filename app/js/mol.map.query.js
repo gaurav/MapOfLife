@@ -8,6 +8,7 @@ mol.modules.map.query = function(mol) {
             this.proxy = proxy;
             this.bus = bus;
             this.map = map;
+            this.seenHint = false;
             this.url = '' +
                 'http://mol.cartodb.com/' +
                 'api/v2/sql?callback=?&q={0}';
@@ -307,40 +308,29 @@ mol.modules.map.query = function(mol) {
                 }
             );
             this.bus.addHandler(
-                'dialog-closed-click',
+                'show-list-hint',
                 function(event) {
-                    if($.cookie('mol_species_list_query_tip_disabled2') == null) {
+                    if(!self.seenHint) {
                         $(self.display.queryButton).qtip({
                             content: {
-                                text: 'Species list querying is currently ' +
-                                      'disabled. Toggle this button to enable' +
-                                      ' querying and left-click the map to' +
-                                      ' generate a list.',
-                                title: {
-                                    text: 'Species List Tool',
-                                    button: true
+                                    text: '<div class="mol-hint">Click on the map ' +
+                                          'to find a list of species that live near ' +
+                                          'that location.</div>'
+                                },
+                                position: {
+                                    my: 'top right',
+                                    at: 'bottom left'
+                                },
+                                show: {
+                                    event: false,
+                                    ready: true
+                                },
+                                hide: {
+                                    fixed: false,
+                                    event: 'mouseenter'
                                 }
-
-                            },
-                            position: {
-                                my: 'top right',
-                                at: 'bottom left'
-                            },
-                            show: {
-                                event: false,
-                                ready: true
-                            },
-                            hide: {
-                                fixed: false,
-                                event: 'mouseenter'
-                            }
-                        });
-
-                        $.cookie(
-                            'mol_species_list_query_tip_disabled2',
-                            'tip_seen',
-                            {expires: 1});
-                    }
+                            })
+                        }
                 }
             );
 
