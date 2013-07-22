@@ -109,6 +109,20 @@ mol.modules.map.splash = function(mol) {
                     self.display.dialog("close");
                 }
             );
+            this.display.about.click(
+                function(event) {
+                    window.open('/about/');
+                }
+            );this.display.dashboard.click(
+                function(event) {
+                    self.bus.fireEvent(
+                        new mol.bus.Event(
+                            'taxonomy-dashboard-toggle',
+                            {visible: true}
+                        )
+                    );    
+                }
+            );
             
             this.bus.addHandler(
             'toggle-splash',
@@ -165,8 +179,8 @@ mol.modules.map.splash = function(mol) {
 			'	</section>' +
 			'   <div style="text-align: center;clear: both;">' +
 			'		<fieldset>' +
-			'			<span class="mol-Splash-button" style="width:250px">See All Species Currently in Map of Life</span>'	+ //
-			'			<span class="mol-Splash-button" style="width:250px">Learn About the Project</span>'	+ //
+			'			<span class="mol-Splash-button dashboard" style="width:250px">See All Species Currently in Map of Life</span>'	+ //
+			'			<span class="mol-Splash-button about" style="width:250px">Learn About the Project</span>'	+ //
 			'		</fieldset>' +
 			'	</div>' +
 			//' </div>' +	//end holder
@@ -189,6 +203,8 @@ mol.modules.map.splash = function(mol) {
             '</div>';
             this._super(html);
             this.Puma = $(this).find('.seePuma');
+            this.about = $(this).find('.about');
+            this.dashboard = $(this).find('.dashboard');
             this.liveNear = $(this).find('.liveNear');
             this.pickRandom = $(this).find('.pickRandom');
             this.letChoose = $(this).find('.letChoose');
