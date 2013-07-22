@@ -69,11 +69,7 @@ mol.modules.map.menu = function(mol) {
             this.bus.addHandler(
                 'add-dashboard-toggle-button',
                 function(event) {
-                    $(self.display).prepend(event.button);
-                    self.display.dashboardItem =
-                        $(self.display).find('#dashboard');
-
-                    self.display.dashboardItem.click(
+                    self.display.dashboard.click(
                         function(event) {
                             self.bus.fireEvent(
                                 new mol.bus.Event('taxonomy-dashboard-toggle'));
@@ -119,6 +115,8 @@ mol.modules.map.menu = function(mol) {
                 '<div class="mol-BottomRightMenu">' +
                     '<div title="Start over." ' +
                     ' class="widgetTheme button start">Start Over</div>' +
+                    '<div ' +
+                    ' class="widgetTheme button dashboard">Dashboard</div>' +
                     '<div title="Current known issues." ' +
                     ' class="widgetTheme button status">Status</div>' +
                     '<div title="About the Map of Life Project." ' +
@@ -132,6 +130,7 @@ mol.modules.map.menu = function(mol) {
 
             this._super(html);
             this.start = $(this).find('.start');
+            this.dashboard = $(this).find('.dashboard');
             this.about = $(this).find('.about');
             this.help = $(this).find('.help');
             this.feedback = $(this).find('.feedback');
