@@ -183,51 +183,53 @@ mol.modules.map.splash = function(mol) {
             //'    <div class="message"></div>' +
             //'    <iframe class="mol-splash iframe_content ui-dialog-content" style="height:400px; width: 98%; margin-right: auto; display: block;" src="/static/splash/index.html"></iframe>' +
             //' <div>'
-            '<div style="text-align: left;clear: both; margin:15px; font-weight:normal">' +
-            '   The Map of Life is the best map of life because it has all of life on a map' +
+            '<div style="text-align: left;clear: both; margin-bottom:10px; font-weight:normal; padding:10px">' +
+            '   <div style="font-size:16px; margin-bottom:6px;">Map of Life is an online resource for mapping, monitoring and analyzing biodiversity worldwide.</div>' +
+            '   <div style="font-size:12px;">We help provide extensive biodiversity information for resource managers, educators or anyone interested in where species are found.' +
+            '   Welcome to this demo version!</div>' +
             '</div>' +
-            '   <section style="width: 380px; float:left; margin-bottom:10px">' +
-            '       <fieldset style="height:400px">' +
+            '   <section style="width: 380px; height:250px; float:left; margin-bottom:10px">' +
+            '       <fieldset style="">' +
             '           <legend>Map a Species</legend>' +
             '           <div style="float:left"><img src="../static/img/puma-range150px.jpg"/></div>' +
             '           <div style="float:left; margin-left:10px;">' +
-            '               <span class="mol-Splash-button">See Where Pumas Live</span><br>'    +
-            '               <div style="font-weight:normal; margin-top:20px; margin-bottom: 20px"">' +
-            '                   See a map for a<br>'    +
-            '                   <div style="margin-top:10px;">' +
-            '                       <img src="../static/img/flamingo30px.png" onmouseover="this.src=\'../static/img/bird-shadow-highlight-20x27px.png\'" onmouseout="this.src=\'../static/img/bird-shadow20x27px.png\'"/>' +
-            '                       <img src="../static/img/frog40px.png"/>' +
-            '                       <img src="../static/img/bird-shadow20x27px.png"/><br>' +
-            '                       <img src="../static/img/lizard40px.png"/>' +
-            '                       <img src="../static/img/lemur60px.png"/><br>' +
+            '               <span class="mol-Splash-button">See Where Pumas Live</span>'    +
+            '               <div style="font-weight:normal; margin-top:10px; margin-bottom:20px; height:90px">' +
+            '                   <div >See a map for a</div>'    +
+            '                   <div style="margin-top:10px; width:150px">' +
+            '                       <div style="width:50px; height:40px; float:left;"><div style="width:25px; height:37px;"><img class="speciesPic" src="../static/img/flamingo25x37px.png" /></div></div>' + //onmouseover="this.src=\'../static/img/bird-shadow-highlight-20x27px.png\'" onmouseout="this.src=\'../static/img/bird-shadow20x27px.png\'"
+            '                       <div style="width:50px; height:40px; float:left;"><div style="width:38px; height:39px;"><img class="speciesPic" src="../static/img/frog38x39px.png" /></div></div>' +
+            '                       <div style="width:50px; height:40px; float:left;"><div style="width:40px; height:38px;"><img class="speciesPic" src="../static/img/jtree40x38px.png" /></div></div>' +
+            '                       <div style="width:60px; height:40px; float:left;"><div style="width:60px; height:27px;"><img class="speciesPic" src="../static/img/lemur60x27px.png"/></div></div>' +
+            '                       <div style="width:60px; height:40px; float:right;"><div style="width:50px; height:33px;"><img class="speciesPic" src="../static/img/lizard50x33px.png"/></div></div>' +
             '                   </div>' +
             '               </div>' +
-            '               <span class="mol-Splash-button search">Let me Search</span>'   +
+            '               <div style="clear:both; padding-top:7px"><span class="mol-Splash-button">Let me Search</span></div>'   +
             '           </div>' +
             '       </fieldset>' +
             '   </section>' +
-            '   <section style="width: 380px; float:left; margin-bottom:10px">' +       
-            '       <fieldset style="height:400px">' +
+            '   <section style="width: 380px; float:left; height:250px; margin-bottom:10px">' +       
+            '       <fieldset style="">' +
             '           <legend>See a Species List</legend>' +  
             '           <div style="float:left;"><img src="../static/img/species-list150px.jpg"/></div>' +
             '           <div style="float:left; margin-left:10px;">' + 
-            '               <span class="mol-Splash-button"">What Birds Lives Near Me?</span><br>'  + //
-            '               <div style="font-weight:normal; margin-top:20px; margin-bottom: 20px">' +
-            '                   See a list of<br>'  +
-            '                   <div style="margin-top:6px;">' +
-            '                       <img src="../static/img/bird-shadow20x27px.png"/>' +
-            '                       <img src="../static/img/bird-shadow20x27px.png"/>' +
-            '                       <img src="../static/img/bird-shadow20x27px.png"/>' +
-            '                       <img src="../static/img/bird-shadow20x27px.png"/>' +
-            '                       <img src="../static/img/bird-shadow20x27px.png"/><br>' +
+            '               <span class="mol-Splash-button"">What Birds Lives Near Me?</span>'  + //
+            '               <div style="font-weight:normal; margin-top:10px; margin-bottom: 20px height:90px"">' +
+            '                   <div >See a list for all</div>'  +
+            '                   <div style="margin-top:10px; width:150px">' +
+            '                       <div style="width:50px; height:40px; float:left;"><div style="width:29px; height:40px;"><img class="speciesPic" src="../static/img/bird29x40px.png" /></div></div>' + //onmouseover="this.src=\'../static/img/bird-shadow-highlight-20x27px.png\'" onmouseout="this.src=\'../static/img/bird-shadow20x27px.png\'"
+            '                       <div style="width:50px; height:40px; float:left;"><div style="width:38px; height:39px;"><img class="speciesPic" src="../static/img/frog38x39px.png" /></div></div>' +
+            '                       <div style="width:50px; height:40px; float:left;"><div style="width:40px; height:18px;"><img class="speciesPic" src="../static/img/bass40x18px.png" /></div></div>' +
+            '                       <div style="width:60px; height:40px; float:left;"><div style="width:60px; height:27px;"><img class="speciesPic" src="../static/img/lemur60x27px.png"/></div></div>' +
+            '                       <div style="width:60px; height:40px; float:right;"><div style="width:50px; height:33px;"><img class="speciesPic" src="../static/img/lizard50x33px.png"/></div></div>' +
             '                   </div>' +
             '               </div>' +
-            '               <span class="mol-Splash-button list">Let me Choose</span>'   + //
+            '               <div style="clear:both; padding-top:7px";><span  class="mol-Splash-button list">Let me Choose</span></div>'   + //
             '           </div>' +
             '       </fieldset>' +
             '   </section>' +
-            '   <div style="text-align: center;clear: both;">' +
-            '       <fieldset>' +
+            '   <div style="text-align: center;clear: both; ">' +
+            '       <fieldset style="width:760;">' +
             '           <span class="mol-Splash-button dashboard" style="width:250px">See All Species Currently in Map of Life</span>'    + //
             '           <span class="mol-Splash-button about" style="width:250px">Learn About the Project</span>' + //
             '       </fieldset>' +
