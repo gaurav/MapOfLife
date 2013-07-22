@@ -119,6 +119,17 @@ mol.modules.map.splash = function(mol) {
                     );
                 }
             );
+            this.display.search.click(
+                function(event) {
+                    self.display.dialog("close");
+                    self.bus.fireEvent(
+                        new mol.bus.Event(
+                            'search-display-toggle',
+                            {visible: true}
+                        )
+                    );
+                }
+            );
             this.display.about.click(
                 function(event) {
                     window.open('/about/');
@@ -165,7 +176,7 @@ mol.modules.map.splash = function(mol) {
             '                       <img src="../static/img/lemur60px.png"/><br>' +
             '                   </div>' +
             '               </div>' +
-            '               <span class="mol-Splash-button">Let me Search</span>'   +
+            '               <span class="mol-Splash-button search">Let me Search</span>'   +
             '           </div>' +
             '       </fieldset>' +
             '   </section>' +
@@ -215,6 +226,7 @@ mol.modules.map.splash = function(mol) {
             '</div>';
             this._super(html);
             this.about = $(this).find('.about');
+            this.search = $(this).find('.search');
             this.dashboard = (this).find('.dashboard');
             this.Puma = $(this).find('.seePuma');
             this.liveNear = $(this).find('.liveNear');

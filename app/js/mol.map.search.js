@@ -204,16 +204,20 @@ mol.modules.map.search = function(mol) {
             this.bus.addHandler(
                 'search-display-toggle',
                 function(event) {
-                    var params = {},
-                        e = null;
+                    var e;
 
-                    if (event.visible === undefined) {
-                        self.display.toggle();
-                        params = {visible: self.display.is(':visible')};
+                    if(event.visible != true ) {
+                        self.display.searchDisplay.hide();
+                        self.display.find('.toggle').text('▶');
+                        params.visible = false;
                     } else {
-                        self.display.toggle(event.visible);
+                        
+                        self.display.searchDisplay.show();
+                        self.display.find('.toggle').text('◀');
+                        params.visible = true;
                     }
-
+                    
+                    
                     e = new mol.bus.Event('results-display-toggle', params);
                     self.bus.fireEvent(e);
                 }
