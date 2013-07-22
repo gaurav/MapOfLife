@@ -135,7 +135,7 @@ mol.modules.map.splash = function(mol) {
             '   The Map of Life is the best map of life because it has all of life on a map' +
             '</div>' +
             '   <section style="width: 380px; float:left; margin-bottom:10px">' +
-            '       <fieldset style="height:220px">' +
+            '       <fieldset style="height:400px">' +
             '           <legend>Map a Species</legend>' +
             '           <div style="float:left"><img src="../static/img/puma-range150px.jpg"/></div>' +
             '           <div style="float:left; margin-left:10px;">' +
@@ -143,11 +143,11 @@ mol.modules.map.splash = function(mol) {
             '               <div style="font-weight:normal; margin-top:20px; margin-bottom: 20px"">' +
             '                   See a map for a<br>'    +
             '                   <div style="margin-top:10px;">' +
-            '                       <img src="../static/img/bird-shadow20x27px.png" onmouseover="this.src=\'../static/img/bird-shadow-highlight-20x27px.png\'" onmouseout="this.src=\'../static/img/bird-shadow20x27px.png\'"/>' +
-            '                       <img src="../static/img/bird-shadow20x27px.png"/>' +
-            '                       <img src="../static/img/bird-shadow20x27px.png"/>' +
-            '                       <img src="../static/img/bird-shadow20x27px.png"/>' +
+            '                       <img src="../static/img/flamingo30px.png" onmouseover="this.src=\'../static/img/bird-shadow-highlight-20x27px.png\'" onmouseout="this.src=\'../static/img/bird-shadow20x27px.png\'"/>' +
+            '                       <img src="../static/img/frog40px.png"/>' +
             '                       <img src="../static/img/bird-shadow20x27px.png"/><br>' +
+            '                       <img src="../static/img/lizard40px.png"/>' +
+            '                       <img src="../static/img/lemur50px.png"/><br>' +
             '                   </div>' +
             '               </div>' +
             '               <span class="mol-Splash-button">Let me Search</span>'   +
@@ -155,7 +155,7 @@ mol.modules.map.splash = function(mol) {
             '       </fieldset>' +
             '   </section>' +
             '   <section style="width: 380px; float:left; margin-bottom:10px">' +       
-            '       <fieldset style="height:220px">' +
+            '       <fieldset style="height:400px">' +
             '           <legend>See a Species List</legend>' +  
             '           <div style="float:left;"><img src="../static/img/species-list150px.jpg"/></div>' +
             '           <div style="float:left; margin-left:10px;">' + 
