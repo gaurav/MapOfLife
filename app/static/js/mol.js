@@ -90,16 +90,16 @@ mol.modules.core = function(mol) {
         return 'layer--{0}--{1}--{2}--{3}--{4}'.format(name, type, source, dataset_id, source_type);
     };
     /*
-     * Makes a srting safe for use as a DOM id or class name.
+     * Makes a string safe for use as a DOM id or class name.
      */
     mol.core.encode = function(string) {
-        return (escape(string)).replace(/%/g,'percent').replace(/\./g,'period'); //.replace(/\//g, 'slash');
+        return (escape(string)).replace(/%/g,'222').replace(/\./g,'333').replace(/\//g, '444');
     };
     /*
      * Decodes string encoded with mol.core.encode. 
      */
     mol.core.decode = function(string) {
-        return (unescape(string.replace(/percent/g,'%').replace(/period/g,'.')));//.replace(/slash/g, '/')));
+        return (unescape(string.replace(/222/g,'%').replace(/333/g,'.').replace(/444/g, '/')));
     };
     
 }
@@ -324,7 +324,7 @@ mol.modules.services.cartodb = function(mol) {
 //                    'mol.cartodb.com';
                     'd3dvrpov25vfw0.cloudfront.net';
                 //cache key is mmddyyyyhhmm of cache start
-                this.tile_cache_key = '042420131233';
+                this.tile_cache_key = '072420131233';
             }
         }
     );
@@ -596,6 +596,7 @@ mol.modules.map = function(mol) {
 
                 mapOptions = {
                     zoom: 3,
+                    center: new google.maps.LatLng(0, -50),
                     maxZoom: 10,
                     minZoom: 2,
                     minLat: -85,
@@ -1747,7 +1748,13 @@ mol.modules.map.menu = function(mol) {
         addEventHandlers: function() {
             var self = this;
 
-
+            this.display.start.click(
+                function(Event) {
+                   self.bus.fireEvent(
+                        new mol.bus.Event('toggle-splash')
+                    );
+                }
+            );
             this.display.about.click(
                 function(Event) {
                     window.open('/about/');
@@ -1829,6 +1836,8 @@ mol.modules.map.menu = function(mol) {
         init: function() {
             var html = '' +
                 '<div class="mol-BottomRightMenu">' +
+                    '<div title="Start over." ' +
+                    ' class="widgetTheme button start">Start Over</div>' +
                     '<div title="Current known issues." ' +
                     ' class="widgetTheme button status">Status</div>' +
                     '<div title="About the Map of Life Project." ' +
@@ -1841,6 +1850,7 @@ mol.modules.map.menu = function(mol) {
                 '</div>';
 
             this._super(html);
+            this.start = $(this).find('.start');
             this.about = $(this).find('.about');
             this.help = $(this).find('.help');
             this.feedback = $(this).find('.feedback');
@@ -2594,14 +2604,11 @@ mol.modules.map.search = function(mol) {
                     '<span class="eng">{1}</span>' +
                 '</div>';
             this.ac_sql = "" +
-                "SELECT n,v FROM ac_mar_8_2013 WHERE n~*'\\m{0}' OR v~*'\\m{0}'";
+                "SELECT n,v FROM ac WHERE n~*'\\m{0}' OR v~*'\\m{0}'";
             this.search_sql = '' +
                 'SELECT DISTINCT l.scientificname as name,'+
                     't.type as type,'+
-                    "CASE d.style_table WHEN 'points_style' " + 
-                        'THEN t.carto_css_point ' + 
-                        "WHEN 'polygons_style' " + 
-                        'THEN t.carto_css_poly END as css,' +
+                    't.cartocss as css,' +
                     't.sort_order as type_sort_order, ' +
                     't.title as type_title, '+
                     't.opacity as opacity, ' +
@@ -2609,7 +2616,7 @@ mol.modules.map.search = function(mol) {
                     'CONCAT(p.title,\'\') as source_title,'+
                     's.source_type as source_type, ' +
                     's.title as source_type_title, ' +   
-                    "CASE WHEN d.type = 'taxogeooccchecklist' " +
+                    "CASE WHEN l.feature_count is not null THEN CASE WHEN d.type = 'taxogeooccchecklist' " +
                         'THEN ' +
                             "CONCAT("+
                                 "to_char(l.occ_count,'999,999,999'),"+
@@ -2619,7 +2626,7 @@ mol.modules.map.search = function(mol) {
 			    ") " +
                         'ELSE ' +
                             "CONCAT(to_char(l.feature_count,'999,999,999'),' features') "+
-                    'END as feature_count, '+
+                    'END ELSE \'\' END as feature_count, '+
                     'CONCAT(n.v,\'\') as names, ' +
                     'CASE WHEN l.extent is null THEN null ELSE ' +
                     'CONCAT(\'{' +
@@ -2636,7 +2643,7 @@ mol.modules.map.search = function(mol) {
                     'd.dataset_title as dataset_title, ' + 
                     'd.style_table as style_table ' +
                     
-                'FROM layer_metadata_mar_8_2013 l ' +
+                'FROM layer_metadata l ' +
                 'LEFT JOIN data_registry d ON ' +
                     'l.dataset_id = d.dataset_id ' +
                 'LEFT JOIN types t ON ' +
@@ -2645,7 +2652,7 @@ mol.modules.map.search = function(mol) {
                     'l.provider = p.provider ' +
                 'LEFT JOIN source_types s ON ' +
                     'p.source_type = s.source_type ' +
-                'LEFT JOIN ac_mar_8_2013 n ON ' +
+                'LEFT JOIN ac n ON ' +
                     'l.scientificname = n.n ' +
                 'WHERE ' +
                      "n.n~*'\\m{0}' OR n.v~*'\\m{0}' " +
@@ -2967,7 +2974,7 @@ mol.modules.map.search = function(mol) {
                             'placeholder="Search by species name">' +
                 '       <button class="execute">Go</button>' +
                 '   </div>'+
-                '   <button class="toggle">◀</button>' +
+                '   <button class="toggle">▶</button>' +
                 '</div>';
 
             this._super(html);
@@ -3392,7 +3399,7 @@ mol.modules.map.tiles = function(mol) {
                     mol.services.cartodb.tileApi.tile_cache_key
                 ),
                 urlPattern = '' +
-                    'http://{HOST}/tiles/{DATASET_ID}/{Z}/{X}/{Y}.png?'+
+                    'http://{HOST}/tiles/mol_style/{Z}/{X}/{Y}.png?'+
                     'sql={SQL}'+
                     '&style={TILE_STYLE}' +
                     '&cache_key={CACHE_KEY}',
@@ -3406,8 +3413,12 @@ mol.modules.map.tiles = function(mol) {
             }
 
             if(layer.tile_style == undefined) {
-                layer.tile_style = "#{0}{1}"
-                    .format(layer.dataset_id,layer.css);
+                if(layer.css != null && layer.css != '') {
+                    layer.tile_style = "#mol_style {0}"
+                        .format(layer.css);
+                } else {
+                    layer.tile_style = "";
+                }
                 layer.style = layer.tile_style;
                 layer.orig_style = layer.tile_style;
                 layer.orig_opacity = layer.opacity;
@@ -3434,7 +3445,6 @@ mol.modules.map.tiles = function(mol) {
                     }
                     url = urlPattern
                         .replace("{HOST}",mol.services.cartodb.tileApi.host)
-                        .replace("{DATASET_ID}",layer.dataset_id)
                         .replace("{SQL}",sql)
                         .replace("{X}",x)
                         .replace("{Y}",y)
@@ -3965,7 +3975,7 @@ mol.modules.map.feature = function(mol) {
             this.url = 'http://mol.cartodb.com/api/v2/sql?callback=?&q={0}';
             //TODO add
             this.sql = "SELECT * FROM " +
-                       "get_map_feature_metadata_test({0},{1},{2},{3},'{4}')";
+                       "get_map_feature_metadata({0},{1},{2},{3},'{4}')";
             
             this.clickDisabled = false;
             this.makingRequest = false;
@@ -4182,7 +4192,7 @@ mol.modules.map.feature = function(mol) {
                             '</a>' +
                         '</h3>';
 
-                o = JSON.parse(row.get_map_feature_metadata_test);
+                o = JSON.parse(row.get_map_feature_metadata);
                 all = _.values(o)[0];
                 allobj = all[0];
                 layerId =  _.keys(o)[0];
@@ -4540,6 +4550,11 @@ mol.modules.map.query = function(mol) {
                     Math.round(lat*100)/100,
                     listradius.radius,
                     _class),
+                zooms = {
+                    "50000": 5,
+                    "100000": 4,
+                    "300000": 3
+                },
                 csv_sql = escape(
                     this.csv_sql.format(
                         dataset_id,
@@ -4551,7 +4566,14 @@ mol.modules.map.query = function(mol) {
             if (self.queryct > 0) {
                 alert('Please wait for your last species list request to ' +
                 'complete before starting another.');
+                listradius.setMap(null);
             } else {
+            
+            	self.map.panTo(new google.maps.LatLng(lat, lng))
+            	if (self.map.getZoom() < zooms[listradius.radius]) {
+                	self.map.setZoom(zooms[listradius.radius]);
+            	}
+            	self.map.panBy($(window).width()/4,0);
                 self.queryct++;
                 $.getJSON(
                     list_url,
@@ -4571,6 +4593,22 @@ mol.modules.map.query = function(mol) {
                     }
                 );
             }
+        },
+        clearLists: function() {
+            _.each(
+                this.features,
+                function(feature) {
+                    if(feature.listWindow) {
+                        feature.listWindow.dialog("close");
+                    }
+                    if(feature.listradius) {
+                        feature.listradius.setMap(null);
+                    }
+                    
+                }
+            );
+            this.features={};
+            this.queryct=0;
         },
 
         addEventHandlers : function () {
@@ -4611,6 +4649,98 @@ mol.modules.map.query = function(mol) {
                         new mol.bus.Event('species-list-tool-toggle', params));
                 }
             );
+            this.bus.addHandler(
+                'clear-lists',
+                function(event) {
+                    self.clearLists();
+                }
+            );
+            this.bus.addHandler(
+                'list-local',
+                function(event) {
+                    var dsid = (event.group != undefined) ? 
+                        event.group : 'jetz_maps',
+                        group_name = (event.group_name != undefined) ? 
+                        event.group_name : 'Birds';
+ 
+                    navigator.geolocation.getCurrentPosition(
+                        function(loc) {
+                            self.bus.fireEvent(
+                                new mol.bus.Event(
+                                    'species-list-tool-toggle',
+                                    {visible: true}
+                                )
+                            );
+                            self.bus.fireEvent(
+                                new mol.bus.Event(
+                                    'species-list-query-click',
+                                    {
+                                        gmaps_event: {
+                                            latLng: new google.maps.LatLng(
+                                                loc.coords.latitude,
+                                                loc.coords.longitude
+                                            )
+                                        }
+                                    }
+                                )
+                            );
+                        
+                        },
+                        function(noloc) {
+                            var lat = prompt(
+                                'We could not determine your location.' +
+                                'Please click a location on the map.');
+                            
+                        }
+                    );
+                }
+            );
+            this.bus.addHandler(
+                'list-random',
+                function(event) {
+                    var dsid = (event.group != undefined) ? 
+                        event.group : 'jetz_maps',
+                        group_name = (event.group_name != undefined) ? 
+                        event.group_name : 'Birds';
+ 
+                    $.getJSON(
+                        'http://mol.cartodb.com/api/v1/sql?q=' +
+                        'SELECT ST_X(g) as lon, ST_Y(g) as lat ' +
+                        'FROM ' +
+                            '(SELECT ST_Centroid(the_geom) as g ' +
+                             'FROM randland ' +
+                             'LIMIT 1 ' +
+                             'OFFSET ' +
+                                'round(' +
+                                    'random()*(SELECT count(*) FROM randland)' +
+                                ')'+
+                             ') c',
+                         function(result) {
+                            self.bus.fireEvent(
+                                new mol.bus.Event(
+                                    'species-list-tool-toggle',
+                                    {visible: true}
+                                )
+                            );
+                            self.bus.fireEvent(
+                                new mol.bus.Event(
+                                    'species-list-query-click',
+                                    {
+                                        gmaps_event: {
+                                            latLng: new google.maps.LatLng(
+                                                result.rows[0].lat,
+                                                result.rows[0].lon
+                                            )
+                                        }
+                                    }
+                                )
+                            );
+                        
+                        }
+                    );
+                }
+            );
+            
             this.bus.addHandler(
                 'layer-click-action',
                 function(event) {
@@ -4714,15 +4844,9 @@ mol.modules.map.query = function(mol) {
                             'show-loading-indicator',
                             {source : 'listradius'}));
 
-                        _.each(
-                            self.features,
-                            function(feature) {
-                                if(feature.listWindow) {
-                                    feature.listWindow.dialog("close");
-                                }
-                            }
-                        )
-
+                       
+                        self.clearLists();
+                        
                         self.getList(
                             event.gmaps_event.latLng.lat(),
                             event.gmaps_event.latLng.lng(),
@@ -5130,6 +5254,7 @@ mol.modules.map.query = function(mol) {
 
             listWindow.dialog({
                 autoOpen: true,
+                position: "center",
                 width: 680,
                 height: 415,
                 dialogClass: 'mol-Map-ListDialog',
@@ -5151,6 +5276,9 @@ mol.modules.map.query = function(mol) {
                 $("#gallery")
                     .height($(".mol-Map-ListDialog").height()-125);
             });
+            $(".mol-Map-ListDialog").animate({
+                    left: '{0}px'.format($(window).width() / (7 / 4) - 200)
+                }, 'slow');
 
             //tabs() function needs document ready to
             //have been called on the dialog content
@@ -6293,59 +6421,23 @@ mol.modules.map.splash = function(mol) {
             }
             return rv;
         },
-        /*
-        *  Method to attach MOL events to links in the iframe.
-        */
-        addIframeHandlers: function() {
-            var self = this;
-
-            $(this.display.iframe_content[0].contentDocument.body).find('.getspecies').click(function(event) {
-                $(self.display).dialog('option', 'modal', 'false');
-                $(self.display.parent()).animate({
-                    left: '{0}px'.format($(window).width() / (7 / 4) - 400)
-                }, 'slow');
-                self.bus.fireEvent(new mol.bus.Event('search', {
-                    term: 'Puma concolor'
-                }));
-                setTimeout(function() {
-                    self.bus.fireEvent(new mol.bus.Event('results-map-selected'))
-                }, 2000);
-            });
-            $(this.display.iframe_content[0].contentDocument.body).find('.listdemo1').click(function(event) {
-                $(self.display).dialog('option', 'modal', 'false');
-                $(self.display.parent()).animate({
-                    left: '{0}px'.format($(window).width() / 3 - 400)
-                }, 'slow');
-                self.bus.fireEvent(new mol.bus.Event('layers-toggle', {
-                    visible: false
-                }));
-                self.bus.fireEvent(new mol.bus.Event('species-list-tool-toggle', 
-                    {visible: true}));
-                self.bus.fireEvent(new mol.bus.Event('species-list-query-click', {
-                    gmaps_event: {
-                        latLng: new google.maps.LatLng(-2.263, 39.045)
-                    },
-                    map: self.map
-                }));
-            });
-        },
         initDialog: function() {
             var self = this;
             this.display.dialog({
                 autoOpen: true,
-                width: 800,
-                height: 580,
+                width: $(window).width() > 800  ? 800 : $(window).width() - 30,
+                height: $(window).width() > 600  ? 600 : $(window).width() - 30,
                 DialogClass: "mol-splash",
+                title: "Welcome to the Map of Life",
                 close: function() {
                     self.bus.fireEvent(new mol.bus.Event('dialog-closed-click'));
                 }
             //modal: true
             });
-            $(this.display).width('98%');
+         
             $(".ui-widget-overlay").live("click", function() {
                 self.display.dialog("close");
             });
-            this.map.setCenter(new google.maps.LatLng(0,-50));
         },
         /*
         *  Display a message for IE8- users.
@@ -6382,20 +6474,45 @@ mol.modules.map.splash = function(mol) {
         },
         addEventHandlers: function() {
             var self = this;
+            
+            //Handlers for links in the splash.
+            
+            this.display.liveNear.click(
+                function(event) {
+                    self.bus.fireEvent(new mol.bus.Event('list-local',{}));
+                    self.display.dialog("close");
+                }
+            );
+            
+            this.display.pickRandom.click(
+                function(event) {
+                    self.bus.fireEvent(new mol.bus.Event('list-random',{}));
+                    self.display.dialog("close");
+                }
+            );
+            
+            this.display.letChoose.click(
+                function(event) {
+                    self.bus.fireEvent(
+                        new mol.bus.Event(
+                            'species-list-tool-toggle',
+                            {visible: true}
+                        )
+                    );    
+                    self.display.dialog("close");
+                }
+            );
+            
             this.bus.addHandler(
             'toggle-splash',
             function(event) {
+                self.bus.fireEvent(new mol.bus.Event('clear-lists'));
                 if (self.getIEVersion() < 9 && self.getIEVersion() >= 0) {
                     self.badBrowser();
                 } else if (self.MOL_Down) {
                     self.molDown();
                 } else {
                     self.initDialog();
-                }
-                if (!self.IE8) {
-                    $(self.display.iframe_content).load(function(event) {
-                        self.addIframeHandlers();
-                    });
                 }
             });
         }
@@ -6404,9 +6521,50 @@ mol.modules.map.splash = function(mol) {
         init: function() {
             var html = '' +
             '<div class="mol-Splash">' +
-            '    <div class="message"></div>' +
-            '    <iframe class="mol-splash iframe_content ui-dialog-content" style="height:400px; width: 98%; margin-right: auto; display: block;" src="/static/splash/index.html"></iframe>' +
-            '    <div id="footer_imgs" style="text-align: center">' + '<div>Sponsors, partners and supporters</div>' +
+            //'    <div class="message"></div>' +
+            //'    <iframe class="mol-splash iframe_content ui-dialog-content" style="height:400px; width: 98%; margin-right: auto; display: block;" src="/static/splash/index.html"></iframe>' +
+            //' <div>'
+            '<div style="text-align: left;clear: both; margin:15px; font-weight:normal">' +
+            '   The Map of Life is the best map of life because it has all of life on a map' +
+            '</div>' +
+            '   <section class="group1">' +
+            '       <fieldset>' +
+			'			<legend>Map a Species</legend>' +
+			'			<div style="float:left"><img src="../static/img/puma-range200px.jpg"/></div>' +
+			'			<div style="float:left; top:0;">' +
+			'				<span class="mol-Splash-button">See Where Pumas Live</span><br>'	+
+			'				<div style="font-weight:normal;">' +
+			'					Map a:<br>'	+
+			'					<img src="../static/img/bird-shadow20x27px.png"/>' +
+			'					<img src="../static/img/bird-shadow20x27px.png"/>' +
+			'					<img src="../static/img/bird-shadow20x27px.png"/>' +
+			'					<img src="../static/img/bird-shadow20x27px.png"/>' +
+			'					<img src="../static/img/bird-shadow20x27px.png"/><br>' +
+			'				</div>' +
+			'				<span class="mol-Splash-button">Let me Search</span>'	+
+			'			</div>' +
+			'		</fieldset>' +
+			'	</section>' +
+			'	<section class="group2">' +		
+            '		<fieldset>' +
+			'			<legend>See a Species List</legend>' +	
+			'			<div style="float:left"><img src="../static/img/species-list200px.jpg"/></div>' +
+			'			<div style="float:left; top:0;">' +
+			'				<span class="mol-Splash-button liveNear">What Birds Lives Near Me?</span><br>'	+ //
+			'				<span class="mol-Splash-button pickRandom">Pick a Random Place</span><br>'	+ //
+			'				<span class="mol-Splash-button letChoose">Let me Choose</span>'	+ //
+			'			</div>' +
+			'		</fieldset>' +
+			'	</section>' +
+			'   <div style="text-align: center;clear: both;">' +
+			'		<fieldset>' +
+			'			<span class="mol-Splash-button" style="width:250px">See All Species Currently in Map of Life</span>'	+ //
+			'			<span class="mol-Splash-button" style="width:250px">Learn About the Project</span>'	+ //
+			'		</fieldset>' +
+			'	</div>' +
+			//' </div>' +	//end holder
+			//' <div class="mol-Splash-footer">
+            '    <div id="footer_imgs" style="text-align: center;clear: both">' + '<div>Sponsors, partners and supporters</div>' +
             '        <a target="_blank" tabindex="-1" href="http://www.yale.edu/jetz/"><button><img width="72px" height="36px" title="Jetz Lab, Yale University" src="/static/home/yale.png"></button></a>' +
             '        <a target="_blank" tabindex="-1" href="http://sites.google.com/site/robgur/"><button><img width="149px" height="36px" title="Guralnick Lab, University of Colorado Boulder" src="/static/home/cuboulder.png"></button></a>' +
             '        <a target="_blank" tabindex="-1" href="http://www.gbif.org/"><button><img width="33px" height="32px" title="Global Biodiversity Information Facility" src="/static/home/gbif.png"></button></a>' +
@@ -6420,9 +6578,13 @@ mol.modules.map.splash = function(mol) {
             '        <a target="_blank" tabindex="-1" href="http://www.bik-f.de/"><button><img width="74px" height="32px" title="Biodiversität und Klima Forschungszentrum (BiK-F)" src="http://www.mappinglife.org/static/home/bik_bildzeichen.png"></button></a>' +
             '        <a target="_blank" tabindex="-1" href="http://www.mountainbiodiversity.org/"><button><img width="59px" height="32px" title="Global Mountain Biodiversity Assessment" src="http://www.mappinglife.org/static/home/gmba.png"></button></a>' +
             '    </div>' +
+           	//' </div>' + //end mol-Splash-footer
             '</div>';
             this._super(html);
-            this.iframe_content = $(this).find('.iframe_content');
+            this.Puma = $(this).find('.seePuma');
+            this.liveNear = $(this).find('.liveNear');
+            this.pickRandom = $(this).find('.pickRandom');
+            this.letChoose = $(this).find('.letChoose');
             this.mesg = $(this).find('.message');
         }
     });
@@ -6993,18 +7155,19 @@ mol.modules.map.styler = function(mol) {
                                         o.pc = $('#seasChk6')
                                                     .is(':checked') ? 1:0;
                                     }
-                                } else {
+                                } else if(layer.type != 'sum'){
                                     o.fill = $('#showFillPalette')
                                             .spectrum("get")
                                                 .toHexString();
                                 }
-
-                                o.border = $('#showBorderPalette')
-                                                .spectrum("get")
-                                                    .toHexString();
-                                o.size = $(api.elements.content)
-                                                .find('.sizer')
-                                                    .slider('value');
+                                if(layer.type != 'sum'){
+                                    o.border = $('#showBorderPalette')
+                                                    .spectrum("get")
+                                                        .toHexString();
+                                    o.size = $(api.elements.content)
+                                                    .find('.sizer')
+                                                        .slider('value');
+                                }
 
                                 self.updateLegendCss(
                                         button,
@@ -7360,7 +7523,7 @@ mol.modules.map.styler = function(mol) {
 
                    $(element).find('.colorPickers').prepend(pickers);
                    $(element).find('.sizerHolder').prepend(sizer);
-                } else {
+                } else if (layer.type != 'sum'){
                    pickers = '' +
                        '<div class="colorPicker">' +
                        '  <span class="stylerLabel">Fill:&nbsp</span>' +
@@ -7442,7 +7605,7 @@ mol.modules.map.styler = function(mol) {
                               color: currSty.p,
                               def: origSty.p});
                 }
-            } else {
+            } else if (lay.type != 'sum'){
                 objs = [ {name: '#showFillPalette',
                           color: currSty.fill,
                           def: origSty.fill},
@@ -7471,7 +7634,7 @@ mol.modules.map.styler = function(mol) {
                 max = 3;
                 min = 0;
             }
-
+            if(lay.type != 'sum') {
             $(cont).find('.sizer').slider({
                 value: currSty.size,
                 min:min,
@@ -7485,7 +7648,7 @@ mol.modules.map.styler = function(mol) {
 
             $(cont).find('#pointSizeValue').html(
                 $(cont).find('.sizer').slider('value') + "px");
-
+            }
             layOpa = reset ? lay.orig_opacity : lay.style_opacity;
 
             //opacity
@@ -7500,6 +7663,7 @@ mol.modules.map.styler = function(mol) {
                         (ui.value)*100 + "&#37");
                 }}
             );
+            
 
             $(cont).find('#opacityValue').html((layOpa)*100 + "&#37");
         },
@@ -7608,7 +7772,8 @@ mol.modules.map.styler = function(mol) {
         updateStyle: function(layer, style, newStyle) {
             var updatedStyle,
                 season;
-
+            if(layer.type='sum') {return};
+            
             if(layer.style_table == "points_style") {
                 style = this.changeStyleProperty(
                             style, 'marker-fill', newStyle.fill, false);
@@ -7686,7 +7851,7 @@ mol.modules.map.styler = function(mol) {
                                 style, 'presence=6', newStyle.pc, true,
                                 'polygon-opacity');
                     }
-                } else {
+                } else if (layer.type !='sum'){
                     style = this.changeStyleProperty(
                                 style, 'polygon-fill', newStyle.fill,
                                     false);
@@ -7779,14 +7944,14 @@ mol.modules.map.styler = function(mol) {
                     style = this.changeStyleProperty(
                                 style,
                                 'marker-line-color',
-                                visible ? '#FF00FF' : oldStyle.border,
+                                visible ? '#AA0022' : oldStyle.border,
                                 false
                             );
                 } else {
                     style = this.changeStyleProperty(
                                 style,
                                 'line-color',
-                                visible ? '#FF00FF' : oldStyle.border,
+                                visible ? '#AA0022' : oldStyle.border,
                                 false
                             );
 
