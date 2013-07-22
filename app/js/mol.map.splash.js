@@ -147,7 +147,7 @@ mol.modules.map.splash = function(mol) {
             '                       <img src="../static/img/frog40px.png"/>' +
             '                       <img src="../static/img/bird-shadow20x27px.png"/><br>' +
             '                       <img src="../static/img/lizard40px.png"/>' +
-            '                       <img src="../static/img/lemur50px.png"/><br>' +
+            '                       <img src="../static/img/lemur60px.png"/><br>' +
             '                   </div>' +
             '               </div>' +
             '               <span class="mol-Splash-button">Let me Search</span>'   +
