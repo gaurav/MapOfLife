@@ -11,6 +11,7 @@ mol.modules.map.search = function(mol) {
             this.bus = bus;
             this.searching = {};
             this.names = [];
+            this.seenHint = false;
             this.ac_label_html = ''+
                 '<div class="ac-item">' +
                     '<span class="sci">{0}</span>' +
@@ -204,21 +205,52 @@ mol.modules.map.search = function(mol) {
             this.bus.addHandler(
                 'search-display-toggle',
                 function(event) {
-                    var params = {},
-                        e = null;
+                   
 
-                    if (event.visible === undefined) {
-                        self.display.toggle();
-                        params = {visible: self.display.is(':visible')};
+                    if(event.visible != true ) {
+                        self.display.searchDisplay.hide();
+                        self.display.find('.toggle').text('▶');
                     } else {
-                        self.display.toggle(event.visible);
+                        
+                        self.display.searchDisplay.show();
+                        self.display.find('.toggle').text('◀');
                     }
-
-                    e = new mol.bus.Event('results-display-toggle', params);
-                    self.bus.fireEvent(e);
+                    
+                    self.bus.fireEvent(
+                        new mol.bus.Event('results-display-toggle', {})
+                    );
+                  
                 }
             );
-
+            this.bus.addHandler(
+                'show-search-hint',
+                function(event) {
+                    if(!self.seenHint) {
+                        self.display.qtip({
+                            content: {
+                                text: '<div class="mol-hint">' +
+                                    'Type a name here and click "Go" to ' +
+                                    'find maps of where species live.' +
+                                    '</div>'
+                            },
+                            style: { width: { min: 400,max:500}},
+                            position: {
+                                my: 'top left',
+                                at: 'bottom right'
+                            },
+                            show: {
+                                event: false,
+                                ready: true
+                            },
+                            hide: {
+                                fixed: false,
+                                event: 'mouseenter'
+                            }
+                        });
+                        self.seenHint=true;
+                    }
+                }
+            );
             this.bus.addHandler(
                 'close-autocomplete',
                 function(event) {

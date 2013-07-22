@@ -98,14 +98,26 @@ mol.modules.map.splash = function(mol) {
                 }
             );
             
-            this.display.letChoose.click(
+            this.display.list.click(
                 function(event) {
                     self.bus.fireEvent(
                         new mol.bus.Event(
                             'species-list-tool-toggle',
                             {visible: true}
                         )
-                    );    
+                    );
+                    self.bus.fireEvent(
+                        new mol.bus.Event(
+                            'search-display-toggle',
+                            {visible: false}
+                        )
+                    );
+                    self.bus.fireEvent(
+                        new mol.bus.Event(
+                            'show-list-hint',
+                            {visible: true}
+                        )
+                    );       
                     self.display.dialog("close");
                 }
             );
@@ -119,6 +131,31 @@ mol.modules.map.splash = function(mol) {
                     );
                 }
             );
+            this.display.search.click(
+                function(event) {
+                    self.display.dialog("close");
+                    self.bus.fireEvent(
+                        new mol.bus.Event(
+                            'search-display-toggle',
+                            {visible: true}
+                        )
+                    );
+                    self.bus.fireEvent(
+                        new mol.bus.Event(
+                            'species-list-tool-toggle',
+                            {visible: false}
+                        )
+                    );
+                    self.bus.fireEvent(
+                        new mol.bus.Event(
+                            'show-search-hint',
+                            {visible: true}
+                        )
+                    );
+                }
+            );
+            
+            
             this.display.about.click(
                 function(event) {
                     window.open('/about/');
@@ -165,7 +202,7 @@ mol.modules.map.splash = function(mol) {
             '                       <img src="../static/img/lemur60px.png"/><br>' +
             '                   </div>' +
             '               </div>' +
-            '               <span class="mol-Splash-button">Let me Search</span>'   +
+            '               <span class="mol-Splash-button search">Let me Search</span>'   +
             '           </div>' +
             '       </fieldset>' +
             '   </section>' +
@@ -185,7 +222,7 @@ mol.modules.map.splash = function(mol) {
             '                       <img src="../static/img/bird-shadow20x27px.png"/><br>' +
             '                   </div>' +
             '               </div>' +
-            '               <span class="mol-Splash-button">Let me Choose</span>'   + //
+            '               <span class="mol-Splash-button list">Let me Choose</span>'   + //
             '           </div>' +
             '       </fieldset>' +
             '   </section>' +
@@ -215,11 +252,12 @@ mol.modules.map.splash = function(mol) {
             '</div>';
             this._super(html);
             this.about = $(this).find('.about');
+            this.search = $(this).find('.search');
             this.dashboard = (this).find('.dashboard');
             this.Puma = $(this).find('.seePuma');
             this.liveNear = $(this).find('.liveNear');
             this.pickRandom = $(this).find('.pickRandom');
-            this.letChoose = $(this).find('.letChoose');
+            this.list = $(this).find('.list');
             this.mesg = $(this).find('.message');
         }
     });
