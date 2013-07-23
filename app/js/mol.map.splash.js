@@ -35,7 +35,7 @@ mol.modules.map.splash = function(mol) {
                 width: $(window).width() > 800  ? 800 : $(window).width() - 30,
                 height: $(window).width() > 600  ? 600 : $(window).width() - 30,
                 DialogClass: "mol-splash",
-                title: "Welcome to the Map of Life",
+                title: "Map of Life",
                 close: function() {
                     self.bus.fireEvent(new mol.bus.Event('dialog-closed-click'));
                 }
@@ -184,18 +184,18 @@ mol.modules.map.splash = function(mol) {
             //'    <iframe class="mol-splash iframe_content ui-dialog-content" style="height:400px; width: 98%; margin-right: auto; display: block;" src="/static/splash/index.html"></iframe>' +
             //' <div>'
             '<div style="text-align: left;clear: both; margin-bottom:10px; font-weight:normal; padding:10px">' +
-            '   <div style="font-size:16px; margin-bottom:6px;">Map of Life is an online resource for mapping, monitoring and analyzing biodiversity worldwide.</div>' +
-            '   <div style="font-size:12px;">We help provide extensive biodiversity information for resource managers, educators or anyone interested in where species are found.' +
+            '   <div style="font-size:16px; margin-bottom:6px;">Map of Life is an online resource for mapping, monitoring and analyzing biodiversity worldwide.' +
+            '   It aims to provide extensive biodiversity information for resource managers, educators or anyone interested in where species are found.' +
             '   Welcome to this demo version!</div>' +
             '</div>' +
             '   <section style="width: 380px; height:250px; float:left; margin-bottom:10px">' +
             '       <fieldset style="">' +
-            '           <legend>Map a Species</legend>' +
+            '           <legend>Map a species</legend>' +
             '           <div style="float:left"><img src="../static/img/puma-range150px.jpg"/></div>' +
             '           <div style="float:left; margin-left:10px;">' +
-            '               <span class="mol-Splash-button">See Where Pumas Live</span>'    +
+            '               <span class="mol-Splash-button">Where do Pumas live?</span>'    +
             '               <div style="font-weight:normal; margin-top:10px; margin-bottom:20px; height:90px">' +
-            '                   <div >See a map for a</div>'    +
+            '                   <div >See a map for a ...</div>'    +
             '                   <div style="margin-top:10px; width:150px">' +
             '                       <div style="width:50px; height:40px; float:left;"><div style="width:25px; height:37px;"><img class="speciesPic" src="../static/img/flamingo25x37px.png" /></div></div>' + //onmouseover="this.src=\'../static/img/bird-shadow-highlight-20x27px.png\'" onmouseout="this.src=\'../static/img/bird-shadow20x27px.png\'"
             '                       <div style="width:50px; height:40px; float:left;"><div style="width:38px; height:39px;"><img class="speciesPic" src="../static/img/frog38x39px.png" /></div></div>' +
@@ -204,18 +204,18 @@ mol.modules.map.splash = function(mol) {
             '                       <div style="width:60px; height:40px; float:right;"><div style="width:50px; height:33px;"><img class="speciesPic" src="../static/img/lizard50x33px.png"/></div></div>' +
             '                   </div>' +
             '               </div>' +
-            '               <div style="clear:both; padding-top:7px"><span class="mol-Splash-button">Let me Search</span></div>'   +
+            '               <div style="clear:both; padding-top:7px"><span class="mol-Splash-button">Let me search for a species</span></div>'   +
             '           </div>' +
             '       </fieldset>' +
             '   </section>' +
             '   <section style="width: 380px; float:left; height:250px; margin-bottom:10px">' +       
             '       <fieldset style="">' +
-            '           <legend>See a Species List</legend>' +  
+            '           <legend>See a species list</legend>' +  
             '           <div style="float:left;"><img src="../static/img/species-list150px.jpg"/></div>' +
             '           <div style="float:left; margin-left:10px;">' + 
-            '               <span class="mol-Splash-button"">What Birds Lives Near Me?</span>'  + //
+            '               <span class="mol-Splash-button"">Which birds Live near me?</span>'  + //
             '               <div style="font-weight:normal; margin-top:10px; margin-bottom: 20px height:90px"">' +
-            '                   <div >See a list for all</div>'  +
+            '                   <div >See a list for all ...</div>'  +
             '                   <div style="margin-top:10px; width:150px">' +
             '                       <div style="width:50px; height:40px; float:left;"><div style="width:29px; height:40px;"><img class="speciesPic" src="../static/img/bird29x40px.png" /></div></div>' + //onmouseover="this.src=\'../static/img/bird-shadow-highlight-20x27px.png\'" onmouseout="this.src=\'../static/img/bird-shadow20x27px.png\'"
             '                       <div style="width:50px; height:40px; float:left;"><div style="width:38px; height:39px;"><img class="speciesPic" src="../static/img/frog38x39px.png" /></div></div>' +
@@ -224,14 +224,14 @@ mol.modules.map.splash = function(mol) {
             '                       <div style="width:60px; height:40px; float:right;"><div style="width:50px; height:33px;"><img class="speciesPic" src="../static/img/lizard50x33px.png"/></div></div>' +
             '                   </div>' +
             '               </div>' +
-            '               <div style="clear:both; padding-top:7px";><span  class="mol-Splash-button list">Let me Choose</span></div>'   + //
+            '               <div style="clear:both; padding-top:7px";><span  class="mol-Splash-button list">Let me pick a place</span></div>'   + //
             '           </div>' +
             '       </fieldset>' +
             '   </section>' +
             '   <div style="text-align: center;clear: both; ">' +
             '       <fieldset style="width:760;">' +
-            '           <span class="mol-Splash-button dashboard" style="width:250px">See All Species Currently in Map of Life</span>'    + //
-            '           <span class="mol-Splash-button about" style="width:250px">Learn About the Project</span>' + //
+            '           <span class="mol-Splash-button dashboard" style="width:100px; height:15px;">All datasets</span>'    + //
+            '           <span class="mol-Splash-button about" style="width:100px; height:15px;">About</span>' + //
             '       </fieldset>' +
             '   </div>' +
             //' </div>' +   //end holder

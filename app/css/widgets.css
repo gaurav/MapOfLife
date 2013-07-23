@@ -159,6 +159,8 @@ button:hover{
 	border-radius:4px;
     }
 
+.mol-Splash-button:hover { color: #FFFFFF; }
+
 .speciesPic:hover {   
     /*-webkit-transform: scale(1.1,1.1);
     -moz-transform:scale(1.1,1.1);*/
@@ -166,7 +168,7 @@ button:hover{
    width:110%;
 }
 
-.mol-Splash-button:hover { color: #FFFFFF; }
+
 .mol-Splash-footer {clear:both;}
  
 
