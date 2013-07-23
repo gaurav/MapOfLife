@@ -8,6 +8,58 @@ mol.modules.map.layers = function(mol) {
             this.bus = bus;
             this.map = map;
             this.clickDisabled = false;
+            this.layer_sql = '' +
+                'SELECT DISTINCT l.scientificname as name,'+
+                    't.type as type,'+
+                    't.cartocss as css,' +
+                    't.sort_order as type_sort_order, ' +
+                    't.title as type_title, '+
+                    't.opacity as opacity, ' +
+                    'CONCAT(l.provider,\'\') as source, '+
+                    'CONCAT(p.title,\'\') as source_title,'+
+                    's.source_type as source_type, ' +
+                    's.title as source_type_title, ' +   
+                    "CASE WHEN l.feature_count is not null THEN CASE WHEN d.type = 'taxogeooccchecklist' " +
+                        'THEN ' +
+                            "CONCAT("+
+                                "to_char(l.occ_count,'999,999,999'),"+
+                                "' records<br>'," +
+                                "to_char(l.feature_count, '999,999,999'),"+
+                                "' locations'"+
+                            ") " +
+                        'ELSE ' +
+                            "CONCAT(to_char(l.feature_count,'999,999,999'),' features') "+
+                    'END ELSE \'\' END as feature_count, '+
+                    'CONCAT(n.v,\'\') as names, ' +
+                    'CASE WHEN l.extent is null THEN null ELSE ' +
+                    'CONCAT(\'{' +
+                        '"sw":{' +
+                            '"lng":\',ST_XMin(box2d(ST_Transform(ST_SetSRID(l.extent,3857),4326))),\', '+
+                            '"lat":\',ST_YMin(box2d(ST_Transform(ST_SetSRID(l.extent,3857),4326))),\' '+
+                        '}, '+
+                        '"ne":{' +
+                        '"lng":\',ST_XMax(box2d(ST_Transform(ST_SetSRID(l.extent,3857),4326))),\', ' +
+                        '"lat":\',ST_YMax(box2d(ST_Transform(ST_SetSRID(l.extent,3857),4326))),\' ' +
+                        '}}\') ' +
+                    'END as extent, ' +
+                    'l.dataset_id as dataset_id, ' +
+                    'd.dataset_title as dataset_title, ' + 
+                    'd.style_table as style_table ' +
+                    
+                'FROM layer_metadata l ' +
+                'LEFT JOIN data_registry d ON ' +
+                    'l.dataset_id = d.dataset_id ' +
+                'LEFT JOIN types t ON ' +
+                    'l.type = t.type ' +
+                'LEFT JOIN providers p ON ' +
+                    'l.provider = p.provider ' +
+                'LEFT JOIN source_types s ON ' +
+                    'p.source_type = s.source_type ' +
+                'LEFT JOIN ac n ON ' +
+                    'l.scientificname = n.n ' +
+                'WHERE ' +
+                     "l.scientificname = '{0}' and l.dataset_id = '{1}'" +
+                'ORDER BY name, type_sort_order';
         },
 
         start: function() {
@@ -198,6 +250,32 @@ mol.modules.map.layers = function(mol) {
                     self.layersToggle(event);
                 }
             );
+            this.bus.addHandler(
+                'map-single-layer',
+                function(event) {
+                    var name  = event.name,
+                        dataset_id = event.dataset_id;
+                    
+                    $.getJSON(
+                       mol.services.cartodb.sqlApi.json_url.format(
+                        self.layer_sql.format(name, dataset_id)),
+                        function(response) {
+                            var layer = response.rows[0];
+
+                            layer.id =  mol.core.getLayerId(layer);
+                            
+                            self.bus.fireEvent(
+                                new mol.bus.Event(
+                                    'add-layers', 
+                                    {layers: [layer]}
+                                )
+                            ); 
+                        },
+                        'json'
+                    );
+                    
+                }
+            )
 
             this.bus.addHandler(
                 'add-layers',
@@ -237,7 +315,7 @@ mol.modules.map.layers = function(mol) {
                                 //invalid extent
                             }
                         }
-                    )
+                    );
                     self.addLayers(event.layers);
                     if(bounds != null) {
                         self.map.fitBounds(bounds)
@@ -594,12 +672,12 @@ mol.modules.map.layers = function(mol) {
                 )
             );
 
-            if(sortedLayers.length == 1) {
+            /*if(sortedLayers.length == 1) {
                 //if only one new layer is being added
                 //select it
                 this.display.list.find('.layer')
                     [this.display.list.find('.layer').length-1].click();
-            }
+            }*/
 
             //done making widgets, toggle on if we have layers.
             if(layerIds.length>0) {
