@@ -86,13 +86,22 @@ mol.modules.map.splash = function(mol) {
             
             this.display.liveNear.click(
                 function(event) {
-                    var params = {datasetID: $(this).attr("data-dataset-id"),
-                                    className: $(this).attr("data-class-name")}
+                    var params = {dataset_id: $(this).data("dataset-id"),
+                                    className: $(this).data("class-name")}
                     self.bus.fireEvent(new mol.bus.Event('list-local',params));
                     self.display.dialog("close");
                 }
             );
             
+            this.display.mapSingleLayer.click(
+                function(event) {
+                    var params = {dataset_id: 'mol',
+                                    name: $(this).data("name")}
+                    self.bus.fireEvent(new mol.bus.Event('map-single-layer',params));
+                    self.display.dialog("close");
+                }
+            );   
+                     
             this.display.pickRandom.click(
                 function(event) {
                     self.bus.fireEvent(new mol.bus.Event('list-random',{}));
@@ -200,14 +209,18 @@ mol.modules.map.splash = function(mol) {
             '                   <div >Where does this live?</div>'    +
             '                   <div style="margin-top:10px; width:150px">' +
             '                       <div style="width:50px; height:40px; float:left;"><div style="width:25px; height:37px;">' +
-            '                           <img title="Lesser Flamingo" class="speciesPic" src="../static/img/flamingo25x37px.png" /></div></div>' + 
-            '                       <div style="width:50px; height:40px; float:left;"><div style="width:38px; height:39px;"><img title="Broad-Banded Grass Frog" class="speciesPic" src="../static/img/frog38x39px.png" /></div></div>' +
-            '                       <div style="width:50px; height:40px; float:left;"><div style="width:40px; height:38px;"><img title="Joshua Tree" class="speciesPic" src="../static/img/jtree40x38px.png" /></div></div>' +
-            '                       <div style="width:60px; height:40px; float:left;"><div style="width:60px; height:27px;"><img title="Hairy-Eared Dwarf Lemur" class="speciesPic" src="../static/img/lemur60x27px.png"/></div></div>' +
-            '                       <div style="width:60px; height:40px; float:right;"><div style="width:50px; height:33px;"><img title="Arabian Toad-headed Agama" class="speciesPic" src="../static/img/lizard50x33px.png"/></div></div>' +
+            '                           <img title="Lesser Flamingo" class="speciesPic mapSingleLayer" data-name="Phoeniconaias minor" src="../static/img/flamingo25x37px.png" /></div></div>' + 
+            '                       <div style="width:50px; height:40px; float:left;"><div style="width:38px; height:39px;">' +
+            '                           <img title="Broad-Banded Grass Frog" class="speciesPic mapSingleLayer" data-name="Ptychadena bibroni" src="../static/img/frog38x39px.png" /></div></div>' +
+            '                       <div style="width:50px; height:40px; float:left;"><div style="width:40px; height:38px;">' +
+            '                           <img title="Joshua Tree" class="speciesPic mapSingleLayer" data-name="Yucca brevifolia" src="../static/img/jtree40x38px.png" /></div></div>' +
+            '                       <div style="width:60px; height:40px; float:left;"><div style="width:60px; height:27px;">' +
+            '                           <img title="Hairy-Eared Dwarf Lemur" class="speciesPic mapSingleLayer" data-name="Allocebus trichotis" src="../static/img/lemur60x27px.png"/></div></div>' +
+            '                       <div style="width:60px; height:40px; float:right;"><div style="width:50px; height:33px;">'+
+            '                           <img title="Arabian Toad-headed Agama" class="speciesPic mapSingleLayer" data-name="Phrynocephalus arabicus" src="../static/img/lizard50x33px.png"/></div></div>' +
             '                   </div>' +
             '               </div>' +
-            '               <div style="clear:both; padding-top:7px"><span class="mol-Splash-button">Let me search for a species</span></div>'   +
+            '               <div style="clear:both; padding-top:7px"><span class="mol-Splash-button search">Let me search for a species</span></div>'   +
             '           </div>' +
             '       </fieldset>' +
             '   </section>' +
@@ -221,7 +234,7 @@ mol.modules.map.splash = function(mol) {
             '                   <div >What lives near me?</div>'  +
             '                   <div style="margin-top:10px; width:150px">' +
             '                       <div style="width:50px; height:40px; float:left;"><div style="width:29px; height:40px;">' +
-            '                           <img title="Birds" class="speciesPic liveNear"  data-dataset-id="jetz_maps" data-class-name="Aves" src="../static/img/bird29x40px.png" /></div></div>' +
+            '                           <img title="Birds" class="speciesPic liveNear"  data-dataset_id="jetz_maps" data-class_name="Aves" src="../static/img/bird29x40px.png" /></div></div>' +
             '                       <div style="width:50px; height:40px; float:left;"><div style="width:38px; height:39px;">' +
             '                           <img title="Amphibians"  class="speciesPic liveNear" data-dataset-id="iucn_amphibians" data-class-name="Amphibia" src="../static/img/frog38x39px.png" /></div></div>' +
             '                       <div style="width:50px; height:40px; float:left;"><div style="width:40px; height:18px; margin-top:11px">'+
@@ -266,6 +279,7 @@ mol.modules.map.splash = function(mol) {
             this.dashboard = (this).find('.dashboard');
             this.Puma = $(this).find('.seePuma');
             this.liveNear = $(this).find('.liveNear');
+            this.mapSingleLayer = $(this).find('.mapSingleLayer');
             this.pickRandom = $(this).find('.pickRandom');
             this.list = $(this).find('.list');
             this.mesg = $(this).find('.message');
