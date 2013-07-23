@@ -228,12 +228,13 @@ mol.modules.map.search = function(mol) {
                     if(!self.seenHint) {
                         self.display.qtip({
                             content: {
-                                text: '<div class="mol-hint">' +
-                                    'Type a name here and click "Go" to ' +
-                                    'find maps of where species live.' +
+                                text: '' +
+                                    '<div class="mol-hint">' +
+                                        'Type a name here and click "Go" to ' +
+                                        'find maps of where species live.' +
                                     '</div>'
                             },
-                            style: { width: { min: 400,max:500}},
+                            style: { width: {min: 400, max:500}},
                             position: {
                                 my: 'top left',
                                 at: 'bottom right'
@@ -244,7 +245,7 @@ mol.modules.map.search = function(mol) {
                             },
                             hide: {
                                 fixed: false,
-                                event: 'mouseenter'
+                                event: 'unfocus'
                             }
                         });
                         self.seenHint=true;
