@@ -285,7 +285,8 @@ mol.modules.map.layers = function(mol) {
                                     'add-layers', 
                                     {layers: [layer]}
                                 )
-                            ); 
+                            );
+                            self.getBounds(layer);
                         },
                         'json'
                     );
@@ -428,7 +429,31 @@ mol.modules.map.layers = function(mol) {
                  )
              );
         },
-
+        getBounds: function (layer) {
+            var self = this;
+            $.getJSON(
+                 mol.services.cartodb.sqlApi.json_url.format(
+                     "SELECT * FROM get_extent('{0}', '{1}','{2}','{3}')".format(
+                         layer.source,
+                         layer.type,
+                         layer.name,
+                         layer.dataset_id
+                     )
+                 ),
+                 function(result) {
+                     
+                        var extent = result.rows[0],
+                        bounds = new google.maps.LatLngBounds(
+                                            new google.maps.LatLng(
+                                                extent.miny,
+                                                extent.minx),
+                                            new google.maps.LatLng(
+                                                extent.maxy,
+                                                extent.maxx));
+                        self.map.fitBounds(bounds);
+                 }
+            );
+        },
         /**
          * Adds layer widgets to the map. The layers parameter is an array
          * of layer objects {id, name, type, source}.
@@ -791,9 +816,6 @@ mol.modules.map.layers = function(mol) {
             this.toggle = $(this).find('.toggle').button();
             this.styler = $(this).find('.styler');
             this.zoom = $(this).find('.zoom');
-            if(layer.extent == null) {
-                this.zoom.css('visibility','hidden');
-            }
             this.info = $(this).find('.info');
             this.close = $(this).find('.close');
             this.type = $(this).find('.type');
