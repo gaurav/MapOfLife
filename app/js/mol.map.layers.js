@@ -251,6 +251,22 @@ mol.modules.map.layers = function(mol) {
                 }
             );
             this.bus.addHandler(
+                'remove-all-layers',
+                function(event) {
+                    self.map.overlayMapTypes.clear();
+                    $(self.display.styleAll).prop('disabled', false);
+                    $(self.display.styleAll).qtip('destroy');
+                    $(self.display).find(".close").trigger("click");
+                    self.bus.fireEvent(
+                        new mol.bus.Event(
+                            'hide-layer-display-toggle'));
+                    $(self.display.styleAll)
+                        .prop('disabled', false);
+                    $(self.display.styleAll).qtip('destroy');
+                    self.display.toggle(false);
+                }
+            );
+            this.bus.addHandler(
                 'map-single-layer',
                 function(event) {
                     var name  = event.name,
@@ -489,20 +505,20 @@ mol.modules.map.layers = function(mol) {
                                     layer: layer,
                                     auto_bound: true
                                 },
-                                extent = eval('({0})'.format(layer.extent)),
-                                bounds = new google.maps.LatLngBounds(
+                                extent = (layer.extent != null) ? eval('({0})'.format(layer.extent)) : null,
+                                bounds = (extent != null) ? new google.maps.LatLngBounds(
                                             new google.maps.LatLng(
                                                 extent.sw.lat,
                                                 extent.sw.lng),
                                             new google.maps.LatLng(
                                                 extent.ne.lat,
-                                                extent.ne.lng));
+                                                extent.ne.lng)) : null;
 
-                            //if(!$(l.layer).hasClass('selected')){
-                            //    l.layer.click();
-                            //}
-                            self.map.fitBounds(bounds);
-
+                            if(extent == null || bounds == null ){
+                                self.getBounds(layer);
+                            } else {
+                                self.map.fitBounds(bounds);
+                            }
                             event.stopPropagation();
                             event.cancelBubble = true;
                         }
