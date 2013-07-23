@@ -32,8 +32,8 @@ mol.modules.map.splash = function(mol) {
             var self = this;
             this.display.dialog({
                 autoOpen: true,
-                width: $(window).width() > 800  ? 800 : $(window).width() - 30,
-                height: $(window).width() > 600  ? 600 : $(window).width() - 30,
+                width: $(window).width() > 778  ? 778 : $(window).width() - 30,
+                height: $(window).width() > 535  ? 535 : $(window).width() - 30,
                 DialogClass: "mol-splash",
                 title: "Map of Life",
                 close: function() {
@@ -86,7 +86,9 @@ mol.modules.map.splash = function(mol) {
             
             this.display.liveNear.click(
                 function(event) {
-                    self.bus.fireEvent(new mol.bus.Event('list-local',{}));
+                    var params = {datasetID: $(this).attr("data-dataset-id"),
+                                    className: $(this).attr("data-class-name")}
+                    self.bus.fireEvent(new mol.bus.Event('list-local',params));
                     self.display.dialog("close");
                 }
             );
@@ -183,25 +185,26 @@ mol.modules.map.splash = function(mol) {
             //'    <div class="message"></div>' +
             //'    <iframe class="mol-splash iframe_content ui-dialog-content" style="height:400px; width: 98%; margin-right: auto; display: block;" src="/static/splash/index.html"></iframe>' +
             //' <div>'
-            '<div style="text-align: left;clear: both; margin-bottom:10px; font-weight:normal; padding:10px">' +
+            '<div style="text-align: left;clear: both; margin-bottom:6px; font-weight:normal; padding:10px; background-color:#EFEFEF;">' +
             '   <div style="font-size:16px; margin-bottom:6px;">Map of Life is an online resource for mapping, monitoring and analyzing biodiversity worldwide.' +
-            '   It aims to provide extensive biodiversity information for resource managers, educators or anyone interested in where species are found.' +
+            //'   It aims to provide extensive biodiversity information for resource managers, educators or anyone interested in where species are found.' +
             '   Welcome to this demo version!</div>' +
             '</div>' +
             '   <section style="width: 380px; height:250px; float:left; margin-bottom:10px">' +
             '       <fieldset style="">' +
-            '           <legend>Map a species</legend>' +
+            '           <legend style="font-size:22px;" >Map a species</legend>' +
             '           <div style="float:left"><img src="../static/img/puma-range150px.jpg"/></div>' +
             '           <div style="float:left; margin-left:10px;">' +
             '               <span class="mol-Splash-button">Where do Pumas live?</span>'    +
             '               <div style="font-weight:normal; margin-top:10px; margin-bottom:20px; height:90px">' +
-            '                   <div >See a map for a ...</div>'    +
+            '                   <div >Where does this live?</div>'    +
             '                   <div style="margin-top:10px; width:150px">' +
-            '                       <div style="width:50px; height:40px; float:left;"><div style="width:25px; height:37px;"><img class="speciesPic" src="../static/img/flamingo25x37px.png" /></div></div>' + //onmouseover="this.src=\'../static/img/bird-shadow-highlight-20x27px.png\'" onmouseout="this.src=\'../static/img/bird-shadow20x27px.png\'"
-            '                       <div style="width:50px; height:40px; float:left;"><div style="width:38px; height:39px;"><img class="speciesPic" src="../static/img/frog38x39px.png" /></div></div>' +
-            '                       <div style="width:50px; height:40px; float:left;"><div style="width:40px; height:38px;"><img class="speciesPic" src="../static/img/jtree40x38px.png" /></div></div>' +
-            '                       <div style="width:60px; height:40px; float:left;"><div style="width:60px; height:27px;"><img class="speciesPic" src="../static/img/lemur60x27px.png"/></div></div>' +
-            '                       <div style="width:60px; height:40px; float:right;"><div style="width:50px; height:33px;"><img class="speciesPic" src="../static/img/lizard50x33px.png"/></div></div>' +
+            '                       <div style="width:50px; height:40px; float:left;"><div style="width:25px; height:37px;">' +
+            '                           <img title="Lesser Flamingo" class="speciesPic" src="../static/img/flamingo25x37px.png" /></div></div>' + 
+            '                       <div style="width:50px; height:40px; float:left;"><div style="width:38px; height:39px;"><img title="Broad-Banded Grass Frog" class="speciesPic" src="../static/img/frog38x39px.png" /></div></div>' +
+            '                       <div style="width:50px; height:40px; float:left;"><div style="width:40px; height:38px;"><img title="Joshua Tree" class="speciesPic" src="../static/img/jtree40x38px.png" /></div></div>' +
+            '                       <div style="width:60px; height:40px; float:left;"><div style="width:60px; height:27px;"><img title="Hairy-Eared Dwarf Lemur" class="speciesPic" src="../static/img/lemur60x27px.png"/></div></div>' +
+            '                       <div style="width:60px; height:40px; float:right;"><div style="width:50px; height:33px;"><img title="Arabian Toad-headed Agama" class="speciesPic" src="../static/img/lizard50x33px.png"/></div></div>' +
             '                   </div>' +
             '               </div>' +
             '               <div style="clear:both; padding-top:7px"><span class="mol-Splash-button">Let me search for a species</span></div>'   +
@@ -210,29 +213,34 @@ mol.modules.map.splash = function(mol) {
             '   </section>' +
             '   <section style="width: 380px; float:left; height:250px; margin-bottom:10px">' +       
             '       <fieldset style="">' +
-            '           <legend>See a species list</legend>' +  
+            '           <legend style="font-size:22px;" >See a species list</legend>' +  
             '           <div style="float:left;"><img src="../static/img/species-list150px.jpg"/></div>' +
             '           <div style="float:left; margin-left:10px;">' + 
-            '               <span class="mol-Splash-button"">Which birds Live near me?</span>'  + //
+            '               <span class="mol-Splash-button liveNear">Which birds live near me?</span>'  + //
             '               <div style="font-weight:normal; margin-top:10px; margin-bottom: 20px height:90px"">' +
-            '                   <div >See a list for all ...</div>'  +
+            '                   <div >What lives near me?</div>'  +
             '                   <div style="margin-top:10px; width:150px">' +
-            '                       <div style="width:50px; height:40px; float:left;"><div style="width:29px; height:40px;"><img class="speciesPic" src="../static/img/bird29x40px.png" /></div></div>' + //onmouseover="this.src=\'../static/img/bird-shadow-highlight-20x27px.png\'" onmouseout="this.src=\'../static/img/bird-shadow20x27px.png\'"
-            '                       <div style="width:50px; height:40px; float:left;"><div style="width:38px; height:39px;"><img class="speciesPic" src="../static/img/frog38x39px.png" /></div></div>' +
-            '                       <div style="width:50px; height:40px; float:left;"><div style="width:40px; height:18px;"><img class="speciesPic" src="../static/img/bass40x18px.png" /></div></div>' +
-            '                       <div style="width:60px; height:40px; float:left;"><div style="width:60px; height:27px;"><img class="speciesPic" src="../static/img/lemur60x27px.png"/></div></div>' +
-            '                       <div style="width:60px; height:40px; float:right;"><div style="width:50px; height:33px;"><img class="speciesPic" src="../static/img/lizard50x33px.png"/></div></div>' +
+            '                       <div style="width:50px; height:40px; float:left;"><div style="width:29px; height:40px;">' +
+            '                           <img title="Birds" class="speciesPic liveNear"  data-dataset-id="jetz_maps" data-class-name="Aves" src="../static/img/bird29x40px.png" /></div></div>' +
+            '                       <div style="width:50px; height:40px; float:left;"><div style="width:38px; height:39px;">' +
+            '                           <img title="Amphibians"  class="speciesPic liveNear" data-dataset-id="iucn_amphibians" data-class-name="Amphibia" src="../static/img/frog38x39px.png" /></div></div>' +
+            '                       <div style="width:50px; height:40px; float:left;"><div style="width:40px; height:18px; margin-top:11px">'+
+            '                           <img title="Freshwater Fishes"  class="speciesPic liveNear" data-dataset-id="na_fish" data-class-name="Fishes" src="../static/img/bass40x18px.png" /></div></div>' +
+            '                       <div style="width:60px; height:40px; float:left;"><div style="width:60px; height:27px;">' +
+            '                           <img title="Mammals" class="speciesPic liveNear" data-dataset-id="iucn_mammals" data-class-name="Mammalia" src="../static/img/lemur60x27px.png"/></div></div>' +
+            '                       <div style="width:60px; height:40px; float:right;"><div style="width:50px; height:33px;">' +
+            '                           <img title="Reptiles" class="speciesPic liveNear" data-dataset-id="iucn_reptiles" data-class-name="Reptilia" src="../static/img/lizard50x33px.png"/></div></div>' +
             '                   </div>' +
             '               </div>' +
             '               <div style="clear:both; padding-top:7px";><span  class="mol-Splash-button list">Let me pick a place</span></div>'   + //
             '           </div>' +
             '       </fieldset>' +
             '   </section>' +
-            '   <div style="text-align: center;clear: both; ">' +
-            '       <fieldset style="width:760;">' +
-            '           <span class="mol-Splash-button dashboard" style="width:100px; height:15px;">All datasets</span>'    + //
-            '           <span class="mol-Splash-button about" style="width:100px; height:15px;">About</span>' + //
-            '       </fieldset>' +
+            '   <div style="text-align: center;clear: both; padding-top:4px; padding-bottom:10px" >' +
+            //'       <fieldset style="height:50px; "">' +
+            '           <span class="mol-Splash-button dashboard" style="width:80px; height:14px; padding:6px;">All datasets</span>'    + //
+            '           <span class="mol-Splash-button about" style="width:80px; height:14px; padding:6px;">About</span>' + //
+            //'       </fieldset>' +
             '   </div>' +
             //' </div>' +   //end holder
             //' <div class="mol-Splash-footer">

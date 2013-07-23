@@ -204,10 +204,10 @@ mol.modules.map.query = function(mol) {
             this.bus.addHandler(
                 'list-local',
                 function(event) {
-                    var dsid = (event.group != undefined) ? 
-                        event.group : 'jetz_maps',
-                        group_name = (event.group_name != undefined) ? 
-                        event.group_name : 'Birds';
+                    var datasetID = (event.datasetID != undefined) ? 
+                        event.datasetID : 'jetz_maps',
+                        className = (event.className != undefined) ? 
+                        event.className : 'Aves';
  
                     navigator.geolocation.getCurrentPosition(
                         function(loc) {
@@ -226,7 +226,9 @@ mol.modules.map.query = function(mol) {
                                                 loc.coords.latitude,
                                                 loc.coords.longitude
                                             )
-                                        }
+                                        },
+                                        dataset_id:datasetID,
+                                        class_name: className
                                     }
                                 )
                             );
@@ -341,17 +343,20 @@ mol.modules.map.query = function(mol) {
                 'species-list-query-click',
                 function (event) {
                     var listradius, overlayPane,
-                        dataset_id = $("option:selected",
-                            $(self.display.dataset_id)).data(
-                                $('.selected',$(self.display.types)).val()
-                            ),
-                        className =  $("option:selected",
-                            $(self.display.dataset_id)).text();
+                        datasetID = (event.dataset_id == null) ? 
+                            $("option:selected",
+                                $(self.display.dataset_id)).data(
+                                    $('.selected',$(self.display.types)).val()
+                                ): event.dataset_id,
+                        className = (event.class_name == null)?  $("option:selected",
+                            $(self.display.dataset_id)).text(): event.class_name;
 
                     if($(self.display).data('qtip')) {
                         $(self.display).qtip('destroy');
                     }
-
+                    
+                    $(self.display.dataset_id)
+                    
                     if (self.enabled
                             &&
                             $(self.display.queryButton).hasClass('selected')) {
@@ -386,7 +391,7 @@ mol.modules.map.query = function(mol) {
                             event.gmaps_event.latLng.lat(),
                             event.gmaps_event.latLng.lng(),
                             listradius,
-                            dataset_id,
+                            datasetID,
                             className);
                     }
                 }
@@ -1363,7 +1368,7 @@ mol.modules.map.query = function(mol) {
                     '    </select>' +
                          'Group ' +
                     '    <select class="dataset_id" value="">' +
-                    '      <option selected data-range="jetz_maps" ' +
+                    '      <option selected class="jetz_maps" data-range="jetz_maps" ' +
                     '        data-class="Aves" >' +
                     '        Birds</option>' +
                     '      <option data-range="na_fish"' +
