@@ -34,6 +34,12 @@ mol.modules.map.menu = function(mol) {
                    self.bus.fireEvent(
                         new mol.bus.Event('toggle-splash')
                     );
+                    self.bus.fireEvent(
+                        new mol.bus.Event('remove-all-layers')
+                    );
+                     self.bus.fireEvent(
+                        new mol.bus.Event('clear-lists')
+                    );
                 }
             );
             this.display.about.click(
