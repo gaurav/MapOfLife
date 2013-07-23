@@ -327,7 +327,7 @@ mol.modules.map.query = function(mol) {
                                 },
                                 hide: {
                                     fixed: false,
-                                    event: 'mouseenter'
+                                    event: 'unfocus'
                                 }
                             })
                         }
