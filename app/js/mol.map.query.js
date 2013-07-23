@@ -204,8 +204,8 @@ mol.modules.map.query = function(mol) {
             this.bus.addHandler(
                 'list-local',
                 function(event) {
-                    var datasetID = (event.datasetID != undefined) ? 
-                        event.datasetID : 'jetz_maps',
+                    var dataset_ID = (event.dataset_id != undefined) ? 
+                        event.dataset_id : 'jetz_maps',
                         className = (event.className != undefined) ? 
                         event.className : 'Aves';
  
