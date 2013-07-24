@@ -97,7 +97,7 @@ mol.modules.map.splash = function(mol) {
                 function(event) {
                     var params = {dataset_id: 'mol',
                                     name: $(this).data("name")}
-                    self.bus.fireEvent(new mol.bus.Event('map-single-layer',params));
+                    self.bus.fireEvent(new mol.bus.Event('map-single-species',params));
                     self.display.dialog("close");
                 }
             );   
@@ -142,6 +142,7 @@ mol.modules.map.splash = function(mol) {
                     );
                 }
             );
+            
             this.display.search.click(
                 function(event) {
                     self.display.dialog("close");
@@ -191,7 +192,7 @@ mol.modules.map.splash = function(mol) {
         init: function() {
             var html = '' +
             '<div class="mol-Splash">' +
-            //'    <div class="message"></div>' +
+            '    <div class="message"></div>' +
             //'    <iframe class="mol-splash iframe_content ui-dialog-content" style="height:400px; width: 98%; margin-right: auto; display: block;" src="/static/splash/index.html"></iframe>' +
             //' <div>'
             '<div style="text-align: left;clear: both; margin-bottom:6px; font-weight:normal; padding:10px; background-color:#EFEFEF;">' +
@@ -204,7 +205,7 @@ mol.modules.map.splash = function(mol) {
             '           <legend style="font-size:22px;" >Map a species</legend>' +
             '           <div style="float:left"><img src="../static/img/puma-range150px.jpg"/></div>' +
             '           <div style="float:left; margin-left:10px;">' +
-            '               <span class="mol-Splash-button">Where do Pumas live?</span>'    +
+            '               <span class="mol-Splash-button mapSingleLayer" data-name="Puma concolor">Where do Pumas live?</span>'    +
             '               <div style="font-weight:normal; margin-top:10px; margin-bottom:20px; height:90px">' +
             '                   <div >Where does this live?</div>'    +
             '                   <div style="margin-top:10px; width:150px">' +
@@ -277,7 +278,7 @@ mol.modules.map.splash = function(mol) {
             this.about = $(this).find('.about');
             this.search = $(this).find('.search');
             this.dashboard = (this).find('.dashboard');
-            this.Puma = $(this).find('.seePuma');
+            this.seePuma = $(this).find('.seePuma');
             this.liveNear = $(this).find('.liveNear');
             this.mapSingleLayer = $(this).find('.mapSingleLayer');
             this.pickRandom = $(this).find('.pickRandom');

@@ -58,7 +58,7 @@ mol.modules.map.layers = function(mol) {
                 'LEFT JOIN ac n ON ' +
                     'l.scientificname = n.n ' +
                 'WHERE ' +
-                     "l.scientificname = '{0}' and l.dataset_id = '{1}'" +
+                     "{0}" +
                 'ORDER BY name, type_sort_order';
         },
 
@@ -274,7 +274,9 @@ mol.modules.map.layers = function(mol) {
                     
                     $.getJSON(
                        mol.services.cartodb.sqlApi.json_url.format(
-                        self.layer_sql.format(name, dataset_id)),
+                        self.layer_sql.format(
+                            "l.scientificname='{0}' and l.dataset_id='{1}"
+                            .format(name, dataset_id))),
                         function(response) {
                             var layer = response.rows[0];
 
@@ -284,6 +286,41 @@ mol.modules.map.layers = function(mol) {
                                 new mol.bus.Event(
                                     'add-layers', 
                                     {layers: [layer]}
+                                )
+                            );
+                            self.getBounds(layer);
+                        },
+                        'json'
+                    );
+                    
+                }
+            );
+            this.bus.addHandler(
+                'map-single-species',
+                function(event) {
+                    var name  = event.name,
+                        dataset_id = event.dataset_id;
+                    
+                    $.getJSON(
+                       mol.services.cartodb.sqlApi.json_url.format(
+                        self.layer_sql.format(
+                            "l.scientificname='{0}'"
+                            .format(name, dataset_id))),
+                        function(response) {
+                            var layers = response.rows;
+
+                            layers =  _.map(
+                                layers,
+                                function(layer) {
+                                    layer.id = mol.core.getLayerId(layer);
+                                    return layer;
+                                }
+                            );
+                            
+                            self.bus.fireEvent(
+                                new mol.bus.Event(
+                                    'add-layers', 
+                                    {layers: layers}
                                 )
                             );
                             self.getBounds(layer);
