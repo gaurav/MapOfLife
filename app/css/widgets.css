@@ -105,15 +105,19 @@ button:hover{
     font-size: 10pt;
 }
 
-/*.holder_content { position: relative; float: left; width: 100%; margin-top:-10px; margin-bottom:16px; margin-left:26px;}*/
 
 /* css for splash page content */
-.holder_content { position: relative; float: left;}
-/*.group1 { float: left; width: 400px; position: relative; background: transparent; padding:15px; margin-bottom:10px}*/
-.group1 {width: 380px; float:left;}
-/*.group2 { float: left; width: 400px; position: relative; background: transparent; padding:15px; margin-bottom:10px}*/
-.group2 {width: 380px; float:right;}
-.mol-Splash-button {
+.mol-Splash .header {text-align: left;clear: both; margin-bottom:6px; font-weight:normal; padding:10px; font-size:16px;}
+.mol-Splash .mainPanel {width: 380px; height:250px; float:left; margin-bottom:10px}
+.mol-Splash .legend {font-size:22px;}
+.mol-Splash .imagePanel {float:left}
+.mol-Splash .buttonPanel {float:left; margin-left:10px;}
+.mol-Splash .middlePanel {font-weight:normal; margin-top:10px; margin-bottom:20px; height:90px}
+.mol-Splash .iconPanel {margin-top:10px; width:150px}
+.mol-Splash .iconTop {width:50px; height:40px; float:left;}
+.mol-Splash .iconBottom {width:60px; height:40px; float:left;}
+
+.mol-Splash .button {
 	width: 160px;
 	height:20px;
 	position:relative;
