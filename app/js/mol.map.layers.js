@@ -323,7 +323,7 @@ mol.modules.map.layers = function(mol) {
                                     {layers: layers}
                                 )
                             );
-                            self.getBounds(layer);
+                            //self.getBounds(layer);
                         },
                         'json'
                     );

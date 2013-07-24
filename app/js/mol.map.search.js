@@ -287,7 +287,9 @@ mol.modules.map.search = function(mol) {
             
             this.display.click(
                 function(event) {
-                    $(this).qtip("hide");
+                    $(this).qtip("hide");  
+                    
+                    
                 }
             )
             
