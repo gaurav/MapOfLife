@@ -97,7 +97,7 @@ mol.modules.map.splash = function(mol) {
                 function(event) {
                     var params = {dataset_id: 'mol',
                                     name: $(this).data("name")}
-                    self.bus.fireEvent(new mol.bus.Event('map-single-layer',params));
+                    self.bus.fireEvent(new mol.bus.Event('map-single-species',params));
                     self.display.dialog("close");
                 }
             );   
@@ -142,6 +142,7 @@ mol.modules.map.splash = function(mol) {
                     );
                 }
             );
+            
             this.display.search.click(
                 function(event) {
                     self.display.dialog("close");
@@ -191,67 +192,68 @@ mol.modules.map.splash = function(mol) {
         init: function() {
             var html = '' +
             '<div class="mol-Splash">' +
-            //'    <div class="message"></div>' +
+            '    <div class="message"></div>' +
             //'    <iframe class="mol-splash iframe_content ui-dialog-content" style="height:400px; width: 98%; margin-right: auto; display: block;" src="/static/splash/index.html"></iframe>' +
             //' <div>'
-            '<div class="header">' +
-            '   Map of Life is an online resource for mapping, monitoring and analyzing biodiversity worldwide.' +
-            '   Welcome to this demo version!' +
+            '<div style="text-align: left;clear: both; margin-bottom:6px; font-weight:normal; padding:10px; background-color:#EFEFEF;">' +
+            '   <div style="font-size:16px; margin-bottom:6px;">Map of Life is an online resource for mapping, monitoring and analyzing biodiversity worldwide.' +
+            //'   It aims to provide extensive biodiversity information for resource managers, educators or anyone interested in where species are found.' +
+            '   Welcome to this demo version!</div>' +
             '</div>' +
-            '   <section class="mainPanel">' +
-            '       <fieldset>' +
-            '           <legend class="legend" >Map a species</legend>' +
-            '           <div class="imagePanel"><img src="../static/img/puma-range150px.jpg"/></div>' +
-            '           <div class="buttonPanel">' +
-            '               <span class="button">Where do Pumas live?</span>'    +
-            '               <div class="middlePanel">' +
+            '   <section style="width: 380px; height:250px; float:left; margin-bottom:10px">' +
+            '       <fieldset style="">' +
+            '           <legend style="font-size:22px;" >Map a species</legend>' +
+            '           <div style="float:left"><img src="../static/img/puma-range150px.jpg"/></div>' +
+            '           <div style="float:left; margin-left:10px;">' +
+            '               <span class="mol-Splash-button mapSingleLayer" data-name="Puma concolor">Where do Pumas live?</span>'    +
+            '               <div style="font-weight:normal; margin-top:10px; margin-bottom:20px; height:90px">' +
             '                   <div >Where does this live?</div>'    +
-            '                   <div class="iconPanel">' +
-            '                       <div class="iconTop"><div style="width:25px; height:37px;">' +
+            '                   <div style="margin-top:10px; width:150px">' +
+            '                       <div style="width:50px; height:40px; float:left;"><div style="width:25px; height:37px;">' +
             '                           <img title="Lesser Flamingo" class="speciesPic mapSingleLayer" data-name="Phoeniconaias minor" src="../static/img/flamingo25x37px.png" /></div></div>' + 
-            '                       <div class="iconTop"><div style="width:38px; height:39px;">' +
+            '                       <div style="width:50px; height:40px; float:left;"><div style="width:38px; height:39px;">' +
             '                           <img title="Broad-Banded Grass Frog" class="speciesPic mapSingleLayer" data-name="Ptychadena bibroni" src="../static/img/frog38x39px.png" /></div></div>' +
-            '                       <div class="iconTop"><div style="width:40px; height:38px;">' +
+            '                       <div style="width:50px; height:40px; float:left;"><div style="width:40px; height:38px;">' +
             '                           <img title="Joshua Tree" class="speciesPic mapSingleLayer" data-name="Yucca brevifolia" src="../static/img/jtree40x38px.png" /></div></div>' +
-            '                       <div class="iconBottom"><div style="width:60px; height:27px;">' +
+            '                       <div style="width:60px; height:40px; float:left;"><div style="width:60px; height:27px;">' +
             '                           <img title="Hairy-Eared Dwarf Lemur" class="speciesPic mapSingleLayer" data-name="Allocebus trichotis" src="../static/img/lemur60x27px.png"/></div></div>' +
-            '                       <div class="iconBottom" style="float:right;"><div style="width:50px; height:33px;">'+
+            '                       <div style="width:60px; height:40px; float:right;"><div style="width:50px; height:33px;">'+
             '                           <img title="Arabian Toad-headed Agama" class="speciesPic mapSingleLayer" data-name="Phrynocephalus arabicus" src="../static/img/lizard50x33px.png"/></div></div>' +
             '                   </div>' +
             '               </div>' +
-            '               <div style="clear:both; padding-top:7px"><span class="button search">Let me search for a species</span></div>'   +
+            '               <div style="clear:both; padding-top:7px"><span class="mol-Splash-button search">Let me search for a species</span></div>'   +
             '           </div>' +
             '       </fieldset>' +
             '   </section>' +
-            '   <section class="mainPanel">' +       
-            '       <fieldset>' +
-            '           <legend class="legend" >See a species list</legend>' +  
-            '           <div class="imagePanel"><img src="../static/img/species-list150px.jpg"/></div>' +
-            '           <div class="buttonPanel">' + 
-            '               <span class="button liveNear">Which birds live near me?</span>'  + //
-            '               <div class="middlePanel">' +
+            '   <section style="width: 380px; float:left; height:250px; margin-bottom:10px">' +       
+            '       <fieldset style="">' +
+            '           <legend style="font-size:22px;" >See a species list</legend>' +  
+            '           <div style="float:left;"><img src="../static/img/species-list150px.jpg"/></div>' +
+            '           <div style="float:left; margin-left:10px;">' + 
+            '               <span class="mol-Splash-button liveNear">Which birds live near me?</span>'  + //
+            '               <div style="font-weight:normal; margin-top:10px; margin-bottom: 20px height:90px"">' +
             '                   <div >What lives near me?</div>'  +
-            '                   <div class="iconPanel">' +
-            '                       <div class="iconTop"><div style="width:29px; height:40px;">' +
+            '                   <div style="margin-top:10px; width:150px">' +
+            '                       <div style="width:50px; height:40px; float:left;"><div style="width:29px; height:40px;">' +
             '                           <img title="Birds" class="speciesPic liveNear"  data-dataset_id="jetz_maps" data-class_name="Aves" src="../static/img/bird29x40px.png" /></div></div>' +
-            '                       <div class="iconTop"><div style="width:38px; height:39px;">' +
+            '                       <div style="width:50px; height:40px; float:left;"><div style="width:38px; height:39px;">' +
             '                           <img title="Amphibians"  class="speciesPic liveNear" data-dataset-id="iucn_amphibians" data-class-name="Amphibia" src="../static/img/frog38x39px.png" /></div></div>' +
-            '                       <div class="iconTop"><div style="width:40px; height:18px; margin-top:11px">'+
-            '                           <img title="North American Freshwater Fishes"  class="speciesPic liveNear" data-dataset-id="na_fish" data-class-name="Fishes" src="../static/img/bass40x18px.png" /></div></div>' +
-            '                       <div class="iconBottom"><div style="width:60px; height:27px;">' +
+            '                       <div style="width:50px; height:40px; float:left;"><div style="width:40px; height:18px; margin-top:11px">'+
+            '                           <img title="Freshwater Fishes"  class="speciesPic liveNear" data-dataset-id="na_fish" data-class-name="Fishes" src="../static/img/bass40x18px.png" /></div></div>' +
+            '                       <div style="width:60px; height:40px; float:left;"><div style="width:60px; height:27px;">' +
             '                           <img title="Mammals" class="speciesPic liveNear" data-dataset-id="iucn_mammals" data-class-name="Mammalia" src="../static/img/lemur60x27px.png"/></div></div>' +
-            '                       <div class="iconBottom" style="float:right;"><div style="width:50px; height:33px;">' +
-            '                           <img title="North American Reptiles" class="speciesPic liveNear" data-dataset-id="iucn_reptiles" data-class-name="Reptilia" src="../static/img/lizard50x33px.png"/></div></div>' +
+            '                       <div style="width:60px; height:40px; float:right;"><div style="width:50px; height:33px;">' +
+            '                           <img title="Reptiles" class="speciesPic liveNear" data-dataset-id="iucn_reptiles" data-class-name="Reptilia" src="../static/img/lizard50x33px.png"/></div></div>' +
             '                   </div>' +
             '               </div>' +
-            '               <div style="clear:both; padding-top:7px";><span  class="button list">Let me pick a place</span></div>'   + //
+            '               <div style="clear:both; padding-top:7px";><span  class="mol-Splash-button list">Let me pick a place</span></div>'   + //
             '           </div>' +
             '       </fieldset>' +
             '   </section>' +
             '   <div style="text-align: center;clear: both; padding-top:4px; padding-bottom:10px" >' +
             //'       <fieldset style="height:50px; "">' +
-            '           <span class="button dashboard" style="width:80px; height:14px; padding:6px;">All datasets</span>'    + //
-            '           <span class="button about" style="width:80px; height:14px; padding:6px;">About</span>' + //
+            '           <span class="mol-Splash-button dashboard" style="width:80px; height:14px; padding:6px;">All datasets</span>'    + //
+            '           <span class="mol-Splash-button about" style="width:80px; height:14px; padding:6px;">About</span>' + //
             //'       </fieldset>' +
             '   </div>' +
             //' </div>' +   //end holder
@@ -276,7 +278,7 @@ mol.modules.map.splash = function(mol) {
             this.about = $(this).find('.about');
             this.search = $(this).find('.search');
             this.dashboard = (this).find('.dashboard');
-            this.Puma = $(this).find('.seePuma');
+            this.seePuma = $(this).find('.seePuma');
             this.liveNear = $(this).find('.liveNear');
             this.mapSingleLayer = $(this).find('.mapSingleLayer');
             this.pickRandom = $(this).find('.pickRandom');

@@ -284,6 +284,13 @@ mol.modules.map.search = function(mol) {
             /**
              * Clicking the go button executes a search.
              */
+            
+            this.display.click(
+                function(event) {
+                    $(this).qtip("hide");
+                }
+            )
+            
             this.display.goButton.click(
                 function(event) {
                     self.search(self.display.searchBox.val());
