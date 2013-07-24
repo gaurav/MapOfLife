@@ -205,8 +205,6 @@ mol.modules.map.search = function(mol) {
             this.bus.addHandler(
                 'search-display-toggle',
                 function(event) {
-                   
-
                     if(event.visible != true ) {
                         self.display.searchDisplay.hide();
                         self.display.find('.toggle').text('▶');
@@ -215,7 +213,6 @@ mol.modules.map.search = function(mol) {
                         self.display.searchDisplay.show();
                         self.display.find('.toggle').text('◀');
                     }
-                    
                     self.bus.fireEvent(
                         new mol.bus.Event('results-display-toggle', {})
                     );
@@ -258,7 +255,18 @@ mol.modules.map.search = function(mol) {
                     $(self.display.searchBox).autocomplete("close");
                 }
             );
-
+            this.bus.addHandler(
+                'hide-search',
+                function(event) {
+                    $(self.display).hide();
+                }
+            );
+            this.bus.addHandler(
+                'show-search',
+                function(event) {
+                    $(self.display).show();
+                }
+            );
             this.bus.addHandler(
                 'search',
                 function(event) {

@@ -208,7 +208,7 @@ mol.modules.map.query = function(mol) {
                         event.dataset_id : 'jetz_maps',
                         className = (event.className != undefined) ? 
                         event.className : 'Aves';
- 
+                    $(self.display).find('.dataset_id').val(dataset_id);
                     navigator.geolocation.getCurrentPosition(
                         function(loc) {
                             self.bus.fireEvent(
@@ -315,24 +315,25 @@ mol.modules.map.query = function(mol) {
                     if(!self.seenHint) {
                         $(self.display.queryButton).qtip({
                             content: {
-                                    text: '<div class="mol-hint">Click on the map ' +
-                                          'to find a list of species that live near ' +
-                                          'that location.</div>'
-                                },
-                                position: {
-                                    my: 'top right',
-                                    at: 'bottom left'
-                                },
-                                show: {
-                                    event: false,
-                                    ready: true
-                                },
-                                hide: {
-                                    fixed: false,
-                                    event: 'unfocus'
-                                }
-                            })
-                        }
+                                text: '<div class="mol-hint">Click on the map ' +
+                                      'to find a list of species that live near ' +
+                                      'that location.</div>'
+                            },
+                            position: {
+                                my: 'top right',
+                                at: 'bottom left'
+                            },
+                            show: {
+                                event: false,
+                                ready: true
+                            },
+                            hide: {
+                                fixed: false,
+                                event: 'unfocus'
+                            }
+                        })
+                    }
+                    self.seenHint = true
                 }
             );
 
@@ -448,7 +449,18 @@ mol.modules.map.query = function(mol) {
                             {source : 'listradius'}));
                 }
             );
-
+            this.bus.addHandler(
+                'hide-list',
+                function(event, params) {
+                    $(self.display).hide();
+                }
+            );
+            this.bus.addHandler(
+                'show-list',
+                function(event, params) {
+                    $(self.display).show();
+                }
+            );
             this.bus.addHandler(
                 'species-list-tool-toggle',
                 function(event, params) {
@@ -462,6 +474,7 @@ mol.modules.map.query = function(mol) {
                         self.display.speciesDisplay.hide();
                     } else {
                         self.display.speciesDisplay.show();
+                        self.bus.fireEvent(new mol.bus.Event('hide-search'));
                     }
 
                     if (self.listradius) {
@@ -1368,20 +1381,20 @@ mol.modules.map.query = function(mol) {
                     '    </select>' +
                          'Group ' +
                     '    <select class="dataset_id" value="">' +
-                    '      <option selected class="jetz_maps" data-range="jetz_maps" ' +
+                    '      <option selected value="jetz_maps" data-range="jetz_maps" ' +
                     '        data-class="Aves" >' +
                     '        Birds</option>' +
-                    '      <option data-range="na_fish"' +
+                    '      <option value="na_fish" data-range="na_fish"' +
                     '        data-class="Fishes" >' +
                     '        NA Freshwater Fishes</option>' +
-                    '      <option data-range="iucn_reptiles" ' +
+                    '      <option value="iucn_reptiles" data-range="iucn_reptiles" ' +
                     '        data-regionalchecklist="ecoregion_species" ' +
                     '        data-class="Reptilia" >' +
                     '        NA Reptiles</option>' +
-                    '      <option data-range="iucn_amphibians"' +
+                    '      <option value="iucn_amphibians" data-range="iucn_amphibians"' +
                     '        data-class="Amphibia" >' +
                     '        Amphibians</option>' +
-                    '      <option data-range="iucn_mammals" ' +
+                    '      <option value="iucn_mammals" data-range="iucn_mammals" ' +
                     '        data-class="Mammalia" >' +
                     '        Mammals</option>' +
                     '    </select>' +

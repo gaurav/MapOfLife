@@ -6,6 +6,7 @@ mol.modules.map.menu = function(mol) {
         init: function(proxy, bus) {
             this.proxy = proxy;
             this.bus = bus;
+            this.seenHint = false;
         },
 
         /**
@@ -71,7 +72,11 @@ mol.modules.map.menu = function(mol) {
                     );
                 }
             );
-
+            this.display.click(
+                function(event) {
+                    $(this).qtip("close");
+                }
+            )
             this.bus.addHandler(
                 'add-dashboard-toggle-button',
                 function(event) {
@@ -98,7 +103,36 @@ mol.modules.map.menu = function(mol) {
                     }
                 }
             );
+            this.bus.addHandler(
+                'show-menu-hint',
+                function(event) {
+                    
+                    if(!self.seenHint) {
+                        $(self.display).qtip({
+                            content: {
+                                    text: '<div class="mol-hint">Click here to start over.</div>'
+                            },
+                            position: {
+                                my: 'bottom right',
+                                at: 'top left'
+                            },
+                            show: {
+                                event: false,
+                                ready: true
+                            },
+                            hide: {
+                                fixed: false,
+                                event: 'unfocus'
+                            }
+                        })
+                    }
+                    self.seenHint = true
+                        
+                }
+            );
         },
+        
+
 
         /**
          * Fires the 'add-map-control' event. The mol.map.MapEngine handles
