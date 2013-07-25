@@ -1907,6 +1907,9 @@ mol.modules.map.menu = function(mol) {
                    self.bus.fireEvent(
                         new mol.bus.Event('toggle-splash')
                     );
+                     self.bus.fireEvent(
+                        new mol.bus.Event('taxonomy-dashboard-toggle',{visible:false})
+                    );
                     self.bus.fireEvent(
                         new mol.bus.Event('remove-all-layers')
                     );
@@ -1954,18 +1957,14 @@ mol.modules.map.menu = function(mol) {
                 function(event) {
                     $(this).qtip("hide");
                 }
-            )
-            this.bus.addHandler(
-                'add-dashboard-toggle-button',
+            );
+            this.display.dashboard.click(
                 function(event) {
-                    self.display.dashboard.click(
-                        function(event) {
-                            self.bus.fireEvent(
-                                new mol.bus.Event('taxonomy-dashboard-toggle'));
-                        }
-                    );
+                    self.bus.fireEvent(
+                        new mol.bus.Event('taxonomy-dashboard-toggle'));
                 }
             );
+               
 
             this.bus.addHandler(
                 'menu-display-toggle',
@@ -3893,25 +3892,7 @@ mol.modules.map.dashboard = function(mol) {
 
             start: function() {
                 this.initDialog();
-                this.addDashboardMenuButton();
             },
-
-            addDashboardMenuButton : function() {
-               var html = '' +
-                    '<div ' +
-                        'title="Toggle dashboard." ' +
-                        'id="dashboard" ' +
-                        'class="widgetTheme dash button">' +
-                        'Dashboard' +
-                    '</div>',
-                    params = {
-                        button: html
-                    },
-                    event = new mol.bus.Event('add-dashboard-toggle-button', params);
-
-               this.bus.fireEvent(event);
-            },
-
             addEventHandlers: function() {
                 var self = this;
 
@@ -3976,13 +3957,14 @@ mol.modules.map.dashboard = function(mol) {
              */
             initDialog: function() {
                 var self = this;
-
+				
                 $.getJSON(
-                    'http://mol.cartodb.com/api/v1/sql?q={0}'.format(this.dashboard_sql),
+                    'http://mol.cartodb.com/api/v1/sql?callback=?&q={0}'.format(this.dashboard_sql),
                     function(response) {
                         self.display = new mol.map.dashboard.DashboardDisplay(
                             response.rows, self.summary
                         );
+                        self.addEventHandlers();
                         self.display.dialog(
                             {
                                 autoOpen: false,
@@ -4009,7 +3991,7 @@ mol.modules.map.dashboard = function(mol) {
                             $(".mol-Dashboard-TableWindow")
                                 .height($(".mol-Dashboard").height()-95);
                         });
-                        self.addEventHandlers();
+                       
                     }
                 );
 
