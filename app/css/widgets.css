@@ -154,6 +154,7 @@ button:hover{
 }
 .mol-Splash .imagePanel {
    float:left;
+   margin-top: 0.02em;
    border-radius: 0.7em;
    height:200px;
    overflow: hidden;
@@ -189,8 +190,7 @@ button:hover{
     padding:9px;
     margin-left:4px;
     display: inline-block;
-    color:#000000;
-    font-size: 12px;
+    font-size: 0.7em;
     cursor: pointer;
     text-align: center;
     text-decoration:none;
@@ -220,7 +220,12 @@ button:hover{
     border-radius:4px;
 }
 
-.mol-Splash .button:hover { color: #FFFFFF; }
+.mol-Splash .button:hover {
+    background-color: rgba(25, 25, 25, 1.0);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#FF191919', endColorstr='#FF191919');
+    cursor: pointer;
+}
+}
 
 .speciesPic:hover {   
    height:110%;

@@ -180,7 +180,12 @@ mol.modules.map.query = function(mol) {
                     );
                 }
             );
-
+			this.display.click(
+				function(event){
+					$(this).qtip('destroy');
+				}
+					
+			);
             /*
              * Toggle Click Handler for Species List Clicking
              */
