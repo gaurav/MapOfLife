@@ -1910,8 +1910,14 @@ mol.modules.map.menu = function(mol) {
                     self.bus.fireEvent(
                         new mol.bus.Event('remove-all-layers')
                     );
-                     self.bus.fireEvent(
+                    self.bus.fireEvent(
                         new mol.bus.Event('clear-lists')
+                    );
+                    self.bus.fireEvent(
+                        new mol.bus.Event(
+                        	'species-list-tool-toggle',
+                        	{visible: false}
+                    	)
                     );
                 }
             );
@@ -1946,7 +1952,7 @@ mol.modules.map.menu = function(mol) {
             );
             this.display.click(
                 function(event) {
-                    $(this).qtip("close");
+                    $(this).qtip("hide");
                 }
             )
             this.bus.addHandler(
@@ -3006,8 +3012,7 @@ mol.modules.map.search = function(mol) {
                             content: {
                                 text: '' +
                                     '<div class="mol-hint">' +
-                                        'Type a name here and click "Go" to ' +
-                                        'find maps of where species live.' +
+                                        'Type a species name here and select.' +
                                     '</div>'
                             },
                             style: { width: {min: 400, max:500}},
@@ -5012,9 +5017,11 @@ mol.modules.map.query = function(mol) {
                     if(!self.seenHint) {
                         $(self.display.queryButton).qtip({
                             content: {
-                                text: '<div class="mol-hint">Click on the map ' +
-                                      'to find a list of species that live near ' +
-                                      'that location.</div>'
+                                text: '' +
+                                '<div class="mol-hint">'+
+                                	'Click on the map to get a list of species. ' +
+                                	'Use this control to change radius or group.' +
+                            	'</div>'
                             },
                             position: {
                                 my: 'top right',
@@ -6730,7 +6737,10 @@ mol.modules.map.splash = function(mol) {
             this.display.liveNear.click(
                 function(event) {
                     var params = {dataset_id: $(this).data("dataset-id"),
-                                    className: $(this).data("class-name")}
+                    	className: $(this).data("class-name")};
+                    self.bus.fireEvent(new mol.bus.Event('hide-search'));
+                    self.bus.fireEvent(new mol.bus.Event('show-list'));
+                    self.bus.fireEvent(new mol.bus.Event('show-menu-hint'));
                     self.bus.fireEvent(new mol.bus.Event('list-local',params));
                     self.display.dialog("close");
                 }
@@ -6742,6 +6752,8 @@ mol.modules.map.splash = function(mol) {
                                     name: $(this).data("name")}
                     self.bus.fireEvent(new mol.bus.Event('map-single-species',params));
                     self.display.dialog("close");
+                    self.bus.fireEvent(new mol.bus.Event('show-menu-hint'));
+                    self.bus.fireEvent(new mol.bus.Event('hide-list'));
                 }
             );   
                      

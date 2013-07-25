@@ -38,8 +38,14 @@ mol.modules.map.menu = function(mol) {
                     self.bus.fireEvent(
                         new mol.bus.Event('remove-all-layers')
                     );
-                     self.bus.fireEvent(
+                    self.bus.fireEvent(
                         new mol.bus.Event('clear-lists')
+                    );
+                    self.bus.fireEvent(
+                        new mol.bus.Event(
+                        	'species-list-tool-toggle',
+                        	{visible: false}
+                    	)
                     );
                 }
             );
@@ -74,7 +80,7 @@ mol.modules.map.menu = function(mol) {
             );
             this.display.click(
                 function(event) {
-                    $(this).qtip("close");
+                    $(this).qtip("hide");
                 }
             )
             this.bus.addHandler(

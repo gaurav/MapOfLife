@@ -315,9 +315,11 @@ mol.modules.map.query = function(mol) {
                     if(!self.seenHint) {
                         $(self.display.queryButton).qtip({
                             content: {
-                                text: '<div class="mol-hint">Click on the map ' +
-                                      'to find a list of species that live near ' +
-                                      'that location.</div>'
+                                text: '' +
+                                '<div class="mol-hint">'+
+                                	'Click on the map to get a list of species. ' +
+                                	'Use this control to change radius or group.' +
+                            	'</div>'
                             },
                             position: {
                                 my: 'top right',

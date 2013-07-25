@@ -87,7 +87,10 @@ mol.modules.map.splash = function(mol) {
             this.display.liveNear.click(
                 function(event) {
                     var params = {dataset_id: $(this).data("dataset-id"),
-                                    className: $(this).data("class-name")}
+                    	className: $(this).data("class-name")};
+                    self.bus.fireEvent(new mol.bus.Event('hide-search'));
+                    self.bus.fireEvent(new mol.bus.Event('show-list'));
+                    self.bus.fireEvent(new mol.bus.Event('show-menu-hint'));
                     self.bus.fireEvent(new mol.bus.Event('list-local',params));
                     self.display.dialog("close");
                 }
@@ -99,6 +102,8 @@ mol.modules.map.splash = function(mol) {
                                     name: $(this).data("name")}
                     self.bus.fireEvent(new mol.bus.Event('map-single-species',params));
                     self.display.dialog("close");
+                    self.bus.fireEvent(new mol.bus.Event('show-menu-hint'));
+                    self.bus.fireEvent(new mol.bus.Event('hide-list'));
                 }
             );   
                      

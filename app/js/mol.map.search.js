@@ -227,8 +227,7 @@ mol.modules.map.search = function(mol) {
                             content: {
                                 text: '' +
                                     '<div class="mol-hint">' +
-                                        'Type a name here and click "Go" to ' +
-                                        'find maps of where species live.' +
+                                        'Type a species name here and select.' +
                                     '</div>'
                             },
                             style: { width: {min: 400, max:500}},
