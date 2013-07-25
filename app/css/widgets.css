@@ -111,7 +111,8 @@ button:hover{
 }
 
 .mol-Splash .IEwarning {
-    color: red;
+	max-width:600px;
+	max-height:400px;
     font-size: 10pt;
 }
 
@@ -125,9 +126,13 @@ button:hover{
     font-size:16px;
 }
 
+.mol-Splash .speciesPic:hover {   
+   height:110%;
+   width:110%;
+}
+
 .mol-Splash .mainPanel {
     display:inline-block;
-    /*width: 360px;*/ 
     height:250px;
     padding:0.3em;
     border: 0.15em solid #555555;
@@ -194,7 +199,8 @@ button:hover{
     cursor: pointer;
     text-align: center;
     text-decoration:none;
-    background-image: -ms-linear-gradient(rgba(29,43,82,0.65) 89%, rgba(29,43,82,0.75) 57%);
+    background-image: -ms-linear-gradient(rgba(29,43,82,0.65) 89%, 
+    	rgba(29,43,82,0.75) 57%);
     background-image: -webkit-gradient(
         linear,
         left bottom,
@@ -212,7 +218,8 @@ button:hover{
         rgba(29,43,82,0.65) 89%,
         rgba(29,43,82,0.75) 57%
     );  
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#A51D2B52', endColorstr='#BF1D2B52'); 
+    filter: progid:DXImageTransform.Microsoft.gradient(
+    	startColorstr='#A51D2B52', endColorstr='#BF1D2B52'); 
     -webkit-box-shadow: rgba(0, 0, 0, 0.347656) 2px 2px 3px; 
     -moz-box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.347656);
     box-shadow: rgba(0, 0, 0, 0.347656) 2px 2px 3px;
@@ -224,12 +231,6 @@ button:hover{
     background-color: rgba(25, 25, 25, 1.0);
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#FF191919', endColorstr='#FF191919');
     cursor: pointer;
-}
-}
-
-.speciesPic:hover {   
-   height:110%;
-   width:110%;
 }
 
 
