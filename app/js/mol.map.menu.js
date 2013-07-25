@@ -36,7 +36,7 @@ mol.modules.map.menu = function(mol) {
                         new mol.bus.Event('toggle-splash')
                     );
                      self.bus.fireEvent(
-                        new mol.bus.Event('taxonomy-dashboard-toggle',{visible:false})
+                        new mol.bus.Event('taxonomy-dashboard-toggle',{state:"close"})
                     );
                     self.bus.fireEvent(
                         new mol.bus.Event('remove-all-layers')

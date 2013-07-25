@@ -1908,7 +1908,7 @@ mol.modules.map.menu = function(mol) {
                         new mol.bus.Event('toggle-splash')
                     );
                      self.bus.fireEvent(
-                        new mol.bus.Event('taxonomy-dashboard-toggle',{visible:false})
+                        new mol.bus.Event('taxonomy-dashboard-toggle',{state:"close"})
                     );
                     self.bus.fireEvent(
                         new mol.bus.Event('remove-all-layers')
@@ -6987,7 +6987,7 @@ mol.modules.map.splash = function(mol) {
                                     '</div>' +
                                     '<div class="iconTop">'+
                                     	'<div style="width:40px; height:18px; margin-top:11px">'+
-            								'<img title="Freshwater Fishes" ' +
+            								'<img title="North American Freshwater Fishes" ' +
             									'class="liveNear speciesPic" ' +
             									'data-dataset-id="na_fish" ' +
             									'data-class-name="Fishes" ' +
@@ -7005,7 +7005,7 @@ mol.modules.map.splash = function(mol) {
 									'</div>' +
             						'<div class="iconBottom" style="float:right">' +
             						    '<div style="width:50px; height:33px;">' +
-                                            '<img title="Reptiles" ' +
+                                            '<img title="North American Reptiles" ' +
                                             	'class="liveNear speciesPic" ' +
                                             	'data-dataset-id="iucn_reptiles" ' +
                                             	'data-class-name="Reptilia" ' +
