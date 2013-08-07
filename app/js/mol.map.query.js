@@ -110,7 +110,7 @@ mol.modules.map.query = function(mol) {
                         _class));
 
 		    if ((lng > -16 || lat < 14) && dataset_id == 'iucn_reptiles') {
-            	alert('Reptile species lists are currently only available for North America');
+            	alert('Reptile species lists are currently only available for North America.');
             	listradius.setMap(null);
             	this.bus.fireEvent(new mol.bus.Event(
                             'hide-loading-indicator',
@@ -118,7 +118,7 @@ mol.modules.map.query = function(mol) {
             	return;
             }
             if ((lat < 25.5 || lng > -16) && dataset_id == 'na_fish') {
-            	alert('Fish species lists are currently only available for North America');
+            	alert('Fish species lists are currently only available for North America.');
             	listradius.setMap(null);
             	this.bus.fireEvent(new mol.bus.Event(
                             'hide-loading-indicator',
@@ -126,7 +126,7 @@ mol.modules.map.query = function(mol) {
             	return;
             }
             if ((lat < 25.5 || lng > -16) && dataset_id == 'na_trees') {
-            	alert('Tree species lists are currently only available for North America');
+            	alert('Tree species lists are currently only available for North America.');
             	listradius.setMap(null);
             	this.bus.fireEvent(new mol.bus.Event(
                             'hide-loading-indicator',
