@@ -201,6 +201,7 @@ mol.modules.map.results = function(mol) {
                     var response= event.response;
                     self.bus.fireEvent(new mol.bus.Event('close-autocomplete'));
                     self.results = response.rows;
+                    self.searchForSynonyms(event.term);
 
                     if (self.getLayersWithIds(self.results).length > 0) {
                         self.showFilters(self.results);
@@ -210,6 +211,37 @@ mol.modules.map.results = function(mol) {
                     }
                 }
             );
+        },
+
+        /**
+         * Check with GBIF or TaxRefine for known synonyms of this name,
+         * pick the most likely accepted name, and add it to the search
+         * display.
+         *
+         * Parameters:
+         *   name: the name to search for.
+         */
+        searchForSynonyms: function(name) {
+            // TODO: Actually search.
+            // if(found_a_synonym) {
+            var finalSynonym = 'Panthera tigris';
+
+            this.display.synonymDisplay.checklistName.html('GBIF Nub');
+            this.display.synonymDisplay.searchedName.html(name);
+            this.display.synonymDisplay.synonymName.html(finalSynonym);
+            this.display.synonymDisplay.searchForSynonym.click(
+                function(event) {
+                    self.bus.fireEvent(
+                        new mol.bus.Event(
+                            'search',
+                            {
+                                'term': finalSynonym
+                            }
+                        )
+                    );
+                }
+            );
+            this.display.synonymDisplay.show();
         },
 
         /**
@@ -493,6 +525,9 @@ mol.modules.map.results = function(mol) {
                                 'Results' +
                                 '<a href="#" class="selectNone">none</a>' +
                                 '<a href="#" class="selectAll">all</a>' +
+                                '<div class="synonymDisplay" style="display: none">' +
+                                    'According to <span class="checklistName">a checklist</span>, <span class="searchedName" style="font-style: italic">the name you searched for</span> is also known as <span class="synonymName" style="font-style: italic">another name</span>. Would you like to <a href="#" class="searchForSynonym">search for <span class="synonymName" style="font-style: italic">that name</span></a>?' +
+                                '</div>' +
                             '</div>' +
                             '<ol class="resultList"></ol>' +
                             '<div class="pageNavigation">' +
@@ -506,6 +541,10 @@ mol.modules.map.results = function(mol) {
                         '</div>' +
                         '<div class="noresults">' +
                             '<h3>No results found.</h3>' +
+                            '<div class="synonymDisplay" style="display: none">' +
+                                '<div class="break" style="clear:both"></div>' + 
+                                'According to <span class="checklistName">a checklist</span>, <span class="searchedName" style="font-style: italic">the name you searched for</span> is also known as <span class="synonymName" style="font-style: italic">another name</span>. Would you like to <a href="#" class="searchForSynonym">search for <span class="synonymName" style="font-style: italic">that name</span></a>?' +
+                            '</div>' +
                         '</div>' +
                     '</div>' +
                 '</div>';
@@ -519,6 +558,12 @@ mol.modules.map.results = function(mol) {
             this.clearResultsButton = $(this).find('.clearResults');
             this.results = $(this).find('.results');
             this.noResults = $(this).find('.noresults');
+
+            this.synonymDisplay = $(this).find('.synonymDisplay');
+            this.synonymDisplay.checklistName = $(this.synonymDisplay).find('.checklistName');
+            this.synonymDisplay.searchedName = $(this.synonymDisplay).find('.searchedName');
+            this.synonymDisplay.synonymName = $(this.synonymDisplay).find('.synonymName');
+            this.synonymDisplay.searchForSynonym = $(this.synonymDisplay).find('.searchForSynonym');
         },
 
         clearResults: function() {
@@ -528,8 +573,6 @@ mol.modules.map.results = function(mol) {
         clearFilters: function() {
             this.filters.html('');
         },
-
-
 
         toggleSelections: function(showOrHide) {
             $(this).find('.checkbox').each(
