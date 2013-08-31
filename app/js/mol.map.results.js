@@ -222,26 +222,56 @@ mol.modules.map.results = function(mol) {
          *   name: the name to search for.
          */
         searchForSynonyms: function(name) {
-            // TODO: Actually search.
-            // if(found_a_synonym) {
-            var finalSynonym = 'Panthera tigris';
+            // First: turn off the previous display.
+            this.display.synonymDisplay.hide();
 
-            this.display.synonymDisplay.checklistName.html('GBIF Nub');
-            this.display.synonymDisplay.searchedName.html(name);
-            this.display.synonymDisplay.synonymName.html(finalSynonym);
-            this.display.synonymDisplay.searchForSynonym.click(
-                function(event) {
-                    self.bus.fireEvent(
-                        new mol.bus.Event(
-                            'search',
-                            {
-                                'term': finalSynonym
-                            }
-                        )
+            // Find all the synonyms 
+            var synonyms = [];
+            var display = this.display;
+
+            // alert("Time to go! Name = " + name);
+
+            $.getJSON(
+                "http://refine.taxonomics.org/gbifchecklists/reconcile?callback=?&query=" + encodeURIComponent(name),
+                function(result) {
+                    var names = [];
+                    if(result.result)
+                        names = result.result;
+
+                    // alert("Got it! Length = " + names.length + "; first = " + names[0].name);
+
+                    names.forEach(function(name_usage) {
+                        if(name_usage.summary && name_usage.summary.accepted) {
+                            synonyms.push(name_usage.summary.accepted);
+                        }
+                    });
+
+                    // No synonyms? Then we're done.
+                    if(synonyms.length == 0)
+                        return;
+
+                    // Display the topmost synonym displayed.
+                    // TODO: extend this to display all synonyms.
+                    var finalSynonym = synonyms[0];
+
+                    display.synonymDisplay.checklistName.html('GBIF Nub');
+                    display.synonymDisplay.searchedName.html(name);
+                    display.synonymDisplay.synonymName.html(finalSynonym);
+                    display.synonymDisplay.searchForSynonym.click(
+                        function(event) {
+                            self.bus.fireEvent(
+                                new mol.bus.Event(
+                                    'search',
+                                    {
+                                        'term': finalSynonym
+                                    }
+                                )
+                            );
+                        }
                     );
+                    display.synonymDisplay.show();
                 }
             );
-            this.display.synonymDisplay.show();
         },
 
         /**
