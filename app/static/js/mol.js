@@ -2325,7 +2325,7 @@ mol.modules.map.results = function(mol) {
                                 acceptedName = match[1];
                             }
 
-                            if(!duplicateNameCheck[acceptedName]) {
+                            if(acceptedName != name && !duplicateNameCheck[acceptedName]) {
                                 synonyms.push({
                                     'name': acceptedName,
                                     'url': name_usage.type[0] + name_usage.id,
