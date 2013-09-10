@@ -264,9 +264,12 @@ mol.modules.map.results = function(mol) {
 
                             // The accepted name usually has authority information. So let's find 
                             // a leading monomial/binomial/trinomial.
-                            var match = acceptedName.match(/([A-Z][a-z]+(?:\s[a-z]+(?:\s[a-z]+)?)?)\W?/);
+                            var match = acceptedName.match(/^\s*([A-Z][a-z\.]+(?:\s+[a-z\.]+(?:\s+[a-z]+)?)?)/);
                             if(match) {
+                                // console.log("Matched '" + acceptedName + "' as '" + match[1] + "'");
                                 acceptedName = match[1];
+                            } else {
+                                // console.log("Unable to match '" + acceptedName + "'.");
                             }
 
                             if(acceptedName != name && !duplicateNameCheck[acceptedName]) {
