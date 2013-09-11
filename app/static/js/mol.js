@@ -2071,6 +2071,7 @@ mol.modules.map.results = function(mol) {
             this.proxy = proxy;
             this.bus = bus;
             this.map = map;
+            this.flag_append_to_search_results = false; // TODO: delete (hacky)
             this.maxLayers = ($.browser.chrome) ? 6 : 100;
             this.filters = { 
                 'name': {
@@ -2259,13 +2260,22 @@ mol.modules.map.results = function(mol) {
                     var response= event.response;
                     self.bus.fireEvent(new mol.bus.Event('close-autocomplete'));
                     self.results = response.rows;
-                    self.searchForSynonyms(event.term);
+
+                    // TODO: delete (hacky)
+                    if(mol.map.results.flag_append_to_search_results) {
+                        if(self.getLayersWithIds(self.results).length > 0) {
+                            self.showLayers(self.results);
+                        }
+                        return;
+                    }
 
                     if (self.getLayersWithIds(self.results).length > 0) {
                         self.showFilters(self.results);
                         self.showLayers(self.results);
+                        self.searchForSynonyms(event.term, false);
                     } else {
                         self.showNoResults();
+                        self.searchForSynonyms(event.term, true);
                     }
                 }
             );
@@ -2278,11 +2288,12 @@ mol.modules.map.results = function(mol) {
          *
          * Parameters:
          *   name: the name to search for.
+         *   flag_add_search_link: add a link to search each name.
          */
-        searchForSynonyms: function(name) {
+        searchForSynonyms: function(name, flag_add_search_link) {
             // First: turn off the previous display.
             this.display.synonymDisplay.hide();
-            this.display.synonymDisplay.synonymList.empty();
+            this.display.synonymDisplay.synonymList.html("");
 
             // Find all the synonyms 
             var synonyms = [];
@@ -2320,16 +2331,19 @@ mol.modules.map.results = function(mol) {
 
                             // The accepted name usually has authority information. So let's find 
                             // a leading monomial/binomial/trinomial.
-                            var match = acceptedName.match(/([A-Z][a-z]+(?:\s[a-z]+(?:\s[a-z]+)?)?)\W?/);
+                            var match = acceptedName.match(/^\s*([A-Z][a-z\.]+(?:\s+[a-z\.]+(?:\s+[a-z]+)?)?)/);
                             if(match) {
+                                // console.log("Matched '" + acceptedName + "' as '" + match[1] + "'");
                                 acceptedName = match[1];
+                            } else {
+                                // console.log("Unable to match '" + acceptedName + "'.");
                             }
 
                             if(acceptedName != name && !duplicateNameCheck[acceptedName]) {
                                 synonyms.push({
                                     'name': acceptedName,
                                     'url': name_usage.type[0] + name_usage.id,
-                                    'type': 'currently accepted',
+                                    'type': 'accepted',
                                     'score': name_usage.score
                                 });
                                 duplicateNameCheck[acceptedName] = 1;
@@ -2354,16 +2368,19 @@ mol.modules.map.results = function(mol) {
                         }
                     });
 
-                    // Display the topmost synonym displayed.
+                    // Display all synonyms displayed.
+                    var index = 0;
                     synonyms.forEach(function(synonym) {
+                        index++;
+
                         var name = synonym.name;
                         var url = synonym.url;
                         var type = synonym.type;
                         var score = synonym.score;
 
-                        var synonymItem = display.synonymDisplay.synonymItem.clone();
-                        $(".synonymName", synonymItem).text(name);
-                        $(".synonymNameSearch", synonymItem).click(function(event) {
+                        // TODO: delete (hacky)
+                        if(index == 1 && flag_add_search_link == false) {
+                            mol.map.results.flag_append_to_search_results = true;
                             self.bus.fireEvent(
                                 new mol.bus.Event(
                                     'search',
@@ -2372,16 +2389,51 @@ mol.modules.map.results = function(mol) {
                                     }
                                 )
                             );
-                        });
+                        }
 
-                        $(".type", synonymItem).text(type);
-                        $(".synonymAccordingTo", synonymItem).attr('href', url);
+                        var synonymItem = $("<a>");
+                        synonymItem.text(name);
+                        synonymItem.css('font-style', 'italic');
+                        synonymItem.css('color', 'rgb(230, 250, 230)');
+                        synonymItem.attr('target', '_blank');
+                        synonymItem.attr('href', url);
+
+                        if(type == 'accepted') {
+                            // Something to distinguish this would be nice,
+                            // but (1) it doesn't seem to come up often, and
+                            // (2) bold just looks ugly.
+                            // synonymItem.css('font-weight', 'bold');
+                        }
+
+                        if(index == 1) {
+                            // Don't display anything before the first item.
+                        } else if(index == synonyms.length) {
+                            display.synonymDisplay.synonymList.append(" or ");
+                        } else {
+                            display.synonymDisplay.synonymList.append(", ");
+                        }
 
                         display.synonymDisplay.synonymList.append(synonymItem);
+                        if(flag_add_search_link) {
+                            var synonymNameSearch = $("<span> (<a href='#'>on Map of Life</a>)</span>");
+                            $("a", synonymNameSearch).css('color', 'rgb(230, 250, 230)');
+                            $("a", synonymNameSearch).click(function() {
+                                // TODO: delete (hacky view of combined search)
+                                self.bus.fireEvent(
+                                    new mol.bus.Event(
+                                        'search',
+                                        {
+                                                'term': name
+                                        }
+                                    )
+                                );
+                            });
+                            display.synonymDisplay.synonymList.append(synonymNameSearch);
+                        }
                     });
 
                     // Set the searched name and GO!
-                    display.synonymDisplay.searchedName.html(name);
+                    display.synonymDisplay.searchedName.text(name);
                     display.synonymDisplay.show();
                 }
             );
@@ -2417,7 +2469,12 @@ mol.modules.map.results = function(mol) {
         showLayers: function(layers) {
             var display = this.display;
 
-            display.clearResults();
+            // TODO: delete (hacky)
+            if(mol.map.results.flag_append_to_search_results) {
+                mol.map.results.flag_append_to_search_results = false;
+            } else {
+                display.clearResults();
+            }
 
             // Set layer results in display.
              _.each(
@@ -2669,7 +2726,7 @@ mol.modules.map.results = function(mol) {
                                 '<a href="#" class="selectNone">none</a>' +
                                 '<a href="#" class="selectAll">all</a>' +
                                 '<div class="synonymDisplay" style="display: none">' +
-                                    '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known by the following names: <ol class="synonymList"></ul>' +
+                                    '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known as <span class="synonymList"></span>. The first synonym has been added to your search.' +
                                 '</div>' +
                             '</div>' +
                             '<ol class="resultList"></ol>' +
@@ -2686,13 +2743,11 @@ mol.modules.map.results = function(mol) {
                             '<h3>No results found.</h3>' +
                             '<div class="synonymDisplay" style="display: none">' +
                                 '<div class="break" style="clear:both"></div>' + 
-                                '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known by the following names: <ol class="synonymList"></ul>' +
+                                '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known as <span class="synonymList"></span>.' +
                             '</div>' +
                         '</div>' +
                     '</div>' +
                 '</div>';
-
-            var html_synonym = '<li><span class="synonymName" style="font-style: italic">This name</span> (<span class="type">type</span>: <a href="#" class="synonymNameSearch">search instead</a>, <a href="#" target="species_information" class="synonymAccordingTo">on GBIF</a>)</li>';
 
             this._super(html);
             this.resultList = $(this).find('.resultList');
@@ -2707,7 +2762,6 @@ mol.modules.map.results = function(mol) {
             this.synonymDisplay = $(this).find('.synonymDisplay');
             this.synonymDisplay.searchedName = $(this.synonymDisplay).find('.searchedName');
             this.synonymDisplay.synonymList = $(this.synonymDisplay).find('.synonymList');
-            this.synonymDisplay.synonymItem = $(html_synonym);
         },
 
         clearResults: function() {
