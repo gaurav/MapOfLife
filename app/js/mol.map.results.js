@@ -13,6 +13,7 @@ mol.modules.map.results = function(mol) {
             this.proxy = proxy;
             this.bus = bus;
             this.map = map;
+            this.flag_append_to_search_results = false; // TODO: delete (hacky)
             this.maxLayers = ($.browser.chrome) ? 6 : 100;
             this.filters = { 
                 'name': {
@@ -202,6 +203,14 @@ mol.modules.map.results = function(mol) {
                     self.bus.fireEvent(new mol.bus.Event('close-autocomplete'));
                     self.results = response.rows;
 
+                    // TODO: delete (hacky)
+                    if(mol.map.results.flag_append_to_search_results) {
+                        if(self.getLayersWithIds(self.results).length > 0) {
+                            self.showLayers(self.results);
+                        }
+                        return;
+                    }
+
                     if (self.getLayersWithIds(self.results).length > 0) {
                         self.showFilters(self.results);
                         self.showLayers(self.results);
@@ -311,6 +320,18 @@ mol.modules.map.results = function(mol) {
                         var type = synonym.type;
                         var score = synonym.score;
 
+                        // TODO: delete (hacky)
+                        if(index == 1 && flag_add_search_link == false) {
+                            mol.map.results.flag_append_to_search_results = true;
+                            self.bus.fireEvent(
+                                new mol.bus.Event(
+                                    'search',
+                                    {
+                                        'term': name
+                                    }
+                                )
+                            );
+                        }
 
                         var synonymItem = $("<a>");
                         synonymItem.text(name);
@@ -647,7 +668,7 @@ mol.modules.map.results = function(mol) {
                                 '<a href="#" class="selectNone">none</a>' +
                                 '<a href="#" class="selectAll">all</a>' +
                                 '<div class="synonymDisplay" style="display: none">' +
-                                    '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known as <span class="synonymList"></span>.' +
+                                    '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known as <span class="synonymList"></span>. The first synonym has been added to your search.' +
                                 '</div>' +
                             '</div>' +
                             '<ol class="resultList"></ol>' +
