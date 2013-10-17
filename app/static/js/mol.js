@@ -2071,8 +2071,8 @@ mol.modules.map.results = function(mol) {
             this.proxy = proxy;
             this.bus = bus;
             this.map = map;
-            this.flag_append_to_search_results = false; // TODO: delete (hacky)
             this.maxLayers = ($.browser.chrome) ? 6 : 100;
+            this.previous_results = []; // Stores the previous search results.
             this.filters = { 
                 'name': {
                     title: 'Name', 
@@ -2252,70 +2252,108 @@ mol.modules.map.results = function(mol) {
             );
 
             /**
-             * Callback that displays search results.
+             * Callback that clears previous search results.
              */
             this.bus.addHandler(
-                'search-results',
+                'search-results-clear',
                 function(event) {
-                    var response= event.response;
-                    self.bus.fireEvent(new mol.bus.Event('close-autocomplete'));
-                    self.results = response.rows;
+                    var response = event.response;
 
-                    // TODO: delete (hacky)
-                    if(mol.map.results.flag_append_to_search_results) {
-                        if(self.getLayersWithIds(self.results).length > 0) {
-                            self.showLayers(self.results);
-                        }
-                        return;
-                    }
+                    // Turn off the previous synonym display.
+                    self.display.synonymDisplay.hide();
+                    self.display.synonymDisplay.synonymList.html("");
+
+                    // Clear previous results.
+                    this.previous_results = [];
+                    self.display.clearResults();
+                }
+            );
+
+            /**
+             * Callback that adds search results to previous.
+             */
+            this.bus.addHandler(
+                'search-results-add',
+                function(event) {
+                    var response = event.response;
+
+                    // Append to the previous results. If the caller meant to
+                    // clear previous results, they would have fired a
+                    // 'search-results-clear' event first.
+                    this.previous_results = this.previous_results.concat(response.rows);
+                    // console.log("previous_results: count = " + this.previous_results.length);
+                    self.results = this.previous_results;
+
+                    // Save these results in case we need to expand this list later.
 
                     if (self.getLayersWithIds(self.results).length > 0) {
                         self.showFilters(self.results);
-                        self.showLayers(self.results);
-                        self.searchForSynonyms(event.term, false);
+
+                        // We only want to add the new rows.
+                        self.showLayers(response.rows);
+
+                        self.searchForSynonyms(event.term, true);
                     } else {
                         self.showNoResults();
-                        self.searchForSynonyms(event.term, true);
+                        self.searchForSynonyms(event.term, false);
                     }
                 }
             );
         },
 
         /**
-         * Check with GBIF or TaxRefine for known synonyms of this name,
+         * Check with TaxRefine for known synonyms of this name,
          * pick the most likely accepted name, and add it to the search
          * display.
          *
+         * TaxRefine uses the GBIF APIs to try to pick the best
+         * supported interpretation of a particular taxonomic name.
+         * You can find out more at https://github.com/gaurav/taxrefine/#taxrefine
+         *
          * Parameters:
-         *   name: the name to search for.
-         *   flag_add_search_link: add a link to search each name.
+         *  name: the name to search for.
+         *  flag_search_automatically:
+         *      if true:    automatically add every synonym to the search.
+         *      if false:   display a link allowing you to search for synonyms
+         *                  on Map of Life after each name.
+         *                  
          */
-        searchForSynonyms: function(name, flag_add_search_link) {
-            // First: turn off the previous display.
-            this.display.synonymDisplay.hide();
-            this.display.synonymDisplay.synonymList.html("");
-
-            // Find all the synonyms 
-            var synonyms = [];
+        searchForSynonyms: function(name, flag_search_automatically) {
+            // Store display for easy access.
             var display = this.display;
 
-            // alert("Time to go! Name = " + name);
-
+            // Query TaxRefine.
             $.getJSON(
                 "http://refine.taxonomics.org/gbifchecklists/reconcile?callback=?&query=" + encodeURIComponent(name),
                 function(result) {
-                    var names = [];
-                    if(result.result)
-                        names = result.result;
+                    // Store the matches in result.result as 'names'.
+                    if(!result.result)
+                        return;
+                    var names = result.result;
 
-                    // alert("Got it! Length = " + names.length + "; first = " + names[0].name);
-
+                    // We use this hash to make sure we don't repeat a name.
+                    // Add the actual name to this: we don't want to say that
+                    // 'Panthera tigris' is a synonym of 'Panthera tigris'.
                     var duplicateNameCheck = {};
+                    duplicateNameCheck[name] = 1;
+                        
+                    // Make a list of all non-duplicate synonyms, whether
+                    // they are junior synonyms ("related") or senior synonyms
+                    // ("accepted").
+                    // 
+                    // This is particularly importance for TaxRefine which
+                    // differentiates between identical names in, say,
+                    // different kingdoms.
+                    var synonyms = [];
+
                     names.forEach(function(name_usage) {
+                        // If there is a canonical name, store it.
                         if(name_usage.summary && name_usage.summary.canonicalName) {
                             var canonicalName = name_usage.summary.canonicalName;
 
-                            if(canonicalName != name && !duplicateNameCheck[canonicalName]) {
+                            // Make a list of canonical name as long as they
+                            // haven't been duplicated.
+                            if(!duplicateNameCheck[canonicalName]) {
                                 synonyms.push({
                                     'name': canonicalName,
                                     'url': name_usage.type[0] + name_usage.id,
@@ -2326,6 +2364,7 @@ mol.modules.map.results = function(mol) {
                             }
                         }
 
+                        // If there is an accepted name, store it.
                         if(name_usage.summary && name_usage.summary.accepted) {
                             var acceptedName = name_usage.summary.accepted;
 
@@ -2339,7 +2378,8 @@ mol.modules.map.results = function(mol) {
                                 // console.log("Unable to match '" + acceptedName + "'.");
                             }
 
-                            if(acceptedName != name && !duplicateNameCheck[acceptedName]) {
+                            // If we found an accepted name, and it's not on the duplicate name check.
+                            if(!duplicateNameCheck[acceptedName]) {
                                 synonyms.push({
                                     'name': acceptedName,
                                     'url': name_usage.type[0] + name_usage.id,
@@ -2355,7 +2395,8 @@ mol.modules.map.results = function(mol) {
                     if(synonyms.length == 0)
                         return;
 
-                    // Sort the synonyms.
+                    // Sort the synonyms first by the 'type' ('accepted' sorted above 'related')
+                    // and then by the score.
                     synonyms.sort(function(a,b) {
                         if(b.type == a.type)
                             return b.score - a.score;
@@ -2368,29 +2409,18 @@ mol.modules.map.results = function(mol) {
                         }
                     });
 
-                    // Display all synonyms displayed.
+                    // Display all the synonyms.
                     var index = 0;
                     synonyms.forEach(function(synonym) {
                         index++;
 
+                        // Get the four variables we stored.
                         var name = synonym.name;
                         var url = synonym.url;
                         var type = synonym.type;
                         var score = synonym.score;
 
-                        // TODO: delete (hacky)
-                        if(index == 1 && flag_add_search_link == false) {
-                            mol.map.results.flag_append_to_search_results = true;
-                            self.bus.fireEvent(
-                                new mol.bus.Event(
-                                    'search',
-                                    {
-                                        'term': name
-                                    }
-                                )
-                            );
-                        }
-
+                        // Create a link to GBIF.
                         var synonymItem = $("<a>");
                         synonymItem.text(name);
                         synonymItem.css('font-style', 'italic');
@@ -2413,17 +2443,34 @@ mol.modules.map.results = function(mol) {
                             display.synonymDisplay.synonymList.append(", ");
                         }
 
+                        // Add this to the synonym list.
                         display.synonymDisplay.synonymList.append(synonymItem);
-                        if(flag_add_search_link) {
+
+                        // Search for this synonym.
+                        if(flag_search_automatically) {
+
+                            // Expand the current search.
+                            self.bus.fireEvent(
+                                new mol.bus.Event(
+                                    'search',
+                                    {
+                                        'term': name,
+                                        'expand_current_search': true
+                                    }
+                                )
+                            );
+
+                        } else {
+
+                            // Add a link to search Map of Life after this name.
                             var synonymNameSearch = $("<span> (<a href='#'>on Map of Life</a>)</span>");
                             $("a", synonymNameSearch).css('color', 'rgb(230, 250, 230)');
                             $("a", synonymNameSearch).click(function() {
-                                // TODO: delete (hacky view of combined search)
                                 self.bus.fireEvent(
                                     new mol.bus.Event(
                                         'search',
                                         {
-                                                'term': name
+                                            'term': name
                                         }
                                     )
                                 );
@@ -2468,13 +2515,6 @@ mol.modules.map.results = function(mol) {
          */
         showLayers: function(layers) {
             var display = this.display;
-
-            // TODO: delete (hacky)
-            if(mol.map.results.flag_append_to_search_results) {
-                mol.map.results.flag_append_to_search_results = false;
-            } else {
-                display.clearResults();
-            }
 
             // Set layer results in display.
              _.each(
@@ -2726,7 +2766,7 @@ mol.modules.map.results = function(mol) {
                                 '<a href="#" class="selectNone">none</a>' +
                                 '<a href="#" class="selectAll">all</a>' +
                                 '<div class="synonymDisplay" style="display: none">' +
-                                    '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known as <span class="synonymList"></span>. The first synonym has been added to your search.' +
+                                    '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known as <span class="synonymList"></span>. These synonyms have now been added to your search.' +
                                 '</div>' +
                             '</div>' +
                             '<ol class="resultList"></ol>' +
@@ -3246,7 +3286,11 @@ mol.modules.map.search = function(mol) {
                             );
                         }
 
-                        self.search(event.term);
+                        if(event.expand_current_search) {
+                            self.searchExpand(event.term);
+                        } else {
+                            self.search(event.term);
+                        }
 
                         if (self.display.searchBox.val()=='') {
                             self.display.searchBox.val(event.term);
@@ -3342,20 +3386,63 @@ mol.modules.map.search = function(mol) {
          */
         search: function(term) {
             var self = this;
-                
-                
-                $(self.display.searchBox).autocomplete('disable');
-                $(self.display.searchBox).autocomplete('close');
-                
+
+            // Trim the term. Since we later overwrite the search string,
+            // this trims that as well.
+            term = $.trim(term);
+
+            // Turn off autocomplete.
+            $(self.display.searchBox).autocomplete('disable');    
+            $(self.display.searchBox).autocomplete('close');    
+
+            // Produce an error if it's too short.
+            if(term.length < 3) {
+                if (term.length == 0) {
+                    self.bus.fireEvent(new mol.bus.Event('clear-results'));
+                } else {
+                    alert('' +
+                        'Please enter at least 3 characters ' +
+                        'in the search box.'
+                     );
+                }
+                return;
+            }
+
+            // Clear results, otherwise the box just stays on the screen
+            // and looks ugly.
+            self.bus.fireEvent(new mol.bus.Event('clear-results'));
+
+            // Display the term in the text window, in case
+            // we're being called programatically. Note that
+            // searchExpand() won't do this.
+            $(self.display.searchBox).val(term);
+
+            // Send a message to search-results to clear
+            // previous results.
+            self.bus.fireEvent(
+                new mol.bus.Event(
+                    'search-results-clear'
+                )
+            );
+
+            // Now that previous search results are
+            // cleared, we can 'expand' that search.
+            self.searchExpand(term);
+        },
+
+        /**
+         * Expands a previous search. This is assumed to be used
+         * programmatically, so it bails out if you try searching
+         * for something less than three characters. If you want
+         * proper UI responses, use search('...') instead.
+         *
+         * @param term the search term (scientific name)
+         */
+        searchExpand: function(term) {
+            var self = this;
+             
                 if(term.length<3) {
-                    if ($.trim(term).length==0) {
-                        self.bus.fireEvent(new mol.bus.Event('clear-results'));
-                    } else {
-                        alert('' +
-                            'Please enter at least 3 characters ' +
-                            'in the search box.'
-                        );
-                    }
+                    return;
                 } else {
                     self.bus.fireEvent(
                         new mol.bus.Event(
@@ -3363,7 +3450,6 @@ mol.modules.map.search = function(mol) {
                             {source : "search-{0}".format(term)}
                         )
                     );
-                    $(self.display.searchBox).val(term);
                     $.getJSON(
                         'http://mol.cartodb.com/api/v1/sql?q={0}'.format(
                             this.search_sql.format(
@@ -3381,7 +3467,7 @@ mol.modules.map.search = function(mol) {
                             );
                             self.bus.fireEvent(
                                 new mol.bus.Event(
-                                    'search-results', 
+                                    'search-results-add', 
                                     results
                                 )
                             );
