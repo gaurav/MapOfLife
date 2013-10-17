@@ -13,7 +13,6 @@ mol.modules.map.results = function(mol) {
             this.proxy = proxy;
             this.bus = bus;
             this.map = map;
-            this.flag_append_to_search_results = false; // TODO: delete (hacky)
             this.maxLayers = ($.browser.chrome) ? 6 : 100;
             this.filters = { 
                 'name': {
@@ -203,61 +202,78 @@ mol.modules.map.results = function(mol) {
                     self.bus.fireEvent(new mol.bus.Event('close-autocomplete'));
                     self.results = response.rows;
 
-                    // TODO: delete (hacky)
-                    if(mol.map.results.flag_append_to_search_results) {
-                        if(self.getLayersWithIds(self.results).length > 0) {
-                            self.showLayers(self.results);
-                        }
-                        return;
-                    }
+                    // Clear previous results.
+                    display.clearResults();
 
                     if (self.getLayersWithIds(self.results).length > 0) {
                         self.showFilters(self.results);
                         self.showLayers(self.results);
-                        self.searchForSynonyms(event.term, false);
+                        self.searchForSynonyms(event.term, true);
                     } else {
                         self.showNoResults();
-                        self.searchForSynonyms(event.term, true);
+                        self.searchForSynonyms(event.term, false);
                     }
                 }
             );
         },
 
         /**
-         * Check with GBIF or TaxRefine for known synonyms of this name,
+         * Check with TaxRefine for known synonyms of this name,
          * pick the most likely accepted name, and add it to the search
          * display.
          *
+         * TaxRefine uses the GBIF APIs to try to pick the best
+         * supported interpretation of a particular taxonomic name.
+         * You can find out more at https://github.com/gaurav/taxrefine/#taxrefine
+         *
          * Parameters:
-         *   name: the name to search for.
-         *   flag_add_search_link: add a link to search each name.
+         *  name: the name to search for.
+         *  flag_search_automatically:
+         *      if true:    automatically add every synonym to the search.
+         *      if false:   display a link allowing you to search for synonyms
+         *                  on Map of Life after each name.
+         *                  
          */
-        searchForSynonyms: function(name, flag_add_search_link) {
-            // First: turn off the previous display.
+        searchForSynonyms: function(name, flag_search_automatically) {
+            // Turn off the previous display.
             this.display.synonymDisplay.hide();
             this.display.synonymDisplay.synonymList.html("");
 
-            // Find all the synonyms 
-            var synonyms = [];
+            // Store display.
             var display = this.display;
 
-            // alert("Time to go! Name = " + name);
-
+            // Query TaxRefine.
             $.getJSON(
                 "http://refine.taxonomics.org/gbifchecklists/reconcile?callback=?&query=" + encodeURIComponent(name),
                 function(result) {
-                    var names = [];
-                    if(result.result)
-                        names = result.result;
+                    // Store the matches in result.result as 'names'.
+                    if(!result.result)
+                        return;
+                    var names = result.result;
 
-                    // alert("Got it! Length = " + names.length + "; first = " + names[0].name);
-
+                    // We use this hash to make sure we don't repeat a name.
+                    // Add the actual name to this: we don't want to say that
+                    // 'Panthera tigris' is a synonym of 'Panthera tigris'.
                     var duplicateNameCheck = {};
+                    duplicateNameCheck[name] = 1;
+                        
+                    // Make a list of all non-duplicate synonyms, whether
+                    // they are junior synonyms ("related") or senior synonyms
+                    // ("accepted").
+                    // 
+                    // This is particularly importance for TaxRefine which
+                    // differentiates between identical names in, say,
+                    // different kingdoms.
+                    var synonyms = [];
+
                     names.forEach(function(name_usage) {
+                        // If there is a canonical name, store it.
                         if(name_usage.summary && name_usage.summary.canonicalName) {
                             var canonicalName = name_usage.summary.canonicalName;
 
-                            if(canonicalName != name && !duplicateNameCheck[canonicalName]) {
+                            // Make a list of canonical name as long as they
+                            // haven't been duplicated.
+                            if(!duplicateNameCheck[canonicalName]) {
                                 synonyms.push({
                                     'name': canonicalName,
                                     'url': name_usage.type[0] + name_usage.id,
@@ -268,6 +284,7 @@ mol.modules.map.results = function(mol) {
                             }
                         }
 
+                        // If there is an accepted name, store it.
                         if(name_usage.summary && name_usage.summary.accepted) {
                             var acceptedName = name_usage.summary.accepted;
 
@@ -281,7 +298,8 @@ mol.modules.map.results = function(mol) {
                                 // console.log("Unable to match '" + acceptedName + "'.");
                             }
 
-                            if(acceptedName != name && !duplicateNameCheck[acceptedName]) {
+                            // If we found an accepted name, and it's not on the duplicate name check.
+                            if(!duplicateNameCheck[acceptedName]) {
                                 synonyms.push({
                                     'name': acceptedName,
                                     'url': name_usage.type[0] + name_usage.id,
@@ -297,7 +315,8 @@ mol.modules.map.results = function(mol) {
                     if(synonyms.length == 0)
                         return;
 
-                    // Sort the synonyms.
+                    // Sort the synonyms first by the 'type' ('accepted' sorted above 'related')
+                    // and then by the score.
                     synonyms.sort(function(a,b) {
                         if(b.type == a.type)
                             return b.score - a.score;
@@ -310,29 +329,18 @@ mol.modules.map.results = function(mol) {
                         }
                     });
 
-                    // Display all synonyms displayed.
+                    // Display all the synonyms.
                     var index = 0;
                     synonyms.forEach(function(synonym) {
                         index++;
 
+                        // Get the four variables we stored.
                         var name = synonym.name;
                         var url = synonym.url;
                         var type = synonym.type;
                         var score = synonym.score;
 
-                        // TODO: delete (hacky)
-                        if(index == 1 && flag_add_search_link == false) {
-                            mol.map.results.flag_append_to_search_results = true;
-                            self.bus.fireEvent(
-                                new mol.bus.Event(
-                                    'search',
-                                    {
-                                        'term': name
-                                    }
-                                )
-                            );
-                        }
-
+                        // Create a link to GBIF.
                         var synonymItem = $("<a>");
                         synonymItem.text(name);
                         synonymItem.css('font-style', 'italic');
@@ -355,17 +363,33 @@ mol.modules.map.results = function(mol) {
                             display.synonymDisplay.synonymList.append(", ");
                         }
 
+                        // Add this to the synonym list.
                         display.synonymDisplay.synonymList.append(synonymItem);
-                        if(flag_add_search_link) {
+
+                        // Search for this synonym.
+                        if(flag_search_automatically) {
+
+                            // Expand the current search.
+                            self.bus.fireEvent(
+                                new mol.bus.Event(
+                                    'searchExpand',
+                                    {
+                                        'term': name,
+                                    }
+                                )
+                            );
+
+                        } else {
+
+                            // Add a link to search Map of Life after this name.
                             var synonymNameSearch = $("<span> (<a href='#'>on Map of Life</a>)</span>");
                             $("a", synonymNameSearch).css('color', 'rgb(230, 250, 230)');
                             $("a", synonymNameSearch).click(function() {
-                                // TODO: delete (hacky view of combined search)
                                 self.bus.fireEvent(
                                     new mol.bus.Event(
                                         'search',
                                         {
-                                                'term': name
+                                            'term': name
                                         }
                                     )
                                 );
@@ -410,13 +434,6 @@ mol.modules.map.results = function(mol) {
          */
         showLayers: function(layers) {
             var display = this.display;
-
-            // TODO: delete (hacky)
-            if(mol.map.results.flag_append_to_search_results) {
-                mol.map.results.flag_append_to_search_results = false;
-            } else {
-                display.clearResults();
-            }
 
             // Set layer results in display.
              _.each(
