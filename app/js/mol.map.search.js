@@ -414,7 +414,7 @@ mol.modules.map.search = function(mol) {
                             );
                             self.bus.fireEvent(
                                 new mol.bus.Event(
-                                    'search-results', 
+                                    'search-results-add', 
                                     results
                                 )
                             );

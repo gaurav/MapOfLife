@@ -14,6 +14,7 @@ mol.modules.map.results = function(mol) {
             this.bus = bus;
             this.map = map;
             this.maxLayers = ($.browser.chrome) ? 6 : 100;
+            this.previous_results = []; // Stores the previous search results.
             this.filters = { 
                 'name': {
                     title: 'Name', 
@@ -193,21 +194,46 @@ mol.modules.map.results = function(mol) {
             );
 
             /**
-             * Callback that displays search results.
+             * Callback that clears previous search results.
              */
             this.bus.addHandler(
-                'search-results',
+                'search-results-clear',
                 function(event) {
-                    var response= event.response;
-                    self.bus.fireEvent(new mol.bus.Event('close-autocomplete'));
-                    self.results = response.rows;
+                    var response = event.response;
+
+                    // Turn off the previous synonym display.
+                    self.display.synonymDisplay.hide();
+                    self.display.synonymDisplay.synonymList.html("");
 
                     // Clear previous results.
-                    display.clearResults();
+                    this.previous_results = [];
+                    self.display.clearResults();
+                }
+            );
+
+            /**
+             * Callback that adds search results to previous.
+             */
+            this.bus.addHandler(
+                'search-results-add',
+                function(event) {
+                    var response = event.response;
+
+                    // Append to the previous results. If the caller meant to
+                    // clear previous results, they would have fired a
+                    // 'search-results-clear' event first.
+                    this.previous_results = this.previous_results.concat(response.rows);
+                    // console.log("previous_results: count = " + this.previous_results.length);
+                    self.results = this.previous_results;
+
+                    // Save these results in case we need to expand this list later.
 
                     if (self.getLayersWithIds(self.results).length > 0) {
                         self.showFilters(self.results);
-                        self.showLayers(self.results);
+
+                        // We only want to add the new rows.
+                        self.showLayers(response.rows);
+
                         self.searchForSynonyms(event.term, true);
                     } else {
                         self.showNoResults();
@@ -235,11 +261,7 @@ mol.modules.map.results = function(mol) {
          *                  
          */
         searchForSynonyms: function(name, flag_search_automatically) {
-            // Turn off the previous display.
-            this.display.synonymDisplay.hide();
-            this.display.synonymDisplay.synonymList.html("");
-
-            // Store display.
+            // Store display for easy access.
             var display = this.display;
 
             // Query TaxRefine.
@@ -685,7 +707,7 @@ mol.modules.map.results = function(mol) {
                                 '<a href="#" class="selectNone">none</a>' +
                                 '<a href="#" class="selectAll">all</a>' +
                                 '<div class="synonymDisplay" style="display: none">' +
-                                    '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known as <span class="synonymList"></span>. The first synonym has been added to your search.' +
+                                    '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known as <span class="synonymList"></span>. These synonyms have now been added to your search.' +
                                 '</div>' +
                             '</div>' +
                             '<ol class="resultList"></ol>' +
