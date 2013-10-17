@@ -394,9 +394,10 @@ mol.modules.map.results = function(mol) {
                             // Expand the current search.
                             self.bus.fireEvent(
                                 new mol.bus.Event(
-                                    'searchExpand',
+                                    'search',
                                     {
                                         'term': name,
+                                        'expand_current_search': true
                                     }
                                 )
                             );

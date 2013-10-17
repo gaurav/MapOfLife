@@ -279,7 +279,11 @@ mol.modules.map.search = function(mol) {
                             );
                         }
 
-                        self.search(event.term);
+                        if(event.expand_current_search) {
+                            self.searchExpand(event.term);
+                        } else {
+                            self.search(event.term);
+                        }
 
                         if (self.display.searchBox.val()=='') {
                             self.display.searchBox.val(event.term);
@@ -375,20 +379,63 @@ mol.modules.map.search = function(mol) {
          */
         search: function(term) {
             var self = this;
-                
-                
-                $(self.display.searchBox).autocomplete('disable');
-                $(self.display.searchBox).autocomplete('close');
-                
+
+            // Trim the term. Since we later overwrite the search string,
+            // this trims that as well.
+            term = $.trim(term);
+
+            // Turn off autocomplete.
+            $(self.display.searchBox).autocomplete('disable');    
+            $(self.display.searchBox).autocomplete('close');    
+
+            // Produce an error if it's too short.
+            if(term.length < 3) {
+                if (term.length == 0) {
+                    self.bus.fireEvent(new mol.bus.Event('clear-results'));
+                } else {
+                    alert('' +
+                        'Please enter at least 3 characters ' +
+                        'in the search box.'
+                     );
+                }
+                return;
+            }
+
+            // Clear results, otherwise the box just stays on the screen
+            // and looks ugly.
+            self.bus.fireEvent(new mol.bus.Event('clear-results'));
+
+            // Display the term in the text window, in case
+            // we're being called programatically. Note that
+            // searchExpand() won't do this.
+            $(self.display.searchBox).val(term);
+
+            // Send a message to search-results to clear
+            // previous results.
+            self.bus.fireEvent(
+                new mol.bus.Event(
+                    'search-results-clear'
+                )
+            );
+
+            // Now that previous search results are
+            // cleared, we can 'expand' that search.
+            self.searchExpand(term);
+        },
+
+        /**
+         * Expands a previous search. This is assumed to be used
+         * programmatically, so it bails out if you try searching
+         * for something less than three characters. If you want
+         * proper UI responses, use search('...') instead.
+         *
+         * @param term the search term (scientific name)
+         */
+        searchExpand: function(term) {
+            var self = this;
+             
                 if(term.length<3) {
-                    if ($.trim(term).length==0) {
-                        self.bus.fireEvent(new mol.bus.Event('clear-results'));
-                    } else {
-                        alert('' +
-                            'Please enter at least 3 characters ' +
-                            'in the search box.'
-                        );
-                    }
+                    return;
                 } else {
                     self.bus.fireEvent(
                         new mol.bus.Event(
@@ -396,7 +443,6 @@ mol.modules.map.search = function(mol) {
                             {source : "search-{0}".format(term)}
                         )
                     );
-                    $(self.display.searchBox).val(term);
                     $.getJSON(
                         'http://mol.cartodb.com/api/v1/sql?q={0}'.format(
                             this.search_sql.format(
