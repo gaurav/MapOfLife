@@ -2073,6 +2073,7 @@ mol.modules.map.results = function(mol) {
             this.map = map;
             this.maxLayers = ($.browser.chrome) ? 6 : 100;
             this.previous_results = []; // Stores the previous search results.
+            this.flag_first_search = 1; // A flag to record if we're starting a new search or not.
             this.filters = { 
                 'name': {
                     title: 'Name', 
@@ -2265,6 +2266,8 @@ mol.modules.map.results = function(mol) {
 
                     // Clear previous results.
                     this.previous_results = [];
+                    this.flag_first_search = 1;
+
                     self.display.clearResults();
                 }
             );
@@ -2276,12 +2279,14 @@ mol.modules.map.results = function(mol) {
                 'search-results-add',
                 function(event) {
                     var response = event.response;
+                    var rows_to_add = response.rows;
 
                     // Append to the previous results. If the caller meant to
                     // clear previous results, they would have fired a
                     // 'search-results-clear' event first.
-                    this.previous_results = this.previous_results.concat(response.rows);
-                    // console.log("previous_results: count = " + this.previous_results.length);
+                    this.previous_results = this.previous_results.concat(rows_to_add);
+
+                    // console.log("previous_results: count = " + this.previous_results.length + ", rows_to_add: " + rows_to_add.length);
                     self.results = this.previous_results;
 
                     // Save these results in case we need to expand this list later.
@@ -2292,19 +2297,25 @@ mol.modules.map.results = function(mol) {
                         // We only want to add the new rows.
                         self.showLayers(response.rows);
 
-                        self.searchForSynonyms(event.term, true);
+                        if(this.flag_first_search)
+                            self.searchForSynonyms(event.term);
                     } else {
                         self.showNoResults();
-                        self.searchForSynonyms(event.term, false);
+
+                        if(this.flag_first_search)
+                            self.searchForSynonyms(event.term);
                     }
+
+                    // No longer the first search!
+                    this.flag_first_search = 0;
                 }
             );
         },
 
         /**
          * Check with TaxRefine for known synonyms of this name,
-         * pick the most likely accepted name, and add it to the search
-         * display.
+         * pick the most likely accepted name, add it to the search
+         * display, and search for it to extend the current search.
          *
          * TaxRefine uses the GBIF APIs to try to pick the best
          * supported interpretation of a particular taxonomic name.
@@ -2312,13 +2323,9 @@ mol.modules.map.results = function(mol) {
          *
          * Parameters:
          *  name: the name to search for.
-         *  flag_search_automatically:
-         *      if true:    automatically add every synonym to the search.
-         *      if false:   display a link allowing you to search for synonyms
-         *                  on Map of Life after each name.
          *                  
          */
-        searchForSynonyms: function(name, flag_search_automatically) {
+        searchForSynonyms: function(name) {
             // Store display for easy access.
             var display = this.display;
 
@@ -2446,37 +2453,17 @@ mol.modules.map.results = function(mol) {
                         // Add this to the synonym list.
                         display.synonymDisplay.synonymList.append(synonymItem);
 
-                        // Search for this synonym.
-                        if(flag_search_automatically) {
+                        // Search for this synonym by expanding the current search.
+                        self.bus.fireEvent(
+                            new mol.bus.Event(
+                                'search',
+                                {
+                                    'term': name,
+                                    'expand_current_search': true
+                                }
+                            )
+                        );
 
-                            // Expand the current search.
-                            self.bus.fireEvent(
-                                new mol.bus.Event(
-                                    'search',
-                                    {
-                                        'term': name,
-                                        'expand_current_search': true
-                                    }
-                                )
-                            );
-
-                        } else {
-
-                            // Add a link to search Map of Life after this name.
-                            var synonymNameSearch = $("<span> (<a href='#'>on Map of Life</a>)</span>");
-                            $("a", synonymNameSearch).css('color', 'rgb(230, 250, 230)');
-                            $("a", synonymNameSearch).click(function() {
-                                self.bus.fireEvent(
-                                    new mol.bus.Event(
-                                        'search',
-                                        {
-                                            'term': name
-                                        }
-                                    )
-                                );
-                            });
-                            display.synonymDisplay.synonymList.append(synonymNameSearch);
-                        }
                     });
 
                     // Set the searched name and GO!
@@ -2783,7 +2770,7 @@ mol.modules.map.results = function(mol) {
                             '<h3>No results found.</h3>' +
                             '<div class="synonymDisplay" style="display: none">' +
                                 '<div class="break" style="clear:both"></div>' + 
-                                '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known as <span class="synonymList"></span>.' +
+                                '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known as <span class="synonymList"></span>, but we do not have data for any of those names.' +
                             '</div>' +
                         '</div>' +
                     '</div>' +
