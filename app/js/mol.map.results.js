@@ -221,12 +221,14 @@ mol.modules.map.results = function(mol) {
                 'search-results-add',
                 function(event) {
                     var response = event.response;
+                    var rows_to_add = response.rows;
 
                     // Append to the previous results. If the caller meant to
                     // clear previous results, they would have fired a
                     // 'search-results-clear' event first.
-                    this.previous_results = this.previous_results.concat(response.rows);
-                    // console.log("previous_results: count = " + this.previous_results.length);
+                    this.previous_results = this.previous_results.concat(rows_to_add);
+
+                    // console.log("previous_results: count = " + this.previous_results.length + ", rows_to_add: " + rows_to_add.length);
                     self.results = this.previous_results;
 
                     // Save these results in case we need to expand this list later.
