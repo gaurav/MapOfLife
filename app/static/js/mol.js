@@ -2438,7 +2438,7 @@ mol.modules.map.results = function(mol) {
                         if(index == 1) {
                             // Don't display anything before the first item.
                         } else if(index == synonyms.length) {
-                            display.synonymDisplay.synonymList.append(" or ");
+                            display.synonymDisplay.synonymList.append(" and ");
                         } else {
                             display.synonymDisplay.synonymList.append(", ");
                         }
