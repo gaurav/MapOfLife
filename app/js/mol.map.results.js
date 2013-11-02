@@ -375,6 +375,8 @@ mol.modules.map.results = function(mol) {
                         $("#name", synonymItem).text(name);
                         // $("#url", synonymItem).attr('href', url);
                         var urlItem = $("#url", synonymItem);
+                        urlItem.attr('href', url);
+                        /*
                         var detailsItem = $("#details", synonymItem);
                         detailsItem.html("<div style='width:100%; text-align: center'>" + score + "&nbsp;checklist(s) <a target='_blank' style='color: rgb(230, 250, 230);' href='" + url + "'>on GBIF</a></div>");
                         detailsItem.hide();
@@ -384,6 +386,7 @@ mol.modules.map.results = function(mol) {
                             detailsItem.toggle();
                             return false;
                         });
+                        */
 
                         if(type == 'accepted') {
                             // Something to distinguish this would be nice,
@@ -417,8 +420,13 @@ mol.modules.map.results = function(mol) {
                     });
 
                     // Set the searched name and GO!
-                    display.synonymDisplay.searchedName.text(name);
-                    display.synonymDisplay.show();
+                    var inList = display.synonymDisplay.ifSuccess.clone();
+                    $(".searchedName", inList).text(name);
+                    if(synonyms.length == 0) {
+                        $(".synonymDisplayIfNoData", inList).show();
+                    }
+                    inList.show();
+                    display.resultList.append(inList);
                 }
             );
         },
@@ -501,6 +509,7 @@ mol.modules.map.results = function(mol) {
             this.display.results.show();
             this.display.toggle(true);
         },
+
         /*
          * Displays a message when no results are returned 
          * from the search query.
@@ -702,8 +711,9 @@ mol.modules.map.results = function(mol) {
                                 'Results' +
                                 '<a href="#" class="selectNone">none</a>' +
                                 '<a href="#" class="selectAll">all</a>' +
-                                '<div class="synonymDisplay" style="display: none">' +
-                                    '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known as <span class="synonymList"></span>. These synonyms have now been added to your search.</span>' +
+                                '<div class="synonymDisplay synonymDisplayIfSuccess" style="display: none">' +
+                                    '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known as <span class="synonymList"></span>. <span class="synonymDisplayIfNoData" style="display:none">No results could be found for this name on Map of Life.</span>' +
+                                    '<div class="break" style="clear:both"></div>' + 
                                 '</div>' +
                             '</div>' +
                             '<ol class="resultList"></ol>' +
@@ -718,7 +728,7 @@ mol.modules.map.results = function(mol) {
                         '</div>' +
                         '<div class="noresults">' +
                             '<h3>No results found.</h3>' +
-                            '<div class="synonymDisplay" style="display: none">' +
+                            '<div class="synonymDisplay synonymDisplayIfNoData" style="display: none">' +
                                 '<div class="break" style="clear:both"></div>' + 
                                 '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known as <span class="synonymList"></span>, but we do not have data for any of those names.' +
                             '</div>' +
@@ -727,8 +737,8 @@ mol.modules.map.results = function(mol) {
                 '</div>';
 
             // var synonymListItem = "<span><em><span id='name'></span></em>&nbsp;(<a id='url' target='_blank' style='color: rgb(230, 250, 230);' href='#'>ref</a>)</span>";
-            // var synonymListItem = "<span><em><a id='url' target='_blank' style='color: rgb(230, 250, 230);' href='#'><span id='name'></span></a> <img src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVElEQVR42n3PgQkAIAhEUXdqJ3dqJ3e6IoTPUSQcgj4EQ5IlUiLE0Jil3PECXhcHGBhZ8kg4hwxAu3MZeCGeyFnAXp4hqNQPnt7QL0nADpD6wHccLvnAKksq8iiaAAAAAElFTkSuQmCC'></span>";
-            var synonymListItem = "<span><a id='url' href='#' target='_blank' style='color: rgb(230, 250, 230);'><em><span id='name'></span></em></a><span id='details'> (More details go here)</span></span>";
+            var synonymListItem = "<span><em><a id='url' target='_blank' style='color: rgb(230, 250, 230);' href='#'><span id='name'></span></a> <img src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVElEQVR42n3PgQkAIAhEUXdqJ3dqJ3e6IoTPUSQcgj4EQ5IlUiLE0Jil3PECXhcHGBhZ8kg4hwxAu3MZeCGeyFnAXp4hqNQPnt7QL0nADpD6wHccLvnAKksq8iiaAAAAAElFTkSuQmCC'></span>";
+            // var synonymListItem = "<span><a id='url' href='#' target='_blank' style='color: rgb(230, 250, 230);'><em><span id='name'></span></em></a><span id='details'> (More details go here)</span></span>";
 
             this._super(html);
             this.resultList = $(this).find('.resultList');
@@ -741,6 +751,8 @@ mol.modules.map.results = function(mol) {
             this.noResults = $(this).find('.noresults');
 
             this.synonymDisplay = $(this).find('.synonymDisplay');
+            this.synonymDisplay.ifSuccess = $(this).find('.synonymDisplayIfSuccess');
+            this.synonymDisplay.ifNoData = $(this).find('.synonymDisplay .ifNoData');
             this.synonymDisplay.searchedName = $(this.synonymDisplay).find('.searchedName');
             this.synonymDisplay.synonymList = $(this.synonymDisplay).find('.synonymList');
             this.synonymDisplay.synonymListItem = $(synonymListItem);
