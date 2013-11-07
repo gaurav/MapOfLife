@@ -284,8 +284,8 @@ mol.modules.map.results = function(mol) {
                     // Add the actual name to this: we don't want to say that
                     // 'Panthera tigris' is a synonym of 'Panthera tigris'.
                     var duplicateNameCheck = {};
-                    duplicateNameCheck[name] = 1;
-                        
+                    duplicateNameCheck[name.toLowerCase()] = 1;
+                     
                     // Make a list of all non-duplicate synonyms, whether
                     // they are junior synonyms ("related") or senior synonyms
                     // ("accepted").
@@ -302,14 +302,14 @@ mol.modules.map.results = function(mol) {
 
                             // Make a list of canonical name as long as they
                             // haven't been duplicated.
-                            if(!duplicateNameCheck[canonicalName]) {
+                            if(!duplicateNameCheck[canonicalName.toLowerCase()]) {
                                 synonyms.push({
                                     'name': canonicalName,
                                     'url': name_usage.type[0] + name_usage.id,
                                     'type': 'related',
                                     'score': name_usage.score
                                 });
-                                duplicateNameCheck[canonicalName] = 1;
+                                duplicateNameCheck[canonicalName.toLowerCase()] = 1;
                             }
                         }
 
@@ -328,14 +328,14 @@ mol.modules.map.results = function(mol) {
                             }
 
                             // If we found an accepted name, and it's not on the duplicate name check.
-                            if(!duplicateNameCheck[acceptedName]) {
+                            if(!duplicateNameCheck[acceptedName.toLowerCase()]) {
                                 synonyms.push({
                                     'name': acceptedName,
                                     'url': name_usage.type[0] + name_usage.id,
                                     'type': 'accepted',
                                     'score': name_usage.score
                                 });
-                                duplicateNameCheck[acceptedName] = 1;
+                                duplicateNameCheck[acceptedName.toLowerCase()] = 1;
                             }
                         }
                     });
@@ -421,7 +421,8 @@ mol.modules.map.results = function(mol) {
 
                     // Set the searched name and GO!
                     var inList = display.synonymDisplay.ifSuccess.clone();
-                    $(".searchedName", inList).text(name);
+                    var name_cleaned = name.substr(0, 1).toUpperCase() + name.substr(1).toLowerCase();
+                    $(".searchedName", inList).text(name_cleaned);
                     if(synonyms.length == 0) {
                         $(".synonymDisplayIfNoData", inList).show();
                     }
