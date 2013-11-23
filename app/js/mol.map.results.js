@@ -271,10 +271,16 @@ mol.modules.map.results = function(mol) {
             // Store display for easy access.
             var display = this.display;
 
+            // Display the 'processing ...' message.
+            display.searchingForSynonyms.show();
+
             // Query TaxRefine.
             $.getJSON(
                 "http://refine.taxonomics.org/gbifchecklists/reconcile?callback=?&query=" + encodeURIComponent(name),
                 function(result) {
+                    // Turn off the 'processing ...' message.
+                    display.searchingForSynonyms.hide();
+
                     // Store the matches in result.result as 'names'.
                     if(!result.result)
                         return;
@@ -375,8 +381,6 @@ mol.modules.map.results = function(mol) {
                         $("#name", synonymItem).text(name);
                         // $("#url", synonymItem).attr('href', url);
                         var urlItem = $("#url", synonymItem);
-                        urlItem.attr('href', url);
-                        /*
                         var detailsItem = $("#details", synonymItem);
                         detailsItem.html("<div style='width:100%; text-align: center'>" + score + "&nbsp;checklist(s) <a target='_blank' style='color: rgb(230, 250, 230);' href='" + url + "'>on GBIF</a></div>");
                         detailsItem.hide();
@@ -386,7 +390,6 @@ mol.modules.map.results = function(mol) {
                             detailsItem.toggle();
                             return false;
                         });
-                        */
 
                         if(type == 'accepted') {
                             // Something to distinguish this would be nice,
@@ -420,14 +423,8 @@ mol.modules.map.results = function(mol) {
                     });
 
                     // Set the searched name and GO!
-                    var inList = display.synonymDisplay.ifSuccess.clone();
-                    var name_cleaned = name.substr(0, 1).toUpperCase() + name.substr(1).toLowerCase();
-                    $(".searchedName", inList).text(name_cleaned);
-                    if(synonyms.length == 0) {
-                        $(".synonymDisplayIfNoData", inList).show();
-                    }
-                    inList.show();
-                    display.resultList.append(inList);
+                    display.synonymDisplay.searchedName.text(name);
+                    display.synonymDisplay.show();
                 }
             );
         },
@@ -510,7 +507,6 @@ mol.modules.map.results = function(mol) {
             this.display.results.show();
             this.display.toggle(true);
         },
-
         /*
          * Displays a message when no results are returned 
          * from the search query.
@@ -712,9 +708,9 @@ mol.modules.map.results = function(mol) {
                                 'Results' +
                                 '<a href="#" class="selectNone">none</a>' +
                                 '<a href="#" class="selectAll">all</a>' +
-                                '<div class="synonymDisplay synonymDisplayIfSuccess" style="display: none">' +
-                                    '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known as <span class="synonymList"></span>. <span class="synonymDisplayIfNoData" style="display:none">No results could be found for this name on Map of Life.</span>' +
-                                    '<div class="break" style="clear:both"></div>' + 
+                                '<div class="searchingForSynonyms" style="display: none; border-bottom: 1px solid rgba(11, 11, 11, 0.298)">Please wait, searching GBIF for synonyms ...</div>' +
+                                '<div class="synonymDisplay" style="display: none; padding-top: 5px; padding-bottom: 5px; border-bottom: 1px solid rgba(11, 11, 11, 0.298)">' +
+                                    'Searched for <span class="searchedName" style="font-style: italic">The name you searched for</span> and these known alternative names: <span class="synonymList"></span>.' +
                                 '</div>' +
                             '</div>' +
                             '<ol class="resultList"></ol>' +
@@ -729,7 +725,8 @@ mol.modules.map.results = function(mol) {
                         '</div>' +
                         '<div class="noresults">' +
                             '<h3>No results found.</h3>' +
-                            '<div class="synonymDisplay synonymDisplayIfNoData" style="display: none">' +
+                            '<div class="searchingForSynonyms" style="display: none">Please wait, searching GBIF for synonyms ...</div>' +
+                            '<div class="synonymDisplay" style="display: none">' +
                                 '<div class="break" style="clear:both"></div>' + 
                                 '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known as <span class="synonymList"></span>, but we do not have data for any of those names.' +
                             '</div>' +
@@ -738,7 +735,7 @@ mol.modules.map.results = function(mol) {
                 '</div>';
 
             // var synonymListItem = "<span><em><span id='name'></span></em>&nbsp;(<a id='url' target='_blank' style='color: rgb(230, 250, 230);' href='#'>ref</a>)</span>";
-            var synonymListItem = "<span><em><a id='url' target='_blank' style='color: rgb(230, 250, 230);' href='#'><span id='name'></span></a> <img src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVElEQVR42n3PgQkAIAhEUXdqJ3dqJ3e6IoTPUSQcgj4EQ5IlUiLE0Jil3PECXhcHGBhZ8kg4hwxAu3MZeCGeyFnAXp4hqNQPnt7QL0nADpD6wHccLvnAKksq8iiaAAAAAElFTkSuQmCC'></span>";
+            var synonymListItem = "<span><em><a id='url' target='_blank' style='color: rgb(230, 250, 230);' href='#'><span id='name'></span></a>&nbsp;<img src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVElEQVR42n3PgQkAIAhEUXdqJ3dqJ3e6IoTPUSQcgj4EQ5IlUiLE0Jil3PECXhcHGBhZ8kg4hwxAu3MZeCGeyFnAXp4hqNQPnt7QL0nADpD6wHccLvnAKksq8iiaAAAAAElFTkSuQmCC'></span>";
             // var synonymListItem = "<span><a id='url' href='#' target='_blank' style='color: rgb(230, 250, 230);'><em><span id='name'></span></em></a><span id='details'> (More details go here)</span></span>";
 
             this._super(html);
@@ -751,9 +748,8 @@ mol.modules.map.results = function(mol) {
             this.results = $(this).find('.results');
             this.noResults = $(this).find('.noresults');
 
+            this.searchingForSynonyms = $(this).find('.searchingForSynonyms');
             this.synonymDisplay = $(this).find('.synonymDisplay');
-            this.synonymDisplay.ifSuccess = $(this).find('.synonymDisplayIfSuccess');
-            this.synonymDisplay.ifNoData = $(this).find('.synonymDisplay .ifNoData');
             this.synonymDisplay.searchedName = $(this.synonymDisplay).find('.searchedName');
             this.synonymDisplay.synonymList = $(this.synonymDisplay).find('.synonymList');
             this.synonymDisplay.synonymListItem = $(synonymListItem);
