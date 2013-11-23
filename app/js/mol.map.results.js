@@ -861,7 +861,7 @@ mol.modules.map.results = function(mol) {
                     '       </div>' +
                     '       <div class="resultName">' +
                     '           <div class="resultRecords">{6}</div>' +
-                    '           <div class="resultNomial">{2}</div>' +
+                    '           <div class="resultNomial">{2} ({9})</div>' +
                     '           <div class="resultEnglishName" title="{5}">' +
                     '               {5}' +
                     '           </div>' +
@@ -887,7 +887,8 @@ mol.modules.map.results = function(mol) {
                         (layer.feature_count != null) ? 
                             '{0}'.format(layer.feature_count) : '', 
                         layer.type_title, 
-                        layer.source_title
+                        layer.source_title,
+                        layer.search_type
                     )
                 );
                 $.data(this[0],'layer',layer);

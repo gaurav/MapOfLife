@@ -433,6 +433,11 @@ mol.modules.map.search = function(mol) {
          */
         searchExpand: function(term) {
             var self = this;
+
+            var search_type = "direct";
+            if($(self.display.searchBox).val() != term) {
+                search_type = "synonym";
+            }
              
                 if(term.length<3) {
                     return;
@@ -451,7 +456,17 @@ mol.modules.map.search = function(mol) {
                             )
                         ),
                         function (response) {
+
+                            response.rows = $.map(
+                                response.rows,
+                                function(element) {
+                                    element.search_type = search_type;
+                                    return element;
+                                }
+                            );
+
                             var results = {term:term, response:response};
+
                             self.bus.fireEvent(
                                 new mol.bus.Event(
                                     'hide-loading-indicator', 
