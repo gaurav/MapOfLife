@@ -858,7 +858,7 @@ mol.modules.map.results = function(mol) {
                     '       </div>' +
                     '       <div class="resultName">' +
                     '           <div class="resultRecords">{6}</div>' +
-                    '           <div class="resultNomial">{2} ({9})</div>' +
+                    '           <div class="resultNomial">{2}{9}</div>' +
                     '           <div class="resultEnglishName" title="{5}">' +
                     '               {5}' +
                     '           </div>' +
@@ -885,7 +885,7 @@ mol.modules.map.results = function(mol) {
                             '{0}'.format(layer.feature_count) : '', 
                         layer.type_title, 
                         layer.source_title,
-                        layer.search_type
+                        ( layer.search_type == 'synonym' ? " (synonym)" : "" ) 
                     )
                 );
                 $.data(this[0],'layer',layer);
