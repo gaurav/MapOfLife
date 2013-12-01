@@ -14,7 +14,7 @@ mol.modules.map.results = function(mol) {
             this.bus = bus;
             this.map = map;
             this.maxLayers = ($.browser.chrome) ? 6 : 100;
-            this.previous_results = []; // Stores the previous search results.
+            this.previous_results = {}; // Stores the previous search results, indexed by layer.id.
             this.flag_first_search = 1; // A flag to record if we're starting a new search or not.
             this.filters = { 
                 'name': {
@@ -207,7 +207,7 @@ mol.modules.map.results = function(mol) {
                     self.display.synonymDisplay.synonymList.html("");
 
                     // Clear previous results.
-                    this.previous_results = [];
+                    this.previous_results = {};
                     this.flag_first_search = 1;
 
                     self.display.clearResults();
@@ -221,15 +221,44 @@ mol.modules.map.results = function(mol) {
                 'search-results-add',
                 function(event) {
                     var response = event.response;
-                    var rows_to_add = response.rows;
+                    var rows_found = response.rows;
+
+                    // console.log("Rows found: " + rows_found.length);
 
                     // Append to the previous results. If the caller meant to
                     // clear previous results, they would have fired a
                     // 'search-results-clear' event first.
-                    this.previous_results = this.previous_results.concat(rows_to_add);
+ 
+                    // Tracks all rows visible.
+                    if(!self.results)
+                        self.results = [];
 
-                    // console.log("previous_results: count = " + this.previous_results.length + ", rows_to_add: " + rows_to_add.length);
-                    self.results = this.previous_results;
+                    // Tracks rows being added in this method.
+                    rows_to_add = [];
+
+                    // Only add rows which we aren't already
+                    // displaying. At the moment, we can't
+                    // directly check for rows, since we
+                    // distinguish 'synonym' rows from
+                    // 'direct' rows in the search_type
+                    // field. So we need to compare row.id
+                    // instead.
+                    rows_found.forEach(function(row) {
+                        // console.log("Checking row: " + _.keys(row));
+                        row_id = row.source_type + "-" + row.dataset_id + "-" + row.name;
+                        if(!this.previous_results[row_id]) {
+                            console.log("New id identified: " + row_id);
+                            this.previous_results[row_id] = row;
+                            rows_to_add.push(row);
+                            self.results.push(row);
+                        }
+                    });
+
+                    // console.log("Rows to add: " + rows_to_add.length);
+                    // console.log("self.results: " + self.results.length);
+
+                    if(self.results.length == 0)
+                        self.results = undefined; 
 
                     // Save these results in case we need to expand this list later.
 
@@ -237,7 +266,7 @@ mol.modules.map.results = function(mol) {
                         self.showFilters(self.results);
 
                         // We only want to add the new rows.
-                        self.showLayers(response.rows);
+                        self.showLayers(rows_to_add);
 
                         if(this.flag_first_search)
                             self.searchForSynonyms(event.term);
