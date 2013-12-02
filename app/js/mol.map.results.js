@@ -16,6 +16,7 @@ mol.modules.map.results = function(mol) {
             this.maxLayers = ($.browser.chrome) ? 6 : 100;
             this.previous_results = {}; // Stores the previous search results, indexed by layer.id.
             this.flag_first_search = 1; // A flag to record if we're starting a new search or not.
+            this.flag_synonym_bar_displayed = 0; // Have we displayed the synonym bar already?
             this.filters = { 
                 'name': {
                     title: 'Name', 
@@ -209,6 +210,7 @@ mol.modules.map.results = function(mol) {
                     // Clear previous results.
                     this.previous_results = {};
                     this.flag_first_search = 1;
+                    this.flag_synonym_bar_displayed = 0;
 
                     self.display.clearResults();
                 }
@@ -247,7 +249,7 @@ mol.modules.map.results = function(mol) {
                         // console.log("Checking row: " + _.keys(row));
                         row_id = row.source_type + "-" + row.dataset_id + "-" + row.name;
                         if(!this.previous_results[row_id]) {
-                            console.log("New id identified: " + row_id);
+                            console.log("New id identified: " + row_id + " (" + row.search_type + ")");
                             this.previous_results[row_id] = row;
                             rows_to_add.push(row);
                             self.results.push(row);
@@ -764,6 +766,8 @@ mol.modules.map.results = function(mol) {
             // var synonymListItem = "<span><em><a id='url' target='_blank' style='color: rgb(230, 250, 230);' href='#'><span id='name'></span></a>&nbsp;<img src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVElEQVR42n3PgQkAIAhEUXdqJ3dqJ3e6IoTPUSQcgj4EQ5IlUiLE0Jil3PECXhcHGBhZ8kg4hwxAu3MZeCGeyFnAXp4hqNQPnt7QL0nADpD6wHccLvnAKksq8iiaAAAAAElFTkSuQmCC'></span>";
             // var synonymListItem = "<span><a id='url' href='#' target='_blank' style='color: rgb(230, 250, 230);'><em><span id='name'></span></em></a><span id='details'> (More details go here)</span></span>";
 
+            var synonymBar = "<div class='resultContainer'><center>Synonyms</center></div><div class='break'></div>"
+
             this._super(html);
             this.resultList = $(this).find('.resultList');
             this.filters = $(this).find('.filters');
@@ -775,6 +779,7 @@ mol.modules.map.results = function(mol) {
             this.noResults = $(this).find('.noresults');
 
             this.searchingForSynonyms = $(this).find('.searchingForSynonyms');
+            this.synonymBar = $(synonymBar);
             this.synonymDisplay = $(this).find('.synonymDisplay');
             this.synonymDisplay.searchedName = $(this.synonymDisplay).find('.searchedName');
             this.synonymDisplay.synonymList = $(this.synonymDisplay).find('.synonymList');
@@ -819,16 +824,23 @@ mol.modules.map.results = function(mol) {
          * @param layers An array of layer objects {id, name, type, source}
          */
         setResults: function(layers) {
-            var flag_first_synonym_found = false;
+            if(layers.length > 0) {
+                // console.log("eh: " + layers[0].search_type);
+
+                // Is this is a batch of synonyms?
+                if(layers[0].search_type != 'direct') {
+
+                    // Have we added the synonym bar already?
+                    if(!this.flag_synonym_bar_displayed) {
+                        this.flag_synonym_bar_displayed = 1;
+                        this.resultList.append(this.synonymBar.clone());
+                    }
+                }
+            }
 
             return _.map(
                 layers,
                 function(layer) {
-                    if(!flag_first_synonym_found && layer.search_type != 'direct') {
-                        flag_first_synonym_found = true;
-                        this.resultList.append($("<div class='resultContainer'><center>Synonyms</center></div><div class='break'></div>"));
-                    }
-
                     var result = new mol.map.results.ResultDisplay(layer);
                     this.resultList.append(result);
                     return result;
