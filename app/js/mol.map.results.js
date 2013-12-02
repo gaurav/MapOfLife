@@ -819,9 +819,16 @@ mol.modules.map.results = function(mol) {
          * @param layers An array of layer objects {id, name, type, source}
          */
         setResults: function(layers) {
+            var flag_first_synonym_found = false;
+
             return _.map(
                 layers,
                 function(layer) {
+                    if(!flag_first_synonym_found && layer.search_type != 'direct') {
+                        flag_first_synonym_found = true;
+                        this.resultList.append($("<div class='resultContainer'><center>Synonyms</center></div><div class='break'></div>"));
+                    }
+
                     var result = new mol.map.results.ResultDisplay(layer);
                     this.resultList.append(result);
                     return result;
@@ -887,7 +894,7 @@ mol.modules.map.results = function(mol) {
                     '       </div>' +
                     '       <div class="resultName">' +
                     '           <div class="resultRecords">{6}</div>' +
-                    '           <div class="resultNomial">{2}{9}</div>' +
+                    '           <div class="resultNomial">{2}</div>' +
                     '           <div class="resultEnglishName" title="{5}">' +
                     '               {5}' +
                     '           </div>' +
@@ -913,8 +920,7 @@ mol.modules.map.results = function(mol) {
                         (layer.feature_count != null) ? 
                             '{0}'.format(layer.feature_count) : '', 
                         layer.type_title, 
-                        layer.source_title,
-                        ( layer.search_type == 'synonym' ? " (synonym)" : "" ) 
+                        layer.source_title
                     )
                 );
                 $.data(this[0],'layer',layer);
