@@ -825,14 +825,14 @@ mol.modules.map.results = function(mol) {
          */
         setResults: function(layers) {
             if(layers.length > 0) {
-                // console.log("eh: " + layers[0].search_type);
+                console.log("eh: " + layers[0].search_type + ", flag = " + self.flag_synonym_bar_displayed);
 
                 // Is this is a batch of synonyms?
                 if(layers[0].search_type != 'direct') {
 
                     // Have we added the synonym bar already?
-                    if(!this.flag_synonym_bar_displayed) {
-                        this.flag_synonym_bar_displayed = 1;
+                    if(!self.flag_synonym_bar_displayed) {
+                        self.flag_synonym_bar_displayed = 1;
                         this.resultList.append(this.synonymBar.clone());
                     }
                 }
