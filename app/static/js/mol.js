@@ -2072,8 +2072,9 @@ mol.modules.map.results = function(mol) {
             this.bus = bus;
             this.map = map;
             this.maxLayers = ($.browser.chrome) ? 6 : 100;
-            this.previous_results = []; // Stores the previous search results.
+            this.previous_results = {}; // Stores the previous search results, indexed by layer.id.
             this.flag_first_search = 1; // A flag to record if we're starting a new search or not.
+            this.flag_synonym_bar_displayed = 0; // Have we displayed the synonym bar already?
             this.filters = { 
                 'name': {
                     title: 'Name', 
@@ -2265,8 +2266,9 @@ mol.modules.map.results = function(mol) {
                     self.display.synonymDisplay.synonymList.html("");
 
                     // Clear previous results.
-                    this.previous_results = [];
+                    this.previous_results = {};
                     this.flag_first_search = 1;
+                    this.flag_synonym_bar_displayed = 0;
 
                     self.display.clearResults();
                 }
@@ -2279,15 +2281,44 @@ mol.modules.map.results = function(mol) {
                 'search-results-add',
                 function(event) {
                     var response = event.response;
-                    var rows_to_add = response.rows;
+                    var rows_found = response.rows;
+
+                    // console.log("Rows found: " + rows_found.length);
 
                     // Append to the previous results. If the caller meant to
                     // clear previous results, they would have fired a
                     // 'search-results-clear' event first.
-                    this.previous_results = this.previous_results.concat(rows_to_add);
+ 
+                    // Tracks all rows visible.
+                    if(!self.results)
+                        self.results = [];
 
-                    // console.log("previous_results: count = " + this.previous_results.length + ", rows_to_add: " + rows_to_add.length);
-                    self.results = this.previous_results;
+                    // Tracks rows being added in this method.
+                    rows_to_add = [];
+
+                    // Only add rows which we aren't already
+                    // displaying. At the moment, we can't
+                    // directly check for rows, since we
+                    // distinguish 'synonym' rows from
+                    // 'direct' rows in the search_type
+                    // field. So we need to compare row.id
+                    // instead.
+                    rows_found.forEach(function(row) {
+                        // console.log("Checking row: " + _.keys(row));
+                        row_id = row.source_type + "-" + row.dataset_id + "-" + row.name;
+                        if(!this.previous_results[row_id]) {
+                            console.log("New id identified: " + row_id + " (" + row.search_type + ")");
+                            this.previous_results[row_id] = row;
+                            rows_to_add.push(row);
+                            self.results.push(row);
+                        }
+                    });
+
+                    // console.log("Rows to add: " + rows_to_add.length);
+                    // console.log("self.results: " + self.results.length);
+
+                    if(self.results.length == 0)
+                        self.results = undefined; 
 
                     // Save these results in case we need to expand this list later.
 
@@ -2295,7 +2326,7 @@ mol.modules.map.results = function(mol) {
                         self.showFilters(self.results);
 
                         // We only want to add the new rows.
-                        self.showLayers(response.rows);
+                        self.showLayers(rows_to_add);
 
                         if(this.flag_first_search)
                             self.searchForSynonyms(event.term);
@@ -2329,10 +2360,16 @@ mol.modules.map.results = function(mol) {
             // Store display for easy access.
             var display = this.display;
 
+            // Display the 'processing ...' message.
+            display.searchingForSynonyms.show();
+
             // Query TaxRefine.
             $.getJSON(
                 "http://refine.taxonomics.org/gbifchecklists/reconcile?callback=?&query=" + encodeURIComponent(name),
                 function(result) {
+                    // Turn off the 'processing ...' message.
+                    display.searchingForSynonyms.hide();
+
                     // Store the matches in result.result as 'names'.
                     if(!result.result)
                         return;
@@ -2431,17 +2468,14 @@ mol.modules.map.results = function(mol) {
                         // Create a link to GBIF.
                         var synonymItem = display.synonymDisplay.synonymListItem.clone();
                         $("#name", synonymItem).text(name);
-                        // $("#url", synonymItem).attr('href', url);
+
                         var urlItem = $("#url", synonymItem);
+                        urlItem.text(index);
+                        urlItem.attr('href', url);
+
                         var detailsItem = $("#details", synonymItem);
                         detailsItem.html("<div style='width:100%; text-align: center'>" + score + "&nbsp;checklist(s) <a target='_blank' style='color: rgb(230, 250, 230);' href='" + url + "'>on GBIF</a></div>");
                         detailsItem.hide();
-
-                        urlItem.click(function() {
-                            var detailsItem = $("#details", $(this).parent());
-                            detailsItem.toggle();
-                            return false;
-                        });
 
                         if(type == 'accepted') {
                             // Something to distinguish this would be nice,
@@ -2760,8 +2794,9 @@ mol.modules.map.results = function(mol) {
                                 'Results' +
                                 '<a href="#" class="selectNone">none</a>' +
                                 '<a href="#" class="selectAll">all</a>' +
-                                '<div class="synonymDisplay" style="display: none">' +
-                                    '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known as <span class="synonymList"></span>. These synonyms have now been added to your search.</span>' +
+                                '<div class="searchingForSynonyms" style="display: none; border-bottom: 1px solid rgba(11, 11, 11, 0.298)">Please wait, searching GBIF for synonyms ...</div>' +
+                                '<div class="synonymDisplay" style="display: none; padding-top: 5px; padding-bottom: 5px; border-bottom: 1px solid rgba(11, 11, 11, 0.298)">' +
+                                    'Searched for <span class="searchedName" style="font-style: italic">The name you searched for</span> and these known alternative names: <span class="synonymList"></span>.' +
                                 '</div>' +
                             '</div>' +
                             '<ol class="resultList"></ol>' +
@@ -2776,6 +2811,7 @@ mol.modules.map.results = function(mol) {
                         '</div>' +
                         '<div class="noresults">' +
                             '<h3>No results found.</h3>' +
+                            '<div class="searchingForSynonyms" style="display: none">Please wait, searching GBIF for synonyms ...</div>' +
                             '<div class="synonymDisplay" style="display: none">' +
                                 '<div class="break" style="clear:both"></div>' + 
                                 '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known as <span class="synonymList"></span>, but we do not have data for any of those names.' +
@@ -2784,9 +2820,11 @@ mol.modules.map.results = function(mol) {
                     '</div>' +
                 '</div>';
 
-            // var synonymListItem = "<span><em><span id='name'></span></em>&nbsp;(<a id='url' target='_blank' style='color: rgb(230, 250, 230);' href='#'>ref</a>)</span>";
-            // var synonymListItem = "<span><em><a id='url' target='_blank' style='color: rgb(230, 250, 230);' href='#'><span id='name'></span></a> <img src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVElEQVR42n3PgQkAIAhEUXdqJ3dqJ3e6IoTPUSQcgj4EQ5IlUiLE0Jil3PECXhcHGBhZ8kg4hwxAu3MZeCGeyFnAXp4hqNQPnt7QL0nADpD6wHccLvnAKksq8iiaAAAAAElFTkSuQmCC'></span>";
-            var synonymListItem = "<span><a id='url' href='#' target='_blank' style='color: rgb(230, 250, 230);'><em><span id='name'></span></em></a><span id='details'> (More details go here)</span></span>";
+            var synonymListItem = "<span><em><span id='name'></span></em><sup><a id='url' target='_blank' style='font-size: 0.9em; color: rgb(230, 250, 230);' href='#'>ref</a></sup></span>";
+            // var synonymListItem = "<span><em><a id='url' target='_blank' style='color: rgb(230, 250, 230);' href='#'><span id='name'></span></a>&nbsp;<img src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVElEQVR42n3PgQkAIAhEUXdqJ3dqJ3e6IoTPUSQcgj4EQ5IlUiLE0Jil3PECXhcHGBhZ8kg4hwxAu3MZeCGeyFnAXp4hqNQPnt7QL0nADpD6wHccLvnAKksq8iiaAAAAAElFTkSuQmCC'></span>";
+            // var synonymListItem = "<span><a id='url' href='#' target='_blank' style='color: rgb(230, 250, 230);'><em><span id='name'></span></em></a><span id='details'> (More details go here)</span></span>";
+
+            var synonymBar = "<div class='resultContainer'><center>Synonyms</center></div><div class='break'></div>"
 
             this._super(html);
             this.resultList = $(this).find('.resultList');
@@ -2798,6 +2836,8 @@ mol.modules.map.results = function(mol) {
             this.results = $(this).find('.results');
             this.noResults = $(this).find('.noresults');
 
+            this.searchingForSynonyms = $(this).find('.searchingForSynonyms');
+            this.synonymBar = $(synonymBar);
             this.synonymDisplay = $(this).find('.synonymDisplay');
             this.synonymDisplay.searchedName = $(this.synonymDisplay).find('.searchedName');
             this.synonymDisplay.synonymList = $(this.synonymDisplay).find('.synonymList');
@@ -2842,6 +2882,20 @@ mol.modules.map.results = function(mol) {
          * @param layers An array of layer objects {id, name, type, source}
          */
         setResults: function(layers) {
+            if(layers.length > 0) {
+                console.log("eh: " + layers[0].search_type + ", flag = " + self.flag_synonym_bar_displayed);
+
+                // Is this is a batch of synonyms?
+                if(layers[0].search_type != 'direct') {
+
+                    // Have we added the synonym bar already?
+                    if(!self.flag_synonym_bar_displayed) {
+                        self.flag_synonym_bar_displayed = 1;
+                        this.resultList.append(this.synonymBar.clone());
+                    }
+                }
+            }
+
             return _.map(
                 layers,
                 function(layer) {
@@ -3440,6 +3494,11 @@ mol.modules.map.search = function(mol) {
          */
         searchExpand: function(term) {
             var self = this;
+
+            var search_type = "direct";
+            if($(self.display.searchBox).val() != term) {
+                search_type = "synonym";
+            }
              
                 if(term.length<3) {
                     return;
@@ -3458,7 +3517,17 @@ mol.modules.map.search = function(mol) {
                             )
                         ),
                         function (response) {
+
+                            response.rows = $.map(
+                                response.rows,
+                                function(element) {
+                                    element.search_type = search_type;
+                                    return element;
+                                }
+                            );
+
                             var results = {term:term, response:response};
+
                             self.bus.fireEvent(
                                 new mol.bus.Event(
                                     'hide-loading-indicator', 
