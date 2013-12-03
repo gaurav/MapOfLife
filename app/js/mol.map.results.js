@@ -752,11 +752,8 @@ mol.modules.map.results = function(mol) {
                                 'Results' +
                                 '<a href="#" class="selectNone">none</a>' +
                                 '<a href="#" class="selectAll">all</a>' +
-                                '<div class="synonymSearchInProgress" style="display: none; border-bottom: 1px solid rgba(11, 11, 11, 0.298); padding-top: 5px; padding-bottom: 5px;">' +
-                                    'Searching for synonyms and associated data ...' +
-                                '</div>' +
                                 '<div class="synonymDisplay" style="display: none; padding-top: 5px; padding-bottom: 5px; border-bottom: 1px solid rgba(11, 11, 11, 0.298)">' +
-                                    'Searched for <span class="searchedName" style="font-style: italic">The name you searched for</span> and these known alternative names: <span class="synonymList"></span>.' +
+                                    'Search<span class="synonymSearchInProgress">ing</span><span class="synonymSearchEnded">ed</span> for <span class="searchedName" style="font-style: italic">The name you searched for</span> and these known alternative names: <span class="synonymList"></span>.' +
                                 '</div>' +
                             '</div>' +
                             '<ol class="resultList"></ol>' +
