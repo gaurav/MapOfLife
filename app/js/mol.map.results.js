@@ -411,9 +411,9 @@ mol.modules.map.results = function(mol) {
                         var synonymItem = display.synonymDisplay.synonymListItem.clone();
                         $("#name", synonymItem).text(name);
 
-                        var urlItem = $("#url", synonymItem);
-                        urlItem.text(index);
-                        urlItem.attr('href', url);
+                        // var urlItem = $("#url", synonymItem);
+                        // urlItem.text(index);
+                        // urlItem.attr('href', url);
 
                         var detailsItem = $("#details", synonymItem);
                         detailsItem.html("<div style='width:100%; text-align: center'>" + score + "&nbsp;checklist(s) <a target='_blank' style='color: rgb(230, 250, 230);' href='" + url + "'>on GBIF</a></div>");
@@ -762,7 +762,8 @@ mol.modules.map.results = function(mol) {
                     '</div>' +
                 '</div>';
 
-            var synonymListItem = "<span><em><span id='name'></span></em><sup><a id='url' target='_blank' style='font-size: 0.9em; color: rgb(230, 250, 230);' href='#'>ref</a></sup></span>";
+            var synonymListItem = "<em><span id='name'></span></em>";
+            // var synonymListItem = "<span><em><span id='name'></span></em><sup><a id='url' target='_blank' style='font-size: 0.9em; color: rgb(230, 250, 230);' href='#'>ref</a></sup></span>";
             // var synonymListItem = "<span><em><a id='url' target='_blank' style='color: rgb(230, 250, 230);' href='#'><span id='name'></span></a>&nbsp;<img src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVElEQVR42n3PgQkAIAhEUXdqJ3dqJ3e6IoTPUSQcgj4EQ5IlUiLE0Jil3PECXhcHGBhZ8kg4hwxAu3MZeCGeyFnAXp4hqNQPnt7QL0nADpD6wHccLvnAKksq8iiaAAAAAElFTkSuQmCC'></span>";
             // var synonymListItem = "<span><a id='url' href='#' target='_blank' style='color: rgb(230, 250, 230);'><em><span id='name'></span></em></a><span id='details'> (More details go here)</span></span>";
 
@@ -825,8 +826,6 @@ mol.modules.map.results = function(mol) {
          */
         setResults: function(layers) {
             if(layers.length > 0) {
-                console.log("eh: " + layers[0].search_type + ", flag = " + self.flag_synonym_bar_displayed);
-
                 // Is this is a batch of synonyms?
                 if(layers[0].search_type != 'direct') {
 
