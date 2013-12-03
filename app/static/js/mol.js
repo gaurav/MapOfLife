@@ -2075,6 +2075,7 @@ mol.modules.map.results = function(mol) {
             this.previous_results = {}; // Stores the previous search results, indexed by layer.id.
             this.flag_first_search = 1; // A flag to record if we're starting a new search or not.
             this.flag_synonym_bar_displayed = 0; // Have we displayed the synonym bar already?
+            this.synonym_search_counter = 0; // How many synonyms are we searching for right now?
             this.filters = { 
                 'name': {
                     title: 'Name', 
@@ -2270,6 +2271,10 @@ mol.modules.map.results = function(mol) {
                     this.flag_first_search = 1;
                     this.flag_synonym_bar_displayed = 0;
 
+                    this.synonym_search_counter = 0;
+                    self.display.synonymSearchInProgress.hide();
+                    self.display.synonymSearchEnded.show();
+
                     self.display.clearResults();
                 }
             );
@@ -2284,6 +2289,18 @@ mol.modules.map.results = function(mol) {
                     var rows_found = response.rows;
 
                     // console.log("Rows found: " + rows_found.length);
+
+                    if(!this.flag_first_search) {
+                        // One of our synonym calls have returned!
+                        this.synonym_search_counter--;
+
+                        if(this.synonym_search_counter == 0) {
+                            // All synonyms are done. Turn off the 
+                            // 'please wait ...' display.
+                            self.display.synonymSearchInProgress.hide();
+                            self.display.synonymSearchEnded.show();
+                        }
+                    }
 
                     // Append to the previous results. If the caller meant to
                     // clear previous results, they would have fired a
@@ -2361,15 +2378,14 @@ mol.modules.map.results = function(mol) {
             var display = this.display;
 
             // Display the 'processing ...' message.
-            display.searchingForSynonyms.show();
+            display.synonymSearchEnded.hide();
+            display.synonymSearchInProgress.show();
+            self.synonym_search_counter++;
 
             // Query TaxRefine.
             $.getJSON(
                 "http://refine.taxonomics.org/gbifchecklists/reconcile?callback=?&query=" + encodeURIComponent(name),
                 function(result) {
-                    // Turn off the 'processing ...' message.
-                    display.searchingForSynonyms.hide();
-
                     // Store the matches in result.result as 'names'.
                     if(!result.result)
                         return;
@@ -2469,9 +2485,9 @@ mol.modules.map.results = function(mol) {
                         var synonymItem = display.synonymDisplay.synonymListItem.clone();
                         $("#name", synonymItem).text(name);
 
-                        var urlItem = $("#url", synonymItem);
-                        urlItem.text(index);
-                        urlItem.attr('href', url);
+                        // var urlItem = $("#url", synonymItem);
+                        // urlItem.text(index);
+                        // urlItem.attr('href', url);
 
                         var detailsItem = $("#details", synonymItem);
                         detailsItem.html("<div style='width:100%; text-align: center'>" + score + "&nbsp;checklist(s) <a target='_blank' style='color: rgb(230, 250, 230);' href='" + url + "'>on GBIF</a></div>");
@@ -2794,7 +2810,9 @@ mol.modules.map.results = function(mol) {
                                 'Results' +
                                 '<a href="#" class="selectNone">none</a>' +
                                 '<a href="#" class="selectAll">all</a>' +
-                                '<div class="searchingForSynonyms" style="display: none; border-bottom: 1px solid rgba(11, 11, 11, 0.298)">Please wait, searching GBIF for synonyms ...</div>' +
+                                '<div class="synonymSearchInProgress" style="display: none; border-bottom: 1px solid rgba(11, 11, 11, 0.298); padding-top: 5px; padding-bottom: 5px;">' +
+                                    'Searching for synonyms and associated data ...' +
+                                '</div>' +
                                 '<div class="synonymDisplay" style="display: none; padding-top: 5px; padding-bottom: 5px; border-bottom: 1px solid rgba(11, 11, 11, 0.298)">' +
                                     'Searched for <span class="searchedName" style="font-style: italic">The name you searched for</span> and these known alternative names: <span class="synonymList"></span>.' +
                                 '</div>' +
@@ -2811,16 +2829,19 @@ mol.modules.map.results = function(mol) {
                         '</div>' +
                         '<div class="noresults">' +
                             '<h3>No results found.</h3>' +
-                            '<div class="searchingForSynonyms" style="display: none">Please wait, searching GBIF for synonyms ...</div>' +
+                            '<div class="synonymSearchInProgress" style="display: none">' +
+                                'Searching for synonyms and associated data ...' +
+                            '</div>' +
                             '<div class="synonymDisplay" style="display: none">' +
                                 '<div class="break" style="clear:both"></div>' + 
-                                '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known as <span class="synonymList"></span>, but we do not have data for any of those names.' +
+                                '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known as <span class="synonymList"></span><span class="synonymSearchInProgress">.</span><span class="synonymSearchEnded" style="display:none">, but we do not have data for any of those names.</span>' +
                             '</div>' +
                         '</div>' +
                     '</div>' +
                 '</div>';
 
-            var synonymListItem = "<span><em><span id='name'></span></em><sup><a id='url' target='_blank' style='font-size: 0.9em; color: rgb(230, 250, 230);' href='#'>ref</a></sup></span>";
+            var synonymListItem = "<em><span id='name'></span></em>";
+            // var synonymListItem = "<span><em><span id='name'></span></em><sup><a id='url' target='_blank' style='font-size: 0.9em; color: rgb(230, 250, 230);' href='#'>ref</a></sup></span>";
             // var synonymListItem = "<span><em><a id='url' target='_blank' style='color: rgb(230, 250, 230);' href='#'><span id='name'></span></a>&nbsp;<img src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVElEQVR42n3PgQkAIAhEUXdqJ3dqJ3e6IoTPUSQcgj4EQ5IlUiLE0Jil3PECXhcHGBhZ8kg4hwxAu3MZeCGeyFnAXp4hqNQPnt7QL0nADpD6wHccLvnAKksq8iiaAAAAAElFTkSuQmCC'></span>";
             // var synonymListItem = "<span><a id='url' href='#' target='_blank' style='color: rgb(230, 250, 230);'><em><span id='name'></span></em></a><span id='details'> (More details go here)</span></span>";
 
@@ -2836,7 +2857,8 @@ mol.modules.map.results = function(mol) {
             this.results = $(this).find('.results');
             this.noResults = $(this).find('.noresults');
 
-            this.searchingForSynonyms = $(this).find('.searchingForSynonyms');
+            this.synonymSearchInProgress = $(this).find('.synonymSearchInProgress');
+            this.synonymSearchEnded = $(this).find('.synonymSearchEnded');
             this.synonymBar = $(synonymBar);
             this.synonymDisplay = $(this).find('.synonymDisplay');
             this.synonymDisplay.searchedName = $(this.synonymDisplay).find('.searchedName');
@@ -2883,8 +2905,6 @@ mol.modules.map.results = function(mol) {
          */
         setResults: function(layers) {
             if(layers.length > 0) {
-                console.log("eh: " + layers[0].search_type + ", flag = " + self.flag_synonym_bar_displayed);
-
                 // Is this is a batch of synonyms?
                 if(layers[0].search_type != 'direct') {
 
