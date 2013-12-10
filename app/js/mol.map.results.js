@@ -284,6 +284,7 @@ mol.modules.map.results = function(mol) {
                     // Find all the rows we need to add in this operation.
                     // Uniqueness is determined by concatenating the source_type,
                     // dataset_id and name.
+                    var time_start = new Date().getTime();
                     var ids_currently_in_use = _.map(self.current_results,
                         function(row) {
                             return (row.source_type + "-" + row.dataset_id + 
@@ -297,6 +298,8 @@ mol.modules.map.results = function(mol) {
                             return(ids_currently_in_use.indexOf(id) == -1);
                         }
                     );
+                    console.log("Time taken to test for duplicates: " + 
+                        (new Date().getTime() - time_start) + " ms");
 
                     // Display the synonym bar if appropriate.
                     if(
