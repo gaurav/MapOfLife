@@ -14,10 +14,39 @@ mol.modules.map.results = function(mol) {
             this.bus = bus;
             this.map = map;
             this.maxLayers = ($.browser.chrome) ? 6 : 100;
-            this.previous_results = {}; // Stores the previous search results, indexed by layer.id.
-            this.flag_first_search = 1; // A flag to record if we're starting a new search or not.
-            this.flag_synonym_bar_displayed = 0; // Have we displayed the synonym bar already?
-            this.synonym_search_counter = 0; // How many synonyms are we searching for right now?
+
+            /** 
+             * this.current_results = []
+             *
+             * Stores the currently displayed results.
+             */
+            this.current_results = [];
+
+            /**
+             * this.flag_synonym_bar_displayed = (0|1)
+             *
+             * The synonym bar displays "Synonyms" between direct and synonym 
+             * search results. This flag is turned on once the bar has been 
+             * displayed, preventing it from being displayed multiple times,
+             * where multiple synonym searches return separate results, for
+             * instance.
+             */
+            this.flag_synonym_bar_displayed = 0; 
+
+
+            /**
+             * this.synonym_search_counter = 0, 1, ...
+             *
+             * The number of ongoing asynchronous synonym searches. When zero,
+             * no synonym searches are ongoing, so if rows are being added,
+             * it must be from a direct search. If > 0, then rows are being
+             * added by a synonym search. As the results from synonym searches
+             * return to this module, this counter in decremented, and once
+             * it returns to zero, any "Please wait, synonym search in 
+             * progress  ..." messages are hidden.
+             */
+            this.synonym_search_counter = 0; 
+
             this.filters = { 
                 'name': {
                     title: 'Name', 
@@ -170,7 +199,7 @@ mol.modules.map.results = function(mol) {
             this.bus.addHandler(
                 'results-display-toggle',
                 function(event) {
-                    if(self.results == undefined) {
+                    if(self.current_results.length == 0) {
                         self.display.toggle(false);
                     } else {
                         if (event.visible === undefined) {
@@ -197,43 +226,25 @@ mol.modules.map.results = function(mol) {
             );
 
             /**
-             * Callback that clears previous search results.
+             * Callback that displays search results. If synonym searches
+             * are in progress, these will be added to the search results
+             * instead of overwriting them.
              */
             this.bus.addHandler(
-                'search-results-clear',
+                'search-results',
                 function(event) {
                     var response = event.response;
+                    var search_type = 'direct';
+ 
+                    // Turn off autocomplete.
+                    self.bus.fireEvent(new mol.bus.Event('close-autocomplete'));
 
-                    // Turn off the previous synonym display.
-                    self.display.synonymDisplay.hide();
-                    self.display.synonymDisplay.synonymList.html("");
+                    console.log("*** search results for: " + event.term + ".");
+                    console.log("synonym_search_counter = " + this.synonym_search_counter);
 
-                    // Clear previous results.
-                    this.previous_results = {};
-                    this.flag_first_search = 1;
-                    this.flag_synonym_bar_displayed = 0;
-
-                    this.synonym_search_counter = 0;
-                    self.display.synonymSearchInProgress.hide();
-                    self.display.synonymSearchEnded.show();
-
-                    self.display.clearResults();
-                }
-            );
-
-            /**
-             * Callback that adds search results to previous.
-             */
-            this.bus.addHandler(
-                'search-results-add',
-                function(event) {
-                    var response = event.response;
-                    var rows_found = response.rows;
-
-                    // console.log("Rows found: " + rows_found.length);
-
-                    if(!this.flag_first_search) {
-                        // One of our synonym calls have returned!
+                    // Are we in a synonym search or a direct search?
+                    if(this.synonym_search_counter > 0) {
+                        // We are in a synonym search!
                         this.synonym_search_counter--;
 
                         if(this.synonym_search_counter == 0) {
@@ -242,62 +253,79 @@ mol.modules.map.results = function(mol) {
                             self.display.synonymSearchInProgress.hide();
                             self.display.synonymSearchEnded.show();
                         }
+
+                        // Change the search type to 'synonym'.
+                        search_type = 'synonym';
+
+                    } else {
+                        // No currently synonym searches in progress.
+                        // So this is a new direct search result!
+
+                        // Turn off the previous synonym display.
+                        self.display.synonymDisplay.hide();
+                        self.display.synonymDisplay.synonymList.html("");
+
+                        // Clear synonym flags and counters.
+                        self.flag_synonym_bar_displayed = 0;
+                        this.synonym_search_counter = 0;
+
+                        // Clear synonym UI.
+                        self.display.synonymSearchInProgress.hide();
+                        self.display.synonymSearchEnded.show();
+
+                        // Clear current results.
+                        self.current_results = [];
+                        self.display.clearResults();
                     }
 
-                    // Append to the previous results. If the caller meant to
-                    // clear previous results, they would have fired a
-                    // 'search-results-clear' event first.
- 
-                    // Tracks all rows visible.
-                    if(!self.results)
-                        self.results = [];
+                    // Rows found by the search.
+                    var rows_found = response.rows;
 
-                    // Tracks rows being added in this method.
-                    rows_to_add = [];
+                    // Find all the rows we need to add in this operation.
+                    var rows_to_add = _.difference(rows_found, self.current_results);
 
-                    // Only add rows which we aren't already
-                    // displaying. At the moment, we can't
-                    // directly check for rows, since we
-                    // distinguish 'synonym' rows from
-                    // 'direct' rows in the search_type
-                    // field. So we need to compare row.id
-                    // instead.
-                    rows_found.forEach(function(row) {
-                        // console.log("Checking row: " + _.keys(row));
-                        row_id = row.source_type + "-" + row.dataset_id + "-" + row.name;
-                        if(!this.previous_results[row_id]) {
-                            console.log("New id identified: " + row_id + " (" + row.search_type + ")");
-                            this.previous_results[row_id] = row;
-                            rows_to_add.push(row);
-                            self.results.push(row);
-                        }
-                    });
+                    // Display the synonym bar if appropriate.
+                    if(
+                        rows_to_add.length > 0 && 
+                        search_type == 'synonym' && 
+                        self.flag_synonym_bar_displayed == 0
+                    ) {
+                        self.flag_synonym_bar_displayed = 1;
+                        self.display.resultList.append(self.display.synonymBar.clone());
+                    }
 
-                    // console.log("Rows to add: " + rows_to_add.length);
-                    // console.log("self.results: " + self.results.length);
+                    // Add the new search results back to current_results. 
+                    // Since we've already eliminated duplicates, this will 
+                    // only add non-duplicates.
+                    if(rows_to_add.length > 0)
+                        self.current_results.push(rows_to_add);
 
-                    if(self.results.length == 0)
-                        self.results = undefined; 
+                    // Now,this.current_results is all current results,
+                    // and rows_to_add are the new rows to add because
+                    // of these search results.
 
-                    // Save these results in case we need to expand this list later.
+                    console.log("search_type: " + search_type);
+                    console.log("current_results: " + self.current_results.join(', ') + " (" + self.current_results.length + ")");
+                    console.log("rows_to_add: " + rows_to_add.join(', ') + " (" + rows_to_add.length + ")");
 
-                    if (self.getLayersWithIds(self.results).length > 0) {
-                        self.showFilters(self.results);
+                    if (self.current_results.length > 0) {
+                        self.showFilters(self.current_results);
 
                         // We only want to add the new rows.
                         self.showLayers(rows_to_add);
 
-                        if(this.flag_first_search)
+                        // Synonym matches shouldn't trigger further
+                        // synonym searching.
+                        if(search_type != 'synonym')
                             self.searchForSynonyms(event.term);
                     } else {
                         self.showNoResults();
 
-                        if(this.flag_first_search)
+                        // Synonym matches shouldn't trigger further
+                        // synonym searching.
+                        if(search_type != 'synonym')
                             self.searchForSynonyms(event.term);
                     }
-
-                    // No longer the first search!
-                    this.flag_first_search = 0;
                 }
             );
         },
@@ -322,12 +350,30 @@ mol.modules.map.results = function(mol) {
             // Display the 'processing ...' message.
             display.synonymSearchEnded.hide();
             display.synonymSearchInProgress.show();
-            self.synonym_search_counter++;
+            console.log("searchForSynonyms: " + name + " (" + this.synonym_search_counter + ")");
 
             // Query TaxRefine.
-            $.getJSON(
-                "http://refine.taxonomics.org/gbifchecklists/reconcile?callback=?&query=" + encodeURIComponent(name),
-                function(result) {
+            $.ajax({
+                url: "//refine.taxonomics.org/gbifchecklists/reconcile?callback=?&query=" + encodeURIComponent(name),
+                dataType: "json",
+                complete: function() {
+                    console.log("JSONP request complete for " + name + " (" + this.synonym_search_counter + ")");
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.log("Error in JSONP request: " + textStatus + "/" + errorThrown);
+                    self.bus.fireEvent(
+                        new mol.bus.Event(
+                            'search-results',
+                            {
+                                'term': name,
+                                'response': {
+                                    'rows': []
+                                }
+                            }
+                        )
+                    );
+                },
+                success: function(result) {
                     // Store the matches in result.result as 'names'.
                     if(!result.result)
                         return;
@@ -454,6 +500,7 @@ mol.modules.map.results = function(mol) {
                         display.synonymDisplay.synonymList.append(synonymItem);
 
                         // Search for this synonym by expanding the current search.
+                        self.synonym_search_counter++;
                         self.bus.fireEvent(
                             new mol.bus.Event(
                                 'search',
@@ -470,7 +517,7 @@ mol.modules.map.results = function(mol) {
                     display.synonymDisplay.searchedName.text(name);
                     display.synonymDisplay.show();
                 }
-            );
+            });
         },
 
         /**
@@ -593,6 +640,8 @@ mol.modules.map.results = function(mol) {
                         results,
                         //for each property, set a filter with a title
                         function(row) {    
+                            console.log("Parsing: " + row + " for " + filter + ": " + row[filter]);
+
                             if(row[filter]) {                 
                                 filters[filter]
                                     .values[row[filter].replace(/ /g, '_')] 
@@ -843,18 +892,6 @@ mol.modules.map.results = function(mol) {
          * @param layers An array of layer objects {id, name, type, source}
          */
         setResults: function(layers) {
-            if(layers.length > 0) {
-                // Is this is a batch of synonyms?
-                if(layers[0].search_type != 'direct') {
-
-                    // Have we added the synonym bar already?
-                    if(!self.flag_synonym_bar_displayed) {
-                        self.flag_synonym_bar_displayed = 1;
-                        this.resultList.append(this.synonymBar.clone());
-                    }
-                }
-            }
-
             return _.map(
                 layers,
                 function(layer) {
