@@ -282,7 +282,21 @@ mol.modules.map.results = function(mol) {
                     var rows_found = response.rows;
 
                     // Find all the rows we need to add in this operation.
-                    var rows_to_add = _.difference(rows_found, self.current_results);
+                    // Uniqueness is determined by concatenating the source_type,
+                    // dataset_id and name.
+                    var ids_currently_in_use = _.map(self.current_results,
+                        function(row) {
+                            return (row.source_type + "-" + row.dataset_id + 
+                                "-" + row.name);
+                        }
+                    );
+                    var rows_to_add = _.filter(rows_found,
+                        function(row) {
+                            var id = (row.source_type + "-" + row.dataset_id
+                                + "-" + row.name);
+                            return(ids_currently_in_use.indexOf(id) == -1);
+                        }
+                    );
 
                     // Display the synonym bar if appropriate.
                     if(
@@ -298,7 +312,7 @@ mol.modules.map.results = function(mol) {
                     // Since we've already eliminated duplicates, this will 
                     // only add non-duplicates.
                     if(rows_to_add.length > 0)
-                        self.current_results.push(rows_to_add);
+                        self.current_results = self.current_results.concat(rows_to_add);
 
                     // Now,this.current_results is all current results,
                     // and rows_to_add are the new rows to add because
@@ -640,7 +654,8 @@ mol.modules.map.results = function(mol) {
                         results,
                         //for each property, set a filter with a title
                         function(row) {    
-                            console.log("Parsing: " + row + " for " + filter + ": " + row[filter]);
+                            // console.log("Row filters: " + Object.keys(row).join(', '));
+                            // console.log("Parsing: " + row + " for " + filter + ": " + row[filter]);
 
                             if(row[filter]) {                 
                                 filters[filter]
