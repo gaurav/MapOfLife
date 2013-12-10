@@ -33,7 +33,6 @@ mol.modules.map.results = function(mol) {
              */
             this.flag_synonym_bar_displayed = 0; 
 
-
             /**
              * this.synonym_search_counter = 0, 1, ...
              *
@@ -258,7 +257,7 @@ mol.modules.map.results = function(mol) {
                         search_type = 'synonym';
 
                     } else {
-                        // No currently synonym searches in progress.
+                        // No ongoing synonym searches in progress.
                         // So this is a new direct search result!
 
                         // Turn off the previous synonym display.
@@ -321,9 +320,9 @@ mol.modules.map.results = function(mol) {
                     // and rows_to_add are the new rows to add because
                     // of these search results.
 
-                    console.log("search_type: " + search_type);
-                    console.log("current_results: " + self.current_results.join(', ') + " (" + self.current_results.length + ")");
-                    console.log("rows_to_add: " + rows_to_add.join(', ') + " (" + rows_to_add.length + ")");
+                    // console.log("search_type: " + search_type);
+                    // console.log("current_results: " + self.current_results.join(', ') + " (" + self.current_results.length + ")");
+                    // console.log("rows_to_add: " + rows_to_add.join(', ') + " (" + rows_to_add.length + ")");
 
                     if (self.current_results.length > 0) {
                         self.showFilters(self.current_results);
@@ -354,106 +353,120 @@ mol.modules.map.results = function(mol) {
          *
          * TaxRefine uses the GBIF APIs to try to pick the best
          * supported interpretation of a particular taxonomic name.
-         * You can find out more at https://github.com/gaurav/taxrefine/#taxrefine
+         * Find out more at 
+         * https://github.com/gaurav/taxrefine/#taxrefine
          *
          * Parameters:
          *  name: the name to search for.
          *                  
          */
         searchForSynonyms: function(name) {
+            // Store the URL.
+            var refine_url = 
+                "http://refine.taxonomics.org/gbifchecklists/reconcile?callback=?&query=" 
+                + encodeURIComponent(name);
+
             // Store display for easy access.
             var display = this.display;
 
             // Display the 'processing ...' message.
             display.synonymSearchEnded.hide();
             display.synonymSearchInProgress.show();
-            console.log("searchForSynonyms: " + name + " (" + this.synonym_search_counter + ")");
+            console.log("searchForSynonyms: " + name
+                + " (" + this.synonym_search_counter + ")");
+
+            // For testing reasons, if the URL contains 'test-break-taxrefine'
+            // change the refine_url so we can see what happens if TaxRefine
+            // is down.
+            if(window.location.href.indexOf("test-break-taxrefine") != -1) {
+                refine_url = refine_url.replace("//refine.", "//refine-b.");
+            }
 
             // Query TaxRefine.
-            $.ajax({
-                url: "//refine.taxonomics.org/gbifchecklists/reconcile?callback=?&query=" + encodeURIComponent(name),
-                dataType: "json",
-                complete: function() {
-                    console.log("JSONP request complete for " + name + " (" + this.synonym_search_counter + ")");
-                },
-                error: function(jqXHR, textStatus, errorThrown) {
-                    console.log("Error in JSONP request: " + textStatus + "/" + errorThrown);
-                    self.bus.fireEvent(
-                        new mol.bus.Event(
-                            'search-results',
-                            {
-                                'term': name,
-                                'response': {
-                                    'rows': []
+            $.ajax(refine_url,
+                {
+                    dataType: "json",
+                    timeout: 10000,
+                    complete: function() {
+                        // Log the completion of the JSON request.
+                        console.log("JSONP request complete for " + name + " (" 
+                            + this.synonym_search_counter + ")");
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        // Log the error.
+                        console.log("Error in JSONP request: " + textStatus 
+                            + "/" + errorThrown);
+
+                        // Turn off the UI.
+                        display.synonymSearchInProgress.hide();
+                        display.synonymSearchEnded.show();
+                    },
+                    success: function(result) {
+                        // Make sure we have some results.
+                        if(!result.result)
+                            return;
+                        var names = result.result;
+
+                        // We use this hash to make sure we don't repeat a name.
+                        //
+                        // Add the actual name to this: we don't want to say that
+                        // 'Panthera tigris' is a synonym of 'Panthera tigris'.
+                        var duplicateNameCheck = {};
+                        duplicateNameCheck[name.toLowerCase()] = 1;
+                         
+                        // Make a list of all non-duplicate synonyms, whether
+                        // they are junior synonyms ("related") or senior synonyms
+                        // ("accepted").
+                        // 
+                        // This is particularly importance for TaxRefine which
+                        // differentiates between identical names in, say,
+                        // different kingdoms.
+                        var synonyms = [];
+
+                        // Go through all the names that TaxRefine matched.
+                        names.forEach(function(name_usage) {
+                            // If there is a canonical name, store it.
+                            if(name_usage.summary && name_usage.summary.canonicalName) {
+                                var canonicalName = name_usage.summary.canonicalName;
+
+                                // Make a list of canonical name as long as they
+                                // haven't been duplicated.
+                                if(!duplicateNameCheck[canonicalName.toLowerCase()]) {
+                                    synonyms.push({
+                                        'name': canonicalName,
+                                        'url': name_usage.type[0] + name_usage.id,
+                                        'type': 'related',
+                                        'score': name_usage.score
+                                    });
+                                    duplicateNameCheck[canonicalName.toLowerCase()] = 1;
                                 }
                             }
-                        )
-                    );
-                },
-                success: function(result) {
-                    // Store the matches in result.result as 'names'.
-                    if(!result.result)
-                        return;
-                    var names = result.result;
 
-                    // We use this hash to make sure we don't repeat a name.
-                    // Add the actual name to this: we don't want to say that
-                    // 'Panthera tigris' is a synonym of 'Panthera tigris'.
-                    var duplicateNameCheck = {};
-                    duplicateNameCheck[name.toLowerCase()] = 1;
-                     
-                    // Make a list of all non-duplicate synonyms, whether
-                    // they are junior synonyms ("related") or senior synonyms
-                    // ("accepted").
-                    // 
-                    // This is particularly importance for TaxRefine which
-                    // differentiates between identical names in, say,
-                    // different kingdoms.
-                    var synonyms = [];
+                            // If there is an accepted name, store it.
+                            if(name_usage.summary && name_usage.summary.accepted) {
+                                var acceptedName = name_usage.summary.accepted;
 
-                    names.forEach(function(name_usage) {
-                        // If there is a canonical name, store it.
-                        if(name_usage.summary && name_usage.summary.canonicalName) {
-                            var canonicalName = name_usage.summary.canonicalName;
+                                // The accepted name usually has authority information. So let's find 
+                                // a leading monomial/binomial/trinomial.
+                                var match = acceptedName.match(/^\s*([A-Z][a-z\.]+(?:\s+[a-z\.]+(?:\s+[a-z]+)?)?)/);
+                                if(match) {
+                                    // console.log("Matched '" + acceptedName + "' as '" + match[1] + "'");
+                                    acceptedName = match[1];
+                                } else {
+                                    // console.log("Unable to match '" + acceptedName + "'.");
+                                }
 
-                            // Make a list of canonical name as long as they
-                            // haven't been duplicated.
-                            if(!duplicateNameCheck[canonicalName.toLowerCase()]) {
-                                synonyms.push({
-                                    'name': canonicalName,
-                                    'url': name_usage.type[0] + name_usage.id,
-                                    'type': 'related',
-                                    'score': name_usage.score
-                                });
-                                duplicateNameCheck[canonicalName.toLowerCase()] = 1;
+                                // If we found an accepted name, and it's not on the duplicate name check.
+                                if(!duplicateNameCheck[acceptedName.toLowerCase()]) {
+                                    synonyms.push({
+                                        'name': acceptedName,
+                                        'url': name_usage.type[0] + name_usage.id,
+                                        'type': 'accepted',
+                                        'score': name_usage.score
+                                    });
+                                    duplicateNameCheck[acceptedName.toLowerCase()] = 1;
+                                }
                             }
-                        }
-
-                        // If there is an accepted name, store it.
-                        if(name_usage.summary && name_usage.summary.accepted) {
-                            var acceptedName = name_usage.summary.accepted;
-
-                            // The accepted name usually has authority information. So let's find 
-                            // a leading monomial/binomial/trinomial.
-                            var match = acceptedName.match(/^\s*([A-Z][a-z\.]+(?:\s+[a-z\.]+(?:\s+[a-z]+)?)?)/);
-                            if(match) {
-                                // console.log("Matched '" + acceptedName + "' as '" + match[1] + "'");
-                                acceptedName = match[1];
-                            } else {
-                                // console.log("Unable to match '" + acceptedName + "'.");
-                            }
-
-                            // If we found an accepted name, and it's not on the duplicate name check.
-                            if(!duplicateNameCheck[acceptedName.toLowerCase()]) {
-                                synonyms.push({
-                                    'name': acceptedName,
-                                    'url': name_usage.type[0] + name_usage.id,
-                                    'type': 'accepted',
-                                    'score': name_usage.score
-                                });
-                                duplicateNameCheck[acceptedName.toLowerCase()] = 1;
-                            }
-                        }
                     });
 
                     // No synonyms? Then we're done.
@@ -474,26 +487,26 @@ mol.modules.map.results = function(mol) {
                         }
                     });
 
-                    // Display all the synonyms.
+                    // Render all the synonyms into HTML and display them.
                     var index = 0;
                     synonyms.forEach(function(synonym) {
                         index++;
 
-                        // Get the four variables we stored.
+                        // Get the variables we stored.
                         var name = synonym.name;
                         var url = synonym.url;
                         var type = synonym.type;
                         var score = synonym.score;
                         var source = synonym.source;
 
-                        // Create a link to GBIF.
+                        // Set the name and details in the synonymListItem.
                         var synonymItem = display.synonymDisplay.synonymListItem.clone();
                         $("#name", synonymItem).text(name);
 
-                        // var urlItem = $("#url", synonymItem);
-                        // urlItem.text(index);
-                        // urlItem.attr('href', url);
-
+                        /*
+                         * Adds details about the synonym item. We don't need
+                         * this for now.
+                         * 
                         var detailsItem = $("#details", synonymItem);
                         detailsItem.html("<div style='width:100%; text-align: center'>" + score + "&nbsp;checklist(s) <a target='_blank' style='color: rgb(230, 250, 230);' href='" + url + "'>on GBIF</a></div>");
                         detailsItem.hide();
@@ -505,6 +518,9 @@ mol.modules.map.results = function(mol) {
                             // synonymItem.css('font-weight', 'bold');
                         }
 
+                        */ 
+                        
+                        // Figure out where to place commas and 'and's.
                         if(index == 1) {
                             // Don't display anything before the first item.
                         } else if(index == synonyms.length) {
@@ -516,7 +532,9 @@ mol.modules.map.results = function(mol) {
                         // Add this to the synonym list.
                         display.synonymDisplay.synonymList.append(synonymItem);
 
-                        // Search for this synonym by expanding the current search.
+                        // Search for this synonym by expanding the current 
+                        // search. Increment the synonym_search_counter so we
+                        // know that we are doing synonym searches.
                         self.synonym_search_counter++;
                         self.bus.fireEvent(
                             new mol.bus.Event(
@@ -527,7 +545,6 @@ mol.modules.map.results = function(mol) {
                                 }
                             )
                         );
-
                     });
 
                     // Set the searched name and GO!
