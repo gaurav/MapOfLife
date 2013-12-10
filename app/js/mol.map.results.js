@@ -540,8 +540,7 @@ mol.modules.map.results = function(mol) {
                             new mol.bus.Event(
                                 'search',
                                 {
-                                    'term': name,
-                                    'expand_current_search': true
+                                    'term': name
                                 }
                             )
                         );
