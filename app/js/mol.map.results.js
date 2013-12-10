@@ -674,9 +674,6 @@ mol.modules.map.results = function(mol) {
                         results,
                         //for each property, set a filter with a title
                         function(row) {    
-                            // console.log("Row filters: " + Object.keys(row).join(', '));
-                            // console.log("Parsing: " + row + " for " + filter + ": " + row[filter]);
-
                             if(row[filter]) {                 
                                 filters[filter]
                                     .values[row[filter].replace(/ /g, '_')] 
@@ -863,13 +860,18 @@ mol.modules.map.results = function(mol) {
                     '</div>' +
                 '</div>';
 
+            // What does one single synonym name entry look like? Some
+            // alternatives are given below.
             var synonymListItem = "<em><span id='name'></span></em>";
             // var synonymListItem = "<span><em><span id='name'></span></em><sup><a id='url' target='_blank' style='font-size: 0.9em; color: rgb(230, 250, 230);' href='#'>ref</a></sup></span>";
             // var synonymListItem = "<span><em><a id='url' target='_blank' style='color: rgb(230, 250, 230);' href='#'><span id='name'></span></a>&nbsp;<img src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVElEQVR42n3PgQkAIAhEUXdqJ3dqJ3e6IoTPUSQcgj4EQ5IlUiLE0Jil3PECXhcHGBhZ8kg4hwxAu3MZeCGeyFnAXp4hqNQPnt7QL0nADpD6wHccLvnAKksq8iiaAAAAAElFTkSuQmCC'></span>";
             // var synonymListItem = "<span><a id='url' href='#' target='_blank' style='color: rgb(230, 250, 230);'><em><span id='name'></span></em></a><span id='details'> (More details go here)</span></span>";
 
+            // Separates direct search results from synonym search results.
             var synonymBar = "<div class='resultContainer'><center>Synonyms</center></div><div class='break'></div>"
 
+            // Store some HTML elements in the display object so we can refer
+            // to them directly.
             this._super(html);
             this.resultList = $(this).find('.resultList');
             this.filters = $(this).find('.filters');
