@@ -867,7 +867,7 @@ mol.modules.map.results = function(mol) {
             // var synonymListItem = "<span><a id='url' href='#' target='_blank' style='color: rgb(230, 250, 230);'><em><span id='name'></span></em></a><span id='details'> (More details go here)</span></span>";
 
             // Separates direct search results from synonym search results.
-            var synonymBar = "<div class='resultContainer'><center>Synonyms</center></div><div class='break'></div>"
+            var synonymBar = "<div><center>Synonyms</center></div><div class='break'></div>"
 
             // Store some HTML elements in the display object so we can refer
             // to them directly.
