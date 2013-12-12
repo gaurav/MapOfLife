@@ -2484,11 +2484,17 @@ mol.modules.map.results = function(mol) {
                             // Matches found!
                             var synonyms = [];
                             rows.forEach(function(row) {
-                                console.log("CartoDB synonym found: " + 
-                                    row.mol_scientificname);
-                                synonyms.push({'name': row.mol_scientificname});
-                            });
-                            fn_synonyms(synonyms);
+                                var syn_name = row.mol_scientificname;
+                                if(syn_name.toLowerCase() == name.toLowerCase()) {
+                                    console.log("CartoDB synonym ignored: " + syn_name);
+                                } else {
+                                    console.log("CartoDB synonym found: " + syn_name);
+                                    synonyms.push({'name': syn_name});
+                                }
+                            }); 
+                            if(fn_synonyms(synonyms) == 0) {
+                                fn_error("no synonyms found");
+                            }
                         }
                     } else {
                         // No 'rows' present. Mysterious.
@@ -2627,8 +2633,11 @@ mol.modules.map.results = function(mol) {
                         }
                     });
 
-                    // Send synonym list to the success callback.
-                    fn_synonyms(synonyms);
+                    // Send synonym list to the success callback; if no
+                    // synonyms were found, that counts as an error.
+                    if(fn_synonyms(synonyms) == 0) {
+                        fn_error("no synonyms found");
+                    }
                 }
             });
 
@@ -2671,7 +2680,7 @@ mol.modules.map.results = function(mol) {
 
                 // No synonyms? Then we're done.
                 if(synonyms.length == 0)
-                    return;
+                    return 0;
 
                 // Sort the synonyms first by the 'type' ('accepted' sorted 
                 // above 'related') and then by the score.
@@ -2754,6 +2763,9 @@ mol.modules.map.results = function(mol) {
                 // Set the searched name and GO!
                 display.synonymDisplay.searchedName.text(name);
                 display.synonymDisplay.show();
+
+                // Return the number of synonyms.
+                return index;
             };
 
             // Search on CartoDB. If CartoDB fails, it will automatically
@@ -3061,8 +3073,9 @@ mol.modules.map.results = function(mol) {
                             '</div>' +
                             '<div class="synonymDisplay" style="display: none">' +
                                 '<div class="break" style="clear:both"></div>' + 
-                                '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known as <span class="synonymList"></span><span class="synonymSearchInProgress">.</span><span class="synonymSearchEnded" style="display:none">, but we do not have data for any of those names.</span>' +
+                                '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known as <span class="synonymList"></span>.' +
                             '</div>' +
+                            '<div class="synonymSearchEnded" style="display:none">No synonyms could be found.</div>'
                         '</div>' +
                     '</div>' +
                 '</div>';
