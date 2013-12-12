@@ -1,3 +1,7 @@
+URL testing components:
+ - ?test-break-taxrefine
+    - Breaks the URL for TaxRefine.
+
 Here are some names which activate odd behavior:
  - Anser hutchinsii
     - No data on Map of Life, but we have data on its synonym.
