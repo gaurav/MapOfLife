@@ -410,6 +410,8 @@ mol.modules.map.results = function(mol) {
                     fn_error(textStatus + "/" + errorThrown);
                 },
                 success: function(result) {
+                    // Success! Prepare list of synonyms and send them to
+                    // fn_synonyms.
                     if(result['rows']) {
                         var rows = result.rows;
 
@@ -495,7 +497,7 @@ mol.modules.map.results = function(mol) {
                         return;
                     var names = result.result;
 
-                    console.log("Names found: " + names.length);
+                    // console.log("Names found: " + names.length);
 
                     // We use this hash to make sure we don't repeat a name.
                     //
@@ -515,7 +517,7 @@ mol.modules.map.results = function(mol) {
 
                     // Go through all the names that TaxRefine matched.
                     names.forEach(function(name_usage) {
-                        console.log("Synonym name: " + name_usage.summary.canonicalName);
+                        // console.log("Synonym name: " + name_usage.summary.canonicalName);
 
                         // If there is a canonical name, store it.
                         if(name_usage.summary && name_usage.summary.canonicalName) {
@@ -538,17 +540,23 @@ mol.modules.map.results = function(mol) {
                         if(name_usage.summary && name_usage.summary.accepted) {
                             var acceptedName = name_usage.summary.accepted;
 
-                            // The accepted name usually has authority information. So let's find 
-                            // a leading monomial/binomial/trinomial.
-                            var match = acceptedName.match(/^\s*([A-Z][a-z\.]+(?:\s+[a-z\.]+(?:\s+[a-z]+)?)?)/);
+                            // The accepted name usually has authority 
+                            // information. So let's find a leading 
+                            // monomial/binomial/trinomial.
+                            var match = acceptedName.match(
+                                /^\s*([A-Z][a-z\.]+(?:\s+[a-z\.]+(?:\s+[a-z]+)?)?)/
+                            );
                             if(match) {
-                                // console.log("Matched '" + acceptedName + "' as '" + match[1] + "'");
+                                // console.log("Matched '" + acceptedName 
+                                //      + "' as '" + match[1] + "'");
                                 acceptedName = match[1];
                             } else {
-                                // console.log("Unable to match '" + acceptedName + "'.");
+                                // console.log("Unable to match '" 
+                                //      + acceptedName + "'.");
                             }
 
-                            // If we found an accepted name, and it's not on the duplicate name check.
+                            // If we found an accepted name, and it's not on 
+                            // the duplicate name check.
                             if(!duplicateNameCheck[acceptedName.toLowerCase()]) {
                                 synonyms.push({
                                     'name': acceptedName,
@@ -561,8 +569,7 @@ mol.modules.map.results = function(mol) {
                         }
                     });
 
-                    console.log("Synonyms found: " + synonyms.length);
-
+                    // Send synonym list to the success callback.
                     fn_synonyms(synonyms);
                 }
             });
@@ -593,7 +600,7 @@ mol.modules.map.results = function(mol) {
             console.log("searchForSynonyms: " + name
                 + " (" + this.synonym_search_counter + ")");
 
-            // If there's an error, turn the synonym search back on.
+            // If there's an error, turn the synonym search UI off.
             var fn_error = function(errorString) { 
                 // Turn off the UI.
                 display.synonymSearchInProgress.hide();
@@ -608,8 +615,8 @@ mol.modules.map.results = function(mol) {
                 if(synonyms.length == 0)
                     return;
 
-                // Sort the synonyms first by the 'type' ('accepted' sorted above 'related')
-                // and then by the score.
+                // Sort the synonyms first by the 'type' ('accepted' sorted 
+                // above 'related') and then by the score.
                 synonyms.sort(function(a,b) {
                     if(b.type == a.type)
                         return b.score - a.score;
@@ -644,7 +651,11 @@ mol.modules.map.results = function(mol) {
                      * this for now.
                      * 
                     var detailsItem = $("#details", synonymItem);
-                    detailsItem.html("<div style='width:100%; text-align: center'>" + score + "&nbsp;checklist(s) <a target='_blank' style='color: rgb(230, 250, 230);' href='" + url + "'>on GBIF</a></div>");
+                    detailsItem.html(
+                        "<div style='width:100%; text-align: center'>" + score 
+                        + "&nbsp;checklist(s) <a target='_blank' "
+                        + "style='color: rgb(230, 250, 230);' href='" + url 
+                        + "'>on GBIF</a></div>");
                     detailsItem.hide();
 
                     if(type == 'accepted') {
