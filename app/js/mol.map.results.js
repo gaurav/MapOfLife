@@ -654,27 +654,6 @@ mol.modules.map.results = function(mol) {
                     // Set the name and details in the synonymListItem.
                     var synonymItem = display.synonymDisplay.synonymListItem.clone();
                     $("#name", synonymItem).text(name);
-
-                    /*
-                     * Adds details about the synonym item. We don't need
-                     * this for now.
-                     * 
-                    var detailsItem = $("#details", synonymItem);
-                    detailsItem.html(
-                        "<div style='width:100%; text-align: center'>" + score 
-                        + "&nbsp;checklist(s) <a target='_blank' "
-                        + "style='color: rgb(230, 250, 230);' href='" + url 
-                        + "'>on GBIF</a></div>");
-                    detailsItem.hide();
-
-                    if(type == 'accepted') {
-                        // Something to distinguish this would be nice,
-                        // but (1) it doesn't seem to come up often, and
-                        // (2) bold just looks ugly.
-                        // synonymItem.css('font-weight', 'bold');
-                    }
-
-                    */ 
                     
                     // Figure out where to place commas and 'and's.
                     if(index == 1) {
@@ -1022,12 +1001,8 @@ mol.modules.map.results = function(mol) {
                     '</div>' +
                 '</div>';
 
-            // What does one single synonym name entry look like? Some
-            // alternatives are given below.
+            // HTML for a single synonym list entry (i.e. one synonym/accepted name).
             var synonymListItem = "<em><span id='name'></span></em>";
-            // var synonymListItem = "<span><em><span id='name'></span></em><sup><a id='url' target='_blank' style='font-size: 0.9em; color: rgb(230, 250, 230);' href='#'>ref</a></sup></span>";
-            // var synonymListItem = "<span><em><a id='url' target='_blank' style='color: rgb(230, 250, 230);' href='#'><span id='name'></span></a>&nbsp;<img src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVElEQVR42n3PgQkAIAhEUXdqJ3dqJ3e6IoTPUSQcgj4EQ5IlUiLE0Jil3PECXhcHGBhZ8kg4hwxAu3MZeCGeyFnAXp4hqNQPnt7QL0nADpD6wHccLvnAKksq8iiaAAAAAElFTkSuQmCC'></span>";
-            // var synonymListItem = "<span><a id='url' href='#' target='_blank' style='color: rgb(230, 250, 230);'><em><span id='name'></span></em></a><span id='details'> (More details go here)</span></span>";
 
             // Separates direct search results from synonym search results.
             var synonymBar = "<div><center>Synonyms</center></div><div class='break'></div>"
