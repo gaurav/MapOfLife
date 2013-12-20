@@ -2312,6 +2312,14 @@ mol.modules.map.results = function(mol) {
                 function(event) {
                     var response = event.response;
                     var search_type = 'direct';
+
+                    // A list of layer identifiers which are currently
+                    // in use.
+                    var ids_currently_in_use;
+                    
+                    // Rows to be added in this event (after duplicate rows
+                    // are removed).
+                    var rows_to_add; 
  
                     // Turn off autocomplete.
                     self.bus.fireEvent(new mol.bus.Event('close-autocomplete'));
@@ -2355,28 +2363,22 @@ mol.modules.map.results = function(mol) {
                         self.display.clearResults();
                     }
 
-                    // Rows found by the search.
-                    var rows_found = response.rows;
-
                     // Find all the rows we need to add in this operation.
                     // Uniqueness is determined by concatenating the source_type,
                     // dataset_id and name.
-                    var time_start = new Date().getTime();
-                    var ids_currently_in_use = _.map(self.current_results,
+                    ids_currently_in_use = _.map(self.current_results,
                         function(row) {
                             return (row.source_type + "-" + row.dataset_id + 
                                 "-" + row.name);
                         }
                     );
-                    var rows_to_add = _.filter(rows_found,
+                    rows_to_add = _.filter(response.rows,
                         function(row) {
                             var id = (row.source_type + "-" + row.dataset_id
                                 + "-" + row.name);
                             return(ids_currently_in_use.indexOf(id) == -1);
                         }
                     );
-                    console.log("Time taken to test for duplicates: " + 
-                        (new Date().getTime() - time_start) + " ms");
 
                     // Display the synonym bar if appropriate.
                     if(
@@ -2468,11 +2470,15 @@ mol.modules.map.results = function(mol) {
                     fn_error(textStatus + "/" + errorThrown);
                 },
                 success: function(result) {
+                    // Rows to process.
+                    var rows = result['rows'];
+
+                    // Synonyms to add.
+                    var synonyms;
+                    
                     // Success! Prepare list of synonyms and send them to
                     // fn_synonyms.
-                    if(result['rows']) {
-                        var rows = result.rows;
-
+                    if(rows) {
                         if(rows.length == 0) {
                             // No matches? Check with TaxRefine.
                             self.searchForSynonymsOnTaxRefine(
@@ -2482,7 +2488,7 @@ mol.modules.map.results = function(mol) {
                             );
                         } else {
                             // Matches found!
-                            var synonyms = [];
+                            synonyms = [];
                             rows.forEach(function(row) {
                                 var syn_name = row.mol_scientificname;
                                 if(syn_name.toLowerCase() == name.toLowerCase()) {
@@ -2525,12 +2531,13 @@ mol.modules.map.results = function(mol) {
          *      Called after the search completes.
          */ 
         searchForSynonymsOnTaxRefine: function(name, fn_synonyms, fn_error) {
-            console.log("TaxRefine synonym search for " + name + " started.");
-
             // Store the URL.
             var refine_url = 
                 "http://refine.taxonomics.org/gbifchecklists/reconcile?callback=?&query=" 
                 + encodeURIComponent(name);
+
+            // Log that we're doing this.
+            console.log("TaxRefine synonym search for " + name + " started.");
 
             // For testing reasons, if the URL contains 'test-break-taxrefine'
             // change the refine_url so we can see what happens if TaxRefine
@@ -2556,10 +2563,19 @@ mol.modules.map.results = function(mol) {
                     fn_error(textStatus + "/" + errorThrown);
                 },
                 success: function(result) {
+                    // Names resulting from the JSON query.
+                    var names;
+
+                    // duplicate name check: make sure all names are unique.
+                    var duplicateNameCheck = {};
+
+                    // Synonyms to add.
+                    var synonyms;
+
                     // Make sure we have some results.
                     if(!result.result)
                         return;
-                    var names = result.result;
+                    names = result.result;
 
                     // console.log("Names found: " + names.length);
 
@@ -2567,7 +2583,6 @@ mol.modules.map.results = function(mol) {
                     //
                     // Add the actual name to this: we don't want to say that
                     // 'Panthera tigris' is a synonym of 'Panthera tigris'.
-                    var duplicateNameCheck = {};
                     duplicateNameCheck[name.toLowerCase()] = 1;
                      
                     // Make a list of all non-duplicate synonyms, whether
@@ -2577,15 +2592,23 @@ mol.modules.map.results = function(mol) {
                     // This is particularly importance for TaxRefine which
                     // differentiates between identical names in, say,
                     // different kingdoms.
-                    var synonyms = [];
+                    synonyms = [];
 
                     // Go through all the names that TaxRefine matched.
                     names.forEach(function(name_usage) {
-                        // console.log("Synonym name: " + name_usage.summary.canonicalName);
+                        // This might be a canonical name.
+                        var canonicalName;
+
+                        // It might also be an accepted name.
+                        var acceptedName;
+
+                        // match object used to store results of regular
+                        // expressions.
+                        var match;
 
                         // If there is a canonical name, store it.
                         if(name_usage.summary && name_usage.summary.canonicalName) {
-                            var canonicalName = name_usage.summary.canonicalName;
+                            canonicalName = name_usage.summary.canonicalName;
 
                             // Make a list of canonical name as long as they
                             // haven't been duplicated.
@@ -2602,12 +2625,12 @@ mol.modules.map.results = function(mol) {
 
                         // If there is an accepted name, store it.
                         if(name_usage.summary && name_usage.summary.accepted) {
-                            var acceptedName = name_usage.summary.accepted;
+                            acceptedName = name_usage.summary.accepted;
 
                             // The accepted name usually has authority 
                             // information. So let's find a leading 
                             // monomial/binomial/trinomial.
-                            var match = acceptedName.match(
+                            match = acceptedName.match(
                                 /^\s*([A-Z][a-z\.]+(?:\s+[a-z\.]+(?:\s+[a-z]+)?)?)/
                             );
                             if(match) {
@@ -2661,6 +2684,10 @@ mol.modules.map.results = function(mol) {
             // Store display for easy access.
             var display = this.display;
 
+            // We'll define some function to handle
+            // errors and display synonyms.
+            var fn_error, fn_synonyms;
+
             // Display the 'processing ...' message.
             display.synonymSearchEnded.hide();
             display.synonymSearchInProgress.show();
@@ -2668,14 +2695,18 @@ mol.modules.map.results = function(mol) {
                 + " (" + this.synonym_search_counter + ")");
 
             // If there's an error, turn the synonym search UI off.
-            var fn_error = function(errorString) { 
+            fn_error = function(errorString) { 
                 // Turn off the UI.
                 display.synonymSearchInProgress.hide();
                 display.synonymSearchEnded.show();
             };
 
             // If we have a set of synonyms, send out search results.
-            var fn_synonyms = function(synonyms) {
+            fn_synonyms = function(synonyms) {
+                // Index of the currently processed synonym.
+                var index = 0;
+
+                // Log what we're up to.
                 console.log("Processing synonym: " + synonyms.length);
 
                 // No synonyms? Then we're done.
@@ -2697,7 +2728,7 @@ mol.modules.map.results = function(mol) {
                 });
 
                 // Render all the synonyms into HTML and display them.
-                var index = 0;
+                index = 0;
                 synonyms.forEach(function(synonym) {
                     index++;
 
@@ -2712,27 +2743,6 @@ mol.modules.map.results = function(mol) {
                     // Set the name and details in the synonymListItem.
                     var synonymItem = display.synonymDisplay.synonymListItem.clone();
                     $("#name", synonymItem).text(name);
-
-                    /*
-                     * Adds details about the synonym item. We don't need
-                     * this for now.
-                     * 
-                    var detailsItem = $("#details", synonymItem);
-                    detailsItem.html(
-                        "<div style='width:100%; text-align: center'>" + score 
-                        + "&nbsp;checklist(s) <a target='_blank' "
-                        + "style='color: rgb(230, 250, 230);' href='" + url 
-                        + "'>on GBIF</a></div>");
-                    detailsItem.hide();
-
-                    if(type == 'accepted') {
-                        // Something to distinguish this would be nice,
-                        // but (1) it doesn't seem to come up often, and
-                        // (2) bold just looks ugly.
-                        // synonymItem.css('font-weight', 'bold');
-                    }
-
-                    */ 
                     
                     // Figure out where to place commas and 'and's.
                     if(index == 1) {
@@ -3080,12 +3090,8 @@ mol.modules.map.results = function(mol) {
                     '</div>' +
                 '</div>';
 
-            // What does one single synonym name entry look like? Some
-            // alternatives are given below.
+            // HTML for a single synonym list entry (i.e. one synonym/accepted name).
             var synonymListItem = "<em><span id='name'></span></em>";
-            // var synonymListItem = "<span><em><span id='name'></span></em><sup><a id='url' target='_blank' style='font-size: 0.9em; color: rgb(230, 250, 230);' href='#'>ref</a></sup></span>";
-            // var synonymListItem = "<span><em><a id='url' target='_blank' style='color: rgb(230, 250, 230);' href='#'><span id='name'></span></a>&nbsp;<img src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVElEQVR42n3PgQkAIAhEUXdqJ3dqJ3e6IoTPUSQcgj4EQ5IlUiLE0Jil3PECXhcHGBhZ8kg4hwxAu3MZeCGeyFnAXp4hqNQPnt7QL0nADpD6wHccLvnAKksq8iiaAAAAAElFTkSuQmCC'></span>";
-            // var synonymListItem = "<span><a id='url' href='#' target='_blank' style='color: rgb(230, 250, 230);'><em><span id='name'></span></em></a><span id='details'> (More details go here)</span></span>";
 
             // Separates direct search results from synonym search results.
             var synonymBar = "<div><center>Synonyms</center></div><div class='break'></div>"
