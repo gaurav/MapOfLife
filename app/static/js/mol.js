@@ -4291,7 +4291,7 @@ mol.modules.map.tiles = function(mol) {
                         self.onafterload != undefined) {
                             self.onafterload();
                     }
-                }).one("error", function() {
+                }).error(function() {
                     var index = $.inArray(this.__src__, pendingurls);
                     pendingurls.splice(index, 1);
                     if (pendingurls.length === 0) {
