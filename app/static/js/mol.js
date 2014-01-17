@@ -1660,10 +1660,10 @@ mol.modules.map.layers = function(mol) {
                 '      <div title="{3}" class="layerEnglishName">{3}</div>'+
                 '    </div>' +
                 '    <button title="Remove layer." class="close">' +
-                       'x' +
+                    '<i class="fa fa-trash-o"></i>' +
                 '    </button>' +
                 '    <button title="Zoom to layer extent." class="zoom">' +
-                       'z' +
+                       '<i class="fa fa-search-plus"></i>' +
                 '    </button>' +
                 '    <label class="buttonContainer">' +
                 '       <input class="toggle" type="checkbox">' +
