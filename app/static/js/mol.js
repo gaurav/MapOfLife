@@ -3443,7 +3443,7 @@ mol.modules.map.search = function(mol) {
                     minLength: 3, 
                     source: function(request, response) {
                         $.getJSON(
-                            'http://mol.cartodb.com/api/v1/sql?q={0}'.format(
+                            mol.services.cartodb.sqlApi.jsonp_url.format(
                                     self.ac_sql.format(
                                         $.trim(request.term)
                                             .replace(/ /g, ' ')
