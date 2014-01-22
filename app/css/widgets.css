@@ -697,17 +697,6 @@ white-space: nowrap;
     margin-right: 10px;
 }
 
-.mol-LayerControl-Layers .layer .toggle {
-    opacity: 0.0;
-    position:absolute;
-    left:0;
-    z-index:100;
-    float: left;
-    width:24px;
-    height:24px;
-    cursor: pointer;
-}
-
 .mol-LayerControl-Layers .layer .customCheck:after{
     content:url('/static/maps/layers/inactive.png');
     margin: 2px;
@@ -724,14 +713,13 @@ white-space: nowrap;
     border: none;
 }
 
-.mol-LayerControl-Layers .layer .toggle:hover + .customCheck:after{
-    background-color: rgb(25, 25, 25);
-    background-color: rgba(25, 25, 25, 1.0);
-    cursor: pointer;
+.mol-LayerControl-Layers .layer .toggleContainer {
+    float: right;
+    position: relative;
+    width: 24px;
+    height: 24px;
 }
-.mol-LayerControl-Layers .layer .toggle:checked + .customCheck:after {
-    content:url('/static/maps/layers/active.png');
-}
+
 .mol-LayerControl-Layers .layer .close {
     float: right;
     position: relative;
@@ -740,9 +728,6 @@ white-space: nowrap;
     font-size: 1.2em;
     height: 24px;
 }
-
-
-
 
 .mol-LayerControl-Layers .layer .zoom {
     float: right;

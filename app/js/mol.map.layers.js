@@ -687,13 +687,22 @@ mol.modules.map.layers = function(mol) {
                     // Click handler for the toggle button.
                     l.toggle.click(
                         function(event) {
-                            var showing = $(event.currentTarget).is(':checked'),
+                            var showing = $(event.currentTarget).hasClass('checked'),
                                 params = {
                                     layer: layer,
-                                    showing: showing
+                                    showing: !showing
                                 },
                                 e = new mol.bus.Event('layer-toggle', params);
-
+                            
+                            if(showing) {
+                                $(this).removeClass('checked');
+                                $(this).removeClass('fa-eye');
+                                $(this).addClass('fa-eye-slash');
+                            } else {
+                                $(this).addClass('checked');
+                                $(this).removeClass('fa-eye-slash');
+                                $(this).addClass('fa-eye');
+                            }
                             self.bus.fireEvent(e);
                             event.stopPropagation();
                             event.cancelBubble = true;
@@ -821,16 +830,14 @@ mol.modules.map.layers = function(mol) {
                 '      <div title="{3}" class="layerEnglishName">{3}</div>'+
                 '    </div>' +
                 '    <button title="Remove layer." class="close">' +
-                       'x' +
+                    '<i class="fa fa-trash-o"></i>' +
                 '    </button>' +
                 '    <button title="Zoom to layer extent." class="zoom">' +
-                       'z' +
+                       '<i class="fa fa-search-plus"></i>' +
                 '    </button>' +
-                '    <label class="buttonContainer">' +
-                '       <input class="toggle" type="checkbox">' +
-                '       <span title="Toggle layer visibility." ' +
-                        'class="customCheck"></span>' +
-                '    </label>' +
+                '    <button class="toggleContainer">' +
+                '       <i class="fa toggle fa-eye checked"></i>' +
+                '    </button>' +
                 '   </div>' +
                 '   <div class="break"></div>' +
                 '</div>',
@@ -850,7 +857,7 @@ mol.modules.map.layers = function(mol) {
             );
 
             this.attr('id', layer.id);
-            this.toggle = $(this).find('.toggle').button();
+            this.toggle = $(this).find('.toggle');
             this.styler = $(this).find('.styler');
             this.zoom = $(this).find('.zoom');
             this.info = $(this).find('.info');
