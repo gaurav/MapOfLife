@@ -3092,7 +3092,7 @@ mol.modules.map.results = function(mol) {
                                 '<div class="break" style="clear:both"></div>' + 
                                 '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known as <span class="synonymList"></span>.' +
                             '</div>' +
-                            '<div class="synonymSearchEnded" style="display:none">No synonyms could be found.</div>'
+                            '<div class="synonymSearchEnded" style="display:none">No synonymous data found.</div>'
                         '</div>' +
                     '</div>' +
                 '</div>';
