@@ -3092,7 +3092,7 @@ mol.modules.map.results = function(mol) {
                                 '<div class="break" style="clear:both"></div>' + 
                                 '<span class="searchedName" style="font-style: italic">The name you searched for</span> is also known as <span class="synonymList"></span>.' +
                             '</div>' +
-                            '<div class="synonymSearchEnded" style="display:none">No synonyms could be found.</div>'
+                            '<div class="synonymSearchEnded" style="display:none">No synonymous data found.</div>'
                         '</div>' +
                     '</div>' +
                 '</div>';
@@ -3747,14 +3747,44 @@ mol.modules.map.search = function(mol) {
                 )
             );
 
-            $.getJSON(
-                'http://mol.cartodb.com/api/v1/sql?q={0}'.format(
+            $.ajax({
+                url: 'http://mol.cartodb.com/api/v1/sql?q={0}'.format(
                     this.search_sql.format(
                         $.trim(term)
                         .replace(/ /g, ' ')
                     )
                 ),
-                function (response) {
+                dataType: "json",
+                timeout: this.search_query_timeout,
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.log("Error searching for layers with term '" +
+                        term + "': " + textStatus + "/" + errorThrown);
+
+                    // Fire a 'search-results' so the synonym count is
+                    // managed correctly.
+                    self.bus.fireEvent(
+                        new mol.bus.Event(
+                            'search-results',
+                            {
+                                term: term,
+                                response: {
+                                    rows: []
+                                }
+                            }
+                        )
+                    );
+
+                    // Reset the UI.
+                    self.bus.fireEvent(
+                        new mol.bus.Event(
+                            'hide-loading-indicator', 
+                            {source : "search-{0}".format(term)}
+                        )
+                    );
+
+                    $(self.display.searchBox).autocomplete('enable');
+                },
+                success: function (response) {
                     var results = {term:term, response:response};
 
                     self.bus.fireEvent(
@@ -3771,7 +3801,7 @@ mol.modules.map.search = function(mol) {
                     );
                     $(self.display.searchBox).autocomplete('enable');
                 }
-            );
+            });
 
         }
     });
